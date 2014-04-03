@@ -1,0 +1,24 @@
+{
+  "manifest_version": 2,
+
+  "name": "Serrano",
+  "description": "Scrape data form the website using remote 'scripts'",
+  "version": "0.1.0",
+
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+       "js": ["lib/jquery.js", "lib/underscore.js", "simplifier.js","commands.js", "SerranoSL.js","content_script.js"]
+    }
+  ],
+  "background": {
+    "scripts": ["background.js"],
+    "persistent": false
+  },
+  "permissions": [
+    "activeTab"
+  ]
+}
