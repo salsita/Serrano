@@ -2,9 +2,25 @@
  * Created by tomasnovella on 3/28/14.
  */
 
-function isValidNumberOfArguments(argc, signature)
+/**
+ * Finds out whether the count of arguments the function received
+ * corresponds to it's signature.
+ * @param {int} argc - Number of arguments the function received.
+ * @param {string} signature - Function signature.
+ * @returns {boolean}
+ */
+function validArgumentCount(argc, signature)
 {
-  function inInterval(num, low, up) {
+  /**
+   * Find out whether the number $num is in the closed interval [$low, $up].
+   * When up is undefined, it is set to infinity.
+   * @param {int} num
+   * @param {int} low
+   * @param {int} up
+   * @returns {boolean}
+   */
+  function inInterval(num, low, up)
+  {
     if (isNaN(low) || isNaN(num)) { throw new TypeError();}
     if (isNaN(up)) {
       if(low <= num) {
@@ -20,7 +36,8 @@ function isValidNumberOfArguments(argc, signature)
 
   var intervals = signature.split(',');
   // for each interval
-  for (var i=0; i<intervals.length; ++i) {
+  for (var i=0; i<intervals.length; ++i)
+  {
     var interval = intervals[i].split('-');
     if (interval.length == 1 && inInterval(argc, parseInt(interval[0]), parseInt(interval[0]))) {
       return true;
@@ -33,8 +50,3 @@ function isValidNumberOfArguments(argc, signature)
 
 }
 
-var signature2 = "2-4, 7 -   9  , 13  , 15-";
-console.log(signature2);
-for (var i=1; i < 20; ++i) {
-  console.log(i+" "+ isValidNumberOfArguments(i, signature2));
-}

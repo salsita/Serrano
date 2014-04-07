@@ -9,16 +9,18 @@ function isCommandName(name)
 
 function isDecoratedName(name)
 {
+
   if (typeof name !== "string")
     return false;
 
-  return $.inArray(name[0], ["$", "~", "="]);
+
+  return $.inArray(name[0], ["$", "~", "="]) !== -1;
 }
 
 function stripDecorator(name)
 {
   if (!isDecoratedName(name))
-    throw new TypeError("Not a decorator!");
+    throw new TypeError("Decorator expected. Received " + name);
   return name.substr(1);
 }
 function isCommand(array)
@@ -42,7 +44,7 @@ function simplifyCommand(cmd)
   for(var i = 0; i < cmd.length; ++i)
   {
     // if the argument should be passed raw, pass it that way
-    if ($.inArray(i, commands[commandName].raw))
+    if ($.inArray(i, commands[commandName].rawArguments) !== -1)
       ret.push(cmd[i]);
     else
     {
@@ -80,7 +82,7 @@ function simplifyInstruction(instr)
     if (isCommand(head))
       ret.push(simplifyCommand(head));
     else
-      throw new TypeError("simplifyInstruction gets some non-command");
+      throw new TypeError("Command expected. Received "+ head.toString());
   }
   for (var i = 1; i < instr.length; ++i)
   {
@@ -88,6 +90,8 @@ function simplifyInstruction(instr)
       ret.push([instr[i]]);
     else if(isCommand(instr[i]))
       ret.push(simplifyCommand(instr[i]));
+    else
+      throw new TypeError("Command expected. Received "+ instr[i].toString());
   }
 
   return ret;
@@ -102,5 +106,5 @@ function simplify(instr)
   {
     return simplifyInstruction(instr);
   } else
-    throw new TypeError("It's neither a command nor an instruction!")
+    throw new TypeError("Expected command or instruction. Received "+ instr.toString());
 }

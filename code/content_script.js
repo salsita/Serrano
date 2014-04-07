@@ -1,7 +1,19 @@
 // Load Tests
 
-alert(555);
 
+test_simplify(v1);
+test_simplify(v2);
+test_simplify(v3);
+test_simplify(v4);
+test_simplify(v5);
+test_simplify(v6);
+
+
+
+
+
+//alert(testString);
+//alert(111);
 //function loadAndExecuteTest(testfile)
 //{
 //  //_debug("loadAndExecuteTest " + testfile);

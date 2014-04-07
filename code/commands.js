@@ -12,18 +12,20 @@ storage = {};
  */
 commands = {
   'getVal': {
+    'argumentCount': '2',
     'implicitForeach': true,
     'rawArguments': [],
     'code': function(key) {
       if (storage.hasOwnProperty(key)) {
         return storage[key];
       } else {
-        _debug('getVal '+ key +' no value found');
+        throw new WrongArgumentError('getVal '+ key +' no value found');
       }
     }
   },
 
   'setVal': {
+    'argumentCount': '3',
     'implicitForeach': true,
     'rawArguments': [],
     'code': function(key, value) {
@@ -32,6 +34,23 @@ commands = {
     }
   },
 
+  'jQuery': {
+    'argumentCount': '1',
+    'implicitForeach': true,
+    'rawArguments': [],
+    'code': function(obj) {
+      return $(obj);
+    }
+  },
+
+  'lt': {
+    argumentCount:"2,3",
+    implicitForeach: true,
+    rawArguments:[1],
+    'code': function(){
+      // ...
+    }
+  },
 
   // converts a jQuery object into an array - https://api.jquery.com/jQuery.makeArray/
   'makeArray': {
@@ -44,7 +63,6 @@ commands = {
       return this.makeArray(obj);
     }
   },
-
 
   // TODO: maybe extend - so that I can get an array of indexes too... (nonEvaluation of an expression)
   'at': {
