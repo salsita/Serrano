@@ -1,9 +1,7 @@
+# webstorm + macvim
 */.idea/*
 *.swp
 
-*.sw*
-*~
-build/
-bin/
-node_modules/
-vendor/
+.DS_Store
+build/*.js
+node_modules

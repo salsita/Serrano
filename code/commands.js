@@ -1,3 +1,6 @@
+jQuery = require("../libs/jquery");
+
+
 storage = {};
 
 /**
@@ -42,7 +45,14 @@ commands = {
       return $(obj);
     }
   },
-
+  'lower': {
+    argumentCount: "1",
+    implicitForeach: true,
+    rawArguments:[],
+    code: function(arg) {
+      return arg.toLowerCase();
+    }
+  },
   'lt': {
     argumentCount:"2,3",
     implicitForeach: true,
@@ -118,127 +128,4 @@ jqChains = {
   'attr': 'buhuattr'
 };
 
-
-/*
-
-function replace()
-{
-  var args = arguments;
-
-}
-
-
-funs = {
-  "!text": {
-     implicitLoop: true,  //?
-     code: function(obj) { return obj.text(); }
-  },
-  "!trim": {
-    ...
-  }
-}
-
-signatura = {
-  name: "replace",
-};
-
-
-$('.myClass').bar(1,2,3).boo($('.myOtherClass').upper(), 'b').get();
-
-[".myClass", "!bar", 1, 2, 3, "!boo", [".myOtherClass", "!upper"], "b", "!get"]
-[".myClass", ["!bar",1, 2, 3], ["!boo", [".myOtherClass", "!upper"], "b"], "!get"]
-
-
-Problem 1.
-[".myClass", ["!replace", "a", "b"]]
-
-
-["!replace", ".myClass", "Class", "Klas"] --> should return ".myKlas"
-["!replace", [".myClass"], "<b>", "&lt;b&gt;"] --> replaces all <b> elements with their entitied notation.
-
-Problem 2.
-["$.myClass", ["!replace, "a","b"], ["!replace", "c", "d"]]
-And now!!!!
-[["!replace", [".myClass"], "a", "b"], ["!replace","c","d"]]
-
-[ ... -> "ahoj", [ "!getVal",
-
-
-Q: How to make it the same???
-Easy! Every function takes as a first argument the return value of the previous item -
-compiler
-
-
-Note: "$.myClass" is a syntactic sugar for ["!getjQuerySelector", ".myClass"]
-[["!setval" "myval"], [".myClass"]]
-
-
-
-Problem 3(pointed out by Roman):
-what if I have a chain and one of the commands doesnt return a value? PROBLEM SOLVED!!!! returns undefined,
-as if the following command were the first item in the chain!!!!!!!!!
-
-PLUS - solves even the infix notation of the case  [0, ["!lt", 5]] it's not so pretty though.
-
-(can add !NOP (NoOPeration) command for that rare cases - takes argument from the chain, returns undefined.
-
-Algorithm:
-1) take the following argument in the array
-2) if a number, return number
-3) if  a string (jQuery string) -> replace with a ["jQuery", that string] function
-4) if a no-arg function(e.g. string "!tolower") -> replace with a ["!tolower", prevArg]
-supplying with the return value of the previous function + arguments given
-5) if array -> call yourself recursively
-
-Problem 4:
-$("h1") doesnt return the content of the element, it returns the whole html of it "<h1>Blah blah blah</h1>"
-You need to call .text() on it explicitly. Q: should I make another shortcut for obtaining text only?
-[alternatively - make a shortcut-function for it..., %, =,&]
-
-[""] $,
-
-"div .age"
-
- ["div .age", "!a", ["!call", "text"]],
- ["=div.age"]
-
-
-
- ["div .age", "!text"]
-
- [ ..., ["!apply", "substr", ["!getVal", "val"] ] ]
-
-
-Note:
--- no call() no apply()
-// ---------------------------------------
-koukni na ty conditions (<, >, ==, !=, ...; and, or; exists, ...)  a rozmysli to
-
-condition always returns a value
-["!lt", "#age", 40, ["!getVal", "youngVal"], ["!getVal", "oldVal"]]
-vs
-["!if", ["!lt", "=#age", 40], ["!getVal", "youngVal"], ["!getVal", "oldVal"]]
-
-
-["=li .age", ["!filter", ["!gt", 50]]
-
-
-// ---------------------------------------
-function replace(str, a, b)
-{
-  return str.replace(a, b);
-}
-
- jednoduche riesenie k tomu foreachovaniu.
-  Totizto ked mas jQuery objekt a na neho volas metodu,
-   tak stale predsa chces, aby sa volala rovnako, ako ked to volas
-   v jQuery (to znamena, ze NEforeachujes ale volas to klasicky na samotny
-   objekt). Ked mas pole (typ Array), tak to chces predsa foreachovat
-   (lebo samotna array nema ZIADNE dolezite metody. pripadne mozno ma
-   .length, ale to mozes simulovat explicitne metodou getLength ktoru
-   napiseme). Ziaden iny pripad nastat nemoze. Takze znacit v signature
-   foreachovatelnost je zrejme zbytocne (mozno sa mylim, ale tak dava mi to
-   zmysel).
-
-
-*/
+module.exports = commands;

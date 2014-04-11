@@ -1,10 +1,13 @@
 /**
  * Created by tomasnovella on 4/3/14.
  */
+var _ = require('../libs/underscore');
+var commands = require("./commands");
+var exceptions = require("./exceptions");
 
 function isCommandName(name)
 {
-  return typeof(name) === "string" && name[0] == "!";
+  return typeof(name) === "string" && name[0] == "!" && name.substr(1) in commands;
 }
 
 function isDecoratedName(name)
@@ -14,7 +17,7 @@ function isDecoratedName(name)
     return false;
 
 
-  return $.inArray(name[0], ["$", "~", "="]) !== -1;
+  return  _.contains(["$", "~", "="], name[0]);
 }
 
 function stripDecorator(name)
@@ -25,30 +28,31 @@ function stripDecorator(name)
 }
 function isCommand(array)
 {
-  return $.isArray(array) && array.length != 0 && isCommandName(array[0]);
+  return _.isArray(array) && array.length != 0 && isCommandName(array[0]);
 }
 
 function isInstruction(array)
 {
-  return $.isArray(array) && array.length != 0 &&
-    ($.isArray(array[0]) || isDecoratedName(array[0]));
+  return _.isArray(array) && array.length != 0 &&
+    (_.isArray(array[0]) || isDecoratedName(array[0]));
 }
-
+// command types:
+// if in the head of instruction, then ["!commName", <arg>, <arg>,...]
+// else also: "!commName"
+// Note: <arg> may be an instruction or command
 function simplifyCommand(cmd)
 {
   var commandName = cmd[0].substr(1);
-  if (!commands.hasOwnProperty(commandName))
-    throw NotImplementedError(cmd[0]);
 
   var ret = [];
   for(var i = 0; i < cmd.length; ++i)
   {
     // if the argument should be passed raw, pass it that way
-    if ($.inArray(i, commands[commandName].rawArguments) !== -1)
+    if (_.contains(commands[commandName].rawArguments, i))
       ret.push(cmd[i]);
     else
     {
-      if ($.isArray(cmd[i]))
+      if (_.isArray(cmd[i]))
         ret.push(simplify(cmd[i]));
       else // numeric/string/whatever
         ret.push(cmd[i]);
@@ -57,13 +61,18 @@ function simplifyCommand(cmd)
 
   return ret;
 }
-
+// instruction types:
+// 1. ["$something",<command>, <command>,...]
+// 2. ["~somthing", <command>, <command>,...]
+// 3. ["=somthing", <command>, <command>,...]
+// 4. [<command>, <command>, <command>,...]
 function simplifyInstruction(instr)
 {
   var ret = [];
 
   // let's start with the head
   var head = instr[0];
+  // cases 1. 2. and 3.
   if (isDecoratedName(head))
   {
     // always done by default (for all decorators)
@@ -77,7 +86,7 @@ function simplifyInstruction(instr)
         ret.push(["!call", "text"]);
         break;
     }
-  } else
+  } else // case 4.
   {
     if (isCommand(head))
       ret.push(simplifyCommand(head));
@@ -88,7 +97,7 @@ function simplifyInstruction(instr)
   {
     if (isCommandName(instr[i])) // "!lower" -> ["!lower"]
       ret.push([instr[i]]);
-    else if(isCommand(instr[i]))
+    else if(isCommand(instr[i])) // ["!lower"]
       ret.push(simplifyCommand(instr[i]));
     else
       throw new TypeError("Command expected. Received "+ instr[i].toString());
@@ -106,5 +115,7 @@ function simplify(instr)
   {
     return simplifyInstruction(instr);
   } else
-    throw new TypeError("Expected command or instruction. Received "+ instr.toString());
+    throw new TypeError("Valid command or instruction expected. Received "+ instr.toString());
 }
+
+module.exports.simplify = simplify;
