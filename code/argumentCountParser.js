@@ -9,7 +9,7 @@
  * @param {string} signature - Function signature.
  * @returns {boolean}
  */
-function validArgumentCount(argc, signature)
+module.exports.validArgumentCount = function(argc, signature)
 {
   /**
    * Find out whether the number $num is in the closed interval [$low, $up].
@@ -39,14 +39,14 @@ function validArgumentCount(argc, signature)
   for (var i=0; i<intervals.length; ++i)
   {
     var interval = intervals[i].split('-');
-    if (interval.length == 1 && inInterval(argc, parseInt(interval[0]), parseInt(interval[0]))) {
+    if (interval.length === 1 && inInterval(argc, parseInt(interval[0], 10), parseInt(interval[0], 10))) {
       return true;
     }
-    if (interval.length == 2 && inInterval(argc, parseInt(interval[0]), parseInt(interval[1]))){
+    if (interval.length === 2 && inInterval(argc, parseInt(interval[0], 10), parseInt(interval[1], 10))){
       return true;
     }
   }
   return false;
 
-}
+};
 

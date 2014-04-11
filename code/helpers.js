@@ -2,9 +2,11 @@
  * Created by tomasnovella on 4/7/14.
  */
 
+// copied from http://stackoverflow.com/questions/603987/what-is-the-javascript-equivalent-of-var-dump-or-print-r-in-php
+
 /* repeatString() returns a string which has been repeated a set number of times */
 function repeatString(str, num) {
-  out = '';
+  var out = '';
   for (var i = 0; i < num; i++) {
     out += str;
   }
