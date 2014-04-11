@@ -1,5 +1,4 @@
 var assert = require("assert");
-var exceptions = require("./exceptions");
 
 var simplifier = require("./simplifier");
 
@@ -30,9 +29,9 @@ describe("module for grammar simplification", function() {
     assert.deepEqual(s(v2), r2);
     assert.deepEqual(s(v3), r3);
     assert.deepEqual(s(v4), r4);
-    assert.throws(function() { s(v5) }, TypeError);
-    assert.throws(function() { s(v6) }, TypeError);
-    assert.throws(function() { s(v7) }, TypeError);
+    assert.throws(function() { s(v5); }, TypeError);
+    assert.throws(function() { s(v6); }, TypeError);
+    assert.throws(function() { s(v7); }, TypeError);
 
   });
 });

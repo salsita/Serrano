@@ -39,14 +39,14 @@ module.exports.validArgumentCount = function(argc, signature)
   for (var i=0; i<intervals.length; ++i)
   {
     var interval = intervals[i].split('-');
-    if (interval.length == 1 && inInterval(argc, parseInt(interval[0], 10), parseInt(interval[0], 10))) {
+    if (interval.length === 1 && inInterval(argc, parseInt(interval[0], 10), parseInt(interval[0], 10))) {
       return true;
     }
-    if (interval.length == 2 && inInterval(argc, parseInt(interval[0], 10), parseInt(interval[1], 10))){
+    if (interval.length === 2 && inInterval(argc, parseInt(interval[0], 10), parseInt(interval[1], 10))){
       return true;
     }
   }
   return false;
 
-}
+};
 

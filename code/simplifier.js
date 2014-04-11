@@ -3,19 +3,19 @@
  */
 var _ = require('../libs/underscore');
 var commands = require("./commands");
-var exceptions = require("./exceptions");
 
 function isCommandName(name)
 {
-  return typeof(name) === "string" && name[0] == "!" && name.substr(1) in commands;
+  return typeof(name) === "string" && name[0] === "!" && name.substr(1) in commands;
 }
 
 function isDecoratedName(name)
 {
 
   if (typeof name !== "string")
+  {
     return false;
-
+  }
 
   return  _.contains(["$", "~", "="], name[0]);
 }
@@ -23,19 +23,22 @@ function isDecoratedName(name)
 function stripDecorator(name)
 {
   if (!isDecoratedName(name))
+  {
     throw new TypeError("Decorator expected. Received " + name);
+  }
   return name.substr(1);
 }
 function isCommand(array)
 {
-  return _.isArray(array) && array.length != 0 && isCommandName(array[0]);
+  return _.isArray(array) && array.length !== 0 && isCommandName(array[0]);
 }
 
 function isInstruction(array)
 {
-  return _.isArray(array) && array.length != 0 &&
+  return _.isArray(array) && array.length !== 0 &&
     (_.isArray(array[0]) || isDecoratedName(array[0]));
 }
+/*global simplify */
 // command types:
 // if in the head of instruction, then ["!commName", <arg>, <arg>,...]
 // else also: "!commName"
@@ -49,13 +52,17 @@ function simplifyCommand(cmd)
   {
     // if the argument should be passed raw, pass it that way
     if (_.contains(commands[commandName].rawArguments, i))
+    {
       ret.push(cmd[i]);
-    else
+    } else
     {
       if (_.isArray(cmd[i]))
+      {
         ret.push(simplify(cmd[i]));
-      else // numeric/string/whatever
+      } else // numeric/string/whatever
+      {
         ret.push(cmd[i]);
+      }
     }
   }
 
@@ -89,18 +96,25 @@ function simplifyInstruction(instr)
   } else // case 4.
   {
     if (isCommand(head))
+    {
       ret.push(simplifyCommand(head));
-    else
+    } else
+    {
       throw new TypeError("Command expected. Received "+ head.toString());
+    }
   }
   for (var i = 1; i < instr.length; ++i)
   {
     if (isCommandName(instr[i])) // "!lower" -> ["!lower"]
+    {
       ret.push([instr[i]]);
-    else if(isCommand(instr[i])) // ["!lower"]
+    } else if (isCommand(instr[i])) // ["!lower"]
+    {
       ret.push(simplifyCommand(instr[i]));
-    else
+    } else
+    {
       throw new TypeError("Command expected. Received "+ instr[i].toString());
+    }
   }
 
   return ret;
@@ -111,11 +125,13 @@ function simplify(instr)
   if (isCommand(instr))
   {
     return simplifyCommand(instr);
-  } else if(isInstruction(instr))
+  } else if (isInstruction(instr))
   {
     return simplifyInstruction(instr);
   } else
+  {
     throw new TypeError("Valid command or instruction expected. Received "+ instr.toString());
+  }
 }
 
 module.exports.simplify = simplify;

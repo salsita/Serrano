@@ -1,7 +1,7 @@
-jQuery = require("../libs/jquery");
+var $ = require("../libs/jquery");
+var exceptions = require("./exceptions");
 
-
-storage = {};
+var storage = {};
 
 /**
  * Contains all the available functions in the following format:
@@ -13,7 +13,7 @@ storage = {};
  *   code : Function (the code of the function itself)
  * }
  */
-commands = {
+var commands = {
   'getVal': {
     'argumentCount': '2',
     'implicitForeach': true,
@@ -22,7 +22,7 @@ commands = {
       if (storage.hasOwnProperty(key)) {
         return storage[key];
       } else {
-        throw new WrongArgumentError('getVal '+ key +' no value found');
+        throw new exceptions.WrongArgumentError('getVal '+ key +' no value found');
       }
     }
   },
@@ -32,7 +32,7 @@ commands = {
     'implicitForeach': true,
     'rawArguments': [],
     'code': function(key, value) {
-      storage[key] = evaluateExpression(value);
+      storage[key] = value;
       return storage[key];
     }
   },
@@ -65,7 +65,7 @@ commands = {
   // converts a jQuery object into an array - https://api.jquery.com/jQuery.makeArray/
   'makeArray': {
     'code':function(obj) {
-      return jQuery.makeArray(obj);
+      return $.makeArray(obj);
     }
   },
   'a': {
@@ -79,7 +79,6 @@ commands = {
     'implicitForeach': false,
     'rawArguments': [1],
     'code': function(array, index) {
-      //if (jQuery.isArray(index));
       return array[index];
     }
   },
@@ -111,7 +110,7 @@ commands = {
     'implicitForeach': false,
     'rawArguments': [1],
     'code': function(obj, condition) {
-      return evaluateExpression([obj, condition]);
+      //return evaluateExpression([obj, condition]);
     }
   },
 
@@ -123,7 +122,7 @@ commands = {
 
 };
 
-jqChains = {
+var jqChains = {
   'lowercase':'buhulowercase',
   'attr': 'buhuattr'
 };

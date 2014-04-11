@@ -1,4 +1,12 @@
+// entry point of the library
+
+/*exported simplifier */
+var simplifier = require("./simplifier");
+
+
+
 // OUTDATED- will be completely rewritten - please ignore!!!
+// **********************************
 
 // This is a library of all the functions
 //

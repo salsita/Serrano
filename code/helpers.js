@@ -6,7 +6,7 @@
 
 /* repeatString() returns a string which has been repeated a set number of times */
 function repeatString(str, num) {
-  out = '';
+  var out = '';
   for (var i = 0; i < num; i++) {
     out += str;
   }
