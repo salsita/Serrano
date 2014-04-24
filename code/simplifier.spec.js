@@ -1,37 +1,61 @@
 var assert = require("assert");
 
+var jQueryMock = require('../libs/jquery-mock');
 var simplifier = require("./simplifier");
+
+simplifier.testInit(jQueryMock);
+
 
 describe("module for grammar simplification", function() {
   it("should verify whether the grammar is correctly simplified", function() {
 
-    var s = simplifier.simplify;
+    var s = simplifier.simplifyScrapingDirective;
     assert.equal("function", typeof(s));
 
-    var v1 = ["$users.ages blah"]; // this is an instruction! do not forget...
-    var r1 = [["!jQuery", "users.ages blah"]];
+    // test all three selectors
+    var sel1 = ['$.dollarSelector'];
+    var res1 = [ [ '!jQuery', '.dollarSelector' ] ];
 
-    var v2 = ["!setVal",["=.classSth", "!lower"], "myVariable"];
-    var r2 = ["!setVal",[ ["!jQuery", ".classSth"], ["!call", "text"], ["!lower"] ],"myVariable" ];
+    var sel2 = ['=.to text'];
+    var res2 = [ [ '!jQuery', '.to text' ], [ '!call', 'text' ] ];
 
-    // wrong number of arguments, simplifier cannot detect, because it needs context....
-    var v3 = ["!getVal"];
-    var r3 = ["!getVal"];
+    var sel3 = ['~to .array h5'];
+    var res3 = [ [ '!jQuery', 'to .array h5' ], [ '!arr' ]];
 
-    var v4 = ["!lt", ["$.this Is Raw", "!lower"], ["~notraw", "!lower"]];
-    var r4 = ["!lt", ["$.this Is Raw", "!lower"],[["!jQuery", "notraw"], ["!arr" ], ["!lower" ] ] ];
+    var unknownCommand = ['!unknowCommand', 5];
 
-    var v5 = ["$somthing", "notAFunction"];
-    var v6 = ["$something", "!notImplemented"];
-    var v7 = ["!someNotImplementedcommand"];
 
-    assert.deepEqual(s(v1), r1);
-    assert.deepEqual(s(v2), r2);
-    assert.deepEqual(s(v3), r3);
-    assert.deepEqual(s(v4), r4);
-    assert.throws(function() { s(v5); }, TypeError);
-    assert.throws(function() { s(v6); }, TypeError);
-    assert.throws(function() { s(v7); }, TypeError);
+    // implicit arg, first arg, second arg...
+    var secondRaw = ['!secondArgumentIsRaw',
+      ['$implicitArg [to=be] simplified'],
+      {prop1:42, prop2:47},
+      ['$thisArgumentIsRaw']];
+
+
+    var rSecondRaw = [ '!secondArgumentIsRaw',
+      [ [ '!jQuery', 'implicitArg [to=be] simplified' ] ],
+      { prop1: 42, prop2: 47 },
+      [ '$thisArgumentIsRaw' ] ];
+
+
+
+//    var v4 = ["$users", ["!filter", ["$name", ["prop", "length"], ["!lt", 30]]]];
+//    var r4 = [["!jQuery","users"], ["!filter",["$name",["prop","length"],["!lt",30]]]];
+//
+//    var v5 = ["~somthing", "notAFunction"];
+//    var v6 = ["$something", "!notImplemented"];
+//    var v7 = ["!someNotImplementedcommand"];
+
+
+
+    assert.deepEqual(s(sel1), res1);
+    assert.deepEqual(s(sel2), res2);
+    assert.deepEqual(s(sel3), res3);
+
+    assert.throws(function() { s(unknownCommand);}, TypeError);
+
+    assert.deepEqual(s(secondRaw), rSecondRaw);
+
 
   });
 });
