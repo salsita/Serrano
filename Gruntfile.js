@@ -9,8 +9,8 @@ module.exports = function(grunt) {
       all: {
         // http://gruntjs.com/configuring-tasks#globbing-patterns
         src: ['package.json', 'lint-options.json', 'Gruntfile.js',
-              'code/**/*.js', '!code/helpers.js', '!code/commands.js' /*, 'tests/*.js' */]
-        // code/helpers is a third part, code/commands is unfinished...
+              'code/**/*.js', 'code/commands.js' /*, 'tests/*.js' */]
+
 
       }
     },

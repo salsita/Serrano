@@ -21,7 +21,7 @@ function HTMLElement(text, tagname)
 //H2Heading.prototype = Object.create(HTMLElement.prototype);
 
 var fixtures = {
-	"h2": {
+  "h2": {
     0: new HTMLElement("This is the first H2 heading", "h2"),
     1: new HTMLElement("Followed by another h2 heading", "h2"),
     "html": function(){return this[0].innerHTML;},
@@ -35,9 +35,22 @@ var fixtures = {
   }
 };
 
-module.exports = function(sel) {
-  if (sel in fixtures)
+var $ = function(sel) {
+  if (sel in fixtures) {
     return fixtures[sel];
-  else
-    return fixtures["_default"]
+  } else {
+    return fixtures["_default"];
+  }
 };
+
+$.makeArray = function(obj) {
+  var array = [];
+  var i = 0;
+  while (obj.hasOwnProperty(i)) {
+    array.push(obj[i]);
+    ++i;
+  }
+  return array;
+}
+
+module.exports = $;
