@@ -45,6 +45,11 @@ var commandDefaults = {
  *   returnsValue: (default) true // indicates whether a command returns a value
  *   code: Function (the code of the function itself)
  * }
+ *
+ * Note: sometimes a function can have conflicting atributes,
+ * i.e. implicitForeach==true and 0 is in rawArguments array.
+ * In that case, rawArguments application has higher priority, i.e it functions the same
+ * as if implicitForeach would be set to false.
  */
 var builtinCommands = {
   getVal: {
@@ -158,6 +163,13 @@ var builtinCommands = {
       condition=0;
       //return evaluate([obj, condition]);
     }
+  },
+
+  len: {
+    implicitForeach: false,
+    code: function(obj) {
+      return obj.length;
+    }
   }
 };
 
@@ -211,6 +223,42 @@ var testCommands = {
     code: function() {
       var args = Array.prototype.slice.call(arguments);
       return args;
+    }
+  },
+
+  nonForeachable: {
+    argumentCount: '1-2',
+    code: function(impl) {
+      return impl;
+    }
+  },
+
+  foreachableImplicitRawArgument: { // same as non foreachable
+    argumentCount: '1-2',
+    rawArguments: [0],
+    code: function(impl) {
+      return impl;
+    }
+  },
+
+  constant: {
+    argumentCount: '1',
+    code: function(c) {
+      return c;
+    }
+  },
+  stringifyFirstArgument: {
+    argumentCount: '2',
+    code: function(impl, first) {
+      return JSON.stringify(first);
+    }
+  },
+
+  stringifyRawFirstArgument: {
+    argumentCount: '2',
+    rawArguments: [1],
+    code: function(impl, first) {
+      return JSON.stringify(first);
     }
   }
 
@@ -270,7 +318,7 @@ function getCommands(){
 }
 
 /**
- * Initializes the global object "commands" with builtin commands and jQuery-dependent
+ * Initializes the global object 'commands' with builtin commands and jQuery-dependent
  * commands.
  * @param $
  */
@@ -291,17 +339,17 @@ function init($) {
  * @returns {boolean} True if name is a command name.
  */
 function isCommandName(name) {
-  return typeof(name) === "string" && name[0] === "!" && name.substr(1) in commands;
+  return typeof(name) === 'string' && name[0] === '!' && name.substr(1) in commands;
 }
 
 
 /**
- * Checks whether it starts with a decorator. Decorators are "$", "~", and "=".
+ * Checks whether it starts with a decorator. Decorators are '$', '~', and '='.
  * @param name
  * @returns {boolean}
  */
 function isDecoratedName(name) {
-  return typeof(name) === "string" && _.contains(["$", "~", "="], name[0]);
+  return typeof(name) === 'string' && _.contains(['$', '~', '='], name[0]);
 }
 
 /**

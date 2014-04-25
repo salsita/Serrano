@@ -1,4 +1,4 @@
-var assert = require("assert");
+var assert = require('assert');
 
 var jQueryMock = require('../libs/jquery-mock');
 var simplifier = require('./simplifier');
@@ -7,11 +7,11 @@ var exceptions = require('./exceptions');
 simplifier.testInit(jQueryMock);
 
 
-describe("module for grammar simplification", function() {
-  it("should verify whether the grammar is correctly simplified", function() {
+describe('module for grammar simplification', function() {
+  it('should verify whether the grammar is correctly simplified', function() {
 
     var s = simplifier.simplifyScrapingDirective;
-    assert.equal("function", typeof(s));
+    assert.equal('function', typeof(s));
 
     // test all three selectors
     var sel1 = ['$.dollarSelector'];
@@ -47,19 +47,19 @@ describe("module for grammar simplification", function() {
       ['!acceptsOneToFiveArguments'],
       ['!acceptsOneToFiveArguments', ['~selectorIsSecondArgument.div'], ['!acceptsZeroToOneArguments']] ];
 
-    var rCorrectArgc = [[["!jQuery","users"]],
-      ["!acceptsOneToFiveArguments"],
-      ["!acceptsOneToFiveArguments",[["!jQuery","selectorIsSecondArgument.div"],["!arr"]],
-        ["!acceptsZeroToOneArguments"]]];
+    var rCorrectArgc = [[['!jQuery','users']],
+      ['!acceptsOneToFiveArguments'],
+      ['!acceptsOneToFiveArguments',[['!jQuery','selectorIsSecondArgument.div'],['!arr']],
+        ['!acceptsZeroToOneArguments']]];
 
 
     var correctArgc2 = [['~blahblah'], ['!noop'], ['!acceptsZeroToOneArguments', 'secondArg']];
-    var rCorrectArgc2 = [ [["!jQuery","blahblah"],["!arr"]],
-      ["!noop"], ["!acceptsZeroToOneArguments","secondArg"] ];
+    var rCorrectArgc2 = [ [['!jQuery','blahblah'],['!arr']],
+      ['!noop'], ['!acceptsZeroToOneArguments','secondArg'] ];
 
     var correctArgc3 = [ ['~blahblah'], ['!noop'], ['!acceptsZeroToOneArguments'] ];
-    var rCorrectArgc3 = [ [["!jQuery","blahblah"],["!arr"]],
-      ["!noop"], ["!acceptsZeroToOneArguments"] ];
+    var rCorrectArgc3 = [ [['!jQuery','blahblah'],['!arr']],
+      ['!noop'], ['!acceptsZeroToOneArguments'] ];
 
     assert.deepEqual(s(sel1), res1);
     assert.deepEqual(s(sel2), res2);

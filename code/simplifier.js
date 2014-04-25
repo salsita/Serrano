@@ -2,7 +2,7 @@
  * Created by tomasnovella on 4/3/14.
  */
 var _ = require('../libs/lodash');
-var commands = require("./commands");
+var commands = require('./commands');
 var argumentCountChecker = require('./argumentCountChecker');
 var exceptions = require('./exceptions');
 
@@ -12,14 +12,14 @@ function simplifySelector(selector) {
     decorator = selName[0];
 
   // in every case
-  result.push(["!jQuery", selName.substr(1)]);
+  result.push(['!jQuery', selName.substr(1)]);
 
   switch (decorator) {
     case '~':
-      result.push(["!arr"]);
+      result.push(['!arr']);
       break;
     case '=':
-      result.push(["!call", "text"]);
+      result.push(['!call', 'text']);
       break;
   }
   return result;
@@ -42,14 +42,14 @@ function simplifyInstruction(instruction) {
         signature = cmd.argumentCount;
 
       if (!argumentCountChecker.checkArgumentCount(argcSupplied, signature)) {
-        var msg = "Command " + selcmd[0] + " was supplied with invalid number of arguments";
+        var msg = 'Command ' + selcmd[0] + ' was supplied with invalid number of arguments';
         throw new exceptions.WrongArgumentError(msg);
       }
       returnsValue = cmd.returnsValue;
       /*global simplifyCommand*/
       result.push(simplifyCommand(selcmd));
     } else {
-      throw new TypeError("In instruction, selector or command expected");
+      throw new TypeError('In instruction, selector or command expected');
     }
   }
   return result;
@@ -74,7 +74,7 @@ function simplifyCommand(command) {
     } else if (commands.isInstruction(arg1)) {
       result.push(simplifyInstruction(arg1));
     } else {
-      throw new TypeError("Invalid command argument at position " + i + " for "+ commName);
+      throw new TypeError('Invalid command argument at position ' + i + ' for '+ commName);
     }
   }
   return result;
@@ -114,7 +114,7 @@ function simplifyScrapingDirective(directive) {
   } else if (commands.isInstruction(directive)) {
     return simplifyInstruction(directive);
   } else {
-    throw new TypeError("selector/command/instruction expected");
+    throw new TypeError('selector/command/instruction expected');
   }
 }
 
