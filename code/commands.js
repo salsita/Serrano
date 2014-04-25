@@ -176,7 +176,7 @@ function JQueryDependentCommands($) {
     },
 
     // converts a jQuery object into an array - https://api.jquery.com/jQuery.makeArray/
-    makeArray: {
+    arr: {
       argumentCount: '1',
       code: function(obj) {
         return $.makeArray(obj);

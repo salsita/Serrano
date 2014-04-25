@@ -2,11 +2,9 @@
  * Created by tomasnovella on 4/3/14.
  */
 var _ = require('../libs/lodash');
-
 var commands = require("./commands");
-
-
-
+var argumentCountChecker = require('./argumentCountChecker');
+var exceptions = require('./exceptions');
 
 function simplifySelector(selector) {
   var result = [],
@@ -28,12 +26,26 @@ function simplifySelector(selector) {
 }
 
 function simplifyInstruction(instruction) {
-  var result = [];
+  var result = [],
+    returnsValue = false; // 5 + true = 6,...
+
   for (var i = 0; i < instruction.length; ++i) {
     var selcmd = instruction[i];
+
     if (commands.isSelector(selcmd)) {
       result.push(simplifySelector(selcmd));
-    } else if(commands.isCommand(selcmd)) {
+      returnsValue = true;
+    } else if (commands.isCommand(selcmd)) {
+      var argcSupplied = selcmd.length - 1 + returnsValue, // -1 for the head==commName
+        commName = selcmd[0].substr(1),
+        cmd = commands.getCommand(commName),
+        signature = cmd.argumentCount;
+
+      if (!argumentCountChecker.checkArgumentCount(argcSupplied, signature)) {
+        var msg = "Command " + selcmd[0] + " was supplied with invalid number of arguments";
+        throw new exceptions.WrongArgumentError(msg);
+      }
+      returnsValue = cmd.returnsValue;
       /*global simplifyCommand*/
       result.push(simplifyCommand(selcmd));
     } else {
@@ -87,6 +99,10 @@ function testInit($) {
 
 /**
  * Simplifies the scraping directive so that selectors are transformed into instructions.
+ * Additionally, checks for syntactic correctness.
+ * Syntactic correctness check means:
+ *   1. scraping directive fully corresponds to the grammar of the language
+ *   2. every function has a right number of arguments
  * @param directive
  * @returns {*}
  */

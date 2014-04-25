@@ -11,7 +11,7 @@
   "content_scripts": [
     {
       "matches": ["file:///*serrano*"],
-       "js": ["../libs/jquery.js", "../libs/underscore.js", "helpers.js",
+       "js": ["../libs/jquery.js", "../libs/lodash.js", "helpers.js",
          "argumentCountChecker.js", "commands.js", "simplifier.js",
          "chrome-extension/content_script.js" ]
     }
