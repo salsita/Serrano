@@ -228,30 +228,16 @@ var testCommands = {
 
   nonForeachable: {
     argumentCount: '1-2',
-    code: function() {
-      return Array.prototype.slice.call(arguments);
+    code: function(impl) {
+      return impl;
     }
   },
 
   foreachableImplicitRawArgument: { // same as non foreachable
     argumentCount: '1-2',
     rawArguments: [0],
-    code: function() {
-      return Array.prototype.slice.call(arguments);
-    }
-  },
-
-  helloWorldString: {
-    argumentCount: '0,1',
-    code: function() {
-      return 'Hello world!';
-    }
-  },
-
-  helloWorldArray: {
-    argumentCount: '0,1',
-    code: function() {
-      return ['Hello', 'World']
+    code: function(impl) {
+      return impl;
     }
   },
 
@@ -259,6 +245,20 @@ var testCommands = {
     argumentCount: '1',
     code: function(c) {
       return c;
+    }
+  },
+  stringifyFirstArgument: {
+    argumentCount: '2',
+    code: function(impl, first) {
+      return JSON.stringify(first);
+    }
+  },
+
+  stringifyRawFirstArgument: {
+    argumentCount: '2',
+    rawArguments: [1],
+    code: function(impl, first) {
+      return JSON.stringify(first);
     }
   }
 
