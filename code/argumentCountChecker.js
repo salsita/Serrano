@@ -20,7 +20,7 @@ function isValidSignature(signature) {
     }
 
     // empty interval "-" and ""
-    if (_.contains(["-", ""], sInterval.trim())) {
+    if (_.contains(['-', ''], sInterval.trim())) {
       return false;
     }
 

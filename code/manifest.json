@@ -1,26 +1,26 @@
 {
-  "manifest_version": 2,
+  'manifest_version': 2,
 
-  "name": "Serrano",
-  "description": "Scrape data form the website using remote 'scripts'",
-  "version": "0.1.0",
+  'name': 'Serrano',
+  'description': 'Scrape data form the website using remote 'scripts'',
+  'version': '0.1.0',
 
-  "browser_action": {
-    "default_popup": "chrome-extension/popup.html"
+  'browser_action': {
+    'default_popup': 'chrome-extension/popup.html'
   },
-  "content_scripts": [
+  'content_scripts': [
     {
-      "matches": ["file:///*serrano*"],
-       "js": ["../libs/jquery.js", "../libs/lodash.js", "helpers.js",
-         "argumentCountChecker.js", "commands.js", "simplifier.js",
-         "chrome-extension/content_script.js" ]
+      'matches': ['file:///*serrano*'],
+       'js': ['../libs/jquery.js', '../libs/lodash.js', 'helpers.js',
+         'argumentCountChecker.js', 'commands.js', 'simplifier.js',
+         'chrome-extension/content_script.js' ]
     }
   ],
-  "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+  'background': {
+    'scripts': ['background.js'],
+    'persistent': false
   },
-  "permissions": [
-    "activeTab"
+  'permissions': [
+    'activeTab'
   ]
 }

@@ -9,7 +9,7 @@ describe('module for parsing the right number of arguments', function() {
     var vargc = argcChecker.checkArgumentCount; // valid argc
     assert.equal('function', typeof(vargc));
 
-    var signature = " 2-   4 , 6, 10  - ";
+    var signature = ' 2-   4 , 6, 10  - ';
 
     // passing tests
     assert.ok(vargc(2, signature));
