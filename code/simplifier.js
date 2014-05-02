@@ -6,6 +6,7 @@ var commands = require('./commands');
 var argumentCountChecker = require('./argumentCountChecker');
 var exceptions = require('./exceptions');
 
+// takes ['$selector'] returns ['!jQuery', selector]
 function simplifySelector(selector) {
   var result = [],
     selName = selector[0],
@@ -25,6 +26,7 @@ function simplifySelector(selector) {
   return result;
 }
 
+// takes an instruction returns an instruction
 function simplifyInstruction(instruction) {
   var result = [],
     returnsValue = false; // 5 + true = 6,...
@@ -49,12 +51,14 @@ function simplifyInstruction(instruction) {
       /*global simplifyCommand*/
       result.push(simplifyCommand(selcmd));
     } else {
-      throw new TypeError('In instruction, selector or command expected');
+      throw new TypeError('In instruction, selector or command expected'+
+        ' in' + JSON.stringify(instruction));
     }
   }
   return result;
 }
 
+// takes command, returns command
 function simplifyCommand(command) {
   var result = [command[0]], // command head stays the same
     commName = command[0].substr(1),

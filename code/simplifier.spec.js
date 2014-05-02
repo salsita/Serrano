@@ -12,7 +12,8 @@ describe('module for grammar simplification', function() {
 
     var s = simplifier.simplifyScrapingDirective;
     assert.equal('function', typeof(s));
-
+    // todo
+    console.log('huhuhuhu' + JSON.stringify(s([ [ "$selector" ] ])));
     // test all three selectors
     var sel1 = ['$.dollarSelector'];
     var res1 = [ [ '!jQuery', '.dollarSelector' ] ];

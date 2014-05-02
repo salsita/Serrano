@@ -65,7 +65,8 @@ var builtinCommands = {
 
   setVal: {
     argumentCount: '2',
-    code: function(key, value) {
+    implicitForeach: false,
+    code: function(value, key) {
       storage[key] = value;
       return storage[key];
     }
@@ -86,7 +87,35 @@ var builtinCommands = {
     }
   },
 
-  // conditions
+  // ***conditions*****************
+
+  // existence tests
+  'exists': {
+    argumentCount: '1',
+    code: function(arg) {
+      return arg !== undefined && arg !== null;
+    }
+  },
+
+  'nexists': {
+    argumentCount: '1',
+    code: function(arg) {
+      return !(arg !== undefined && arg !== null);
+    }
+  },
+  'empty': {
+    argumentCount: '1',
+    code: function(arg) {
+      return typeof(arg) === 'object' && 'length' in Object.keys(arg) ? 0 === arg.length : 0 === Object.keys(arg);
+    }
+  },
+  'nempty': {
+    argumentCount: '1',
+    code: function(arg) {
+      return !(typeof(arg) === 'object' && 'length' in Object.keys(arg) ? 0 === arg.length : 0 === Object.keys(arg));
+    }
+  },
+  // comparisons
   lt: {
     argumentCount: '2',
     code: function(left, right) {
@@ -111,29 +140,246 @@ var builtinCommands = {
       return left >= right;
     }
   },
+  eq: {
+    argumentCount: '2',
+    code: function(left, right) {
+      return left == right;
+    }
+  },
+  neq: {
+    argumentCount: '2',
+    code: function(left, right) {
+      return left != right;
+    }
+  },
 
-  at: {
+  // compound conditions
+  all: { // todo how about augmentation? hopefully o.k.
     argumentCount: '1-',
-    implicitForeach: false,
+    code: function() {
+      var args = Array.prototype.slice.call(arguments);
+      return _.all(args);
+    }
+  },
+
+  //alias
+  and: this['all'],
+
+  any: {
+    argumentCount:'1-',
+    code: function() {
+      var args = Array.prototype.slice.call(arguments);
+      return _.any(args);
+    }
+  },
+  or: this['any'],
+
+  filter: {
+    argumentCount: '1',
     rawArguments: [1],
-    code: function(array, index) {
-      // here we have a list of indices
-      if (_.isArray(index)) {
-        var resolvedElements = [];
-        _(index).forEach(function(i) {
-          var el = array[i];
-          if (typeof el !== 'undefined') {
-            resolvedElements.push(el);
-          }
+    code: function() {
+      // todo:
+      // eval.evalExpression(...);
+    }
+  },
+  prop: {
+    argumentCount: '2-3',
+    implicitForeach: false, // get prop of the whole object
+    code: function(obj, prop, inner) {
+      if (inner || ! _.has(obj, prop)) {
+        return _.map(obj, function(item) {
+          return item[prop];
         });
-        return resolvedElements;
-      } else { // isInt
-        return array[index];
+      } else {
+        return obj[prop];
       }
     }
   },
 
-  concat: {
+  call: {
+    argumentCount: '2-3', // depending whther it has "inner" argument...
+    implicitForeach: false,
+    code: function(obj, method, inner) {
+      if (inner || ! _.has(obj, method)) {
+        return _.map(obj, function(item) {
+          return item[method]();
+        });
+      } else {
+        return obj[method]();
+      }
+    }
+  },
+
+  apply: {
+    argumentCount: '3-4',
+    rawArguments: [],
+    implicitForeach: false,
+    code: function(obj, method, attrs, inner) {
+      if (inner || ! _.has(obj, method)) {
+        return _.map(obj, function(item) {
+          if (_.isFunction(obj[method])) {
+            return item[method].apply(null, attrs);
+          }
+        });
+      } else {
+        if (_.isFunction(obj[method])) { // else TypeError: Cannot read property 'apply' of undefined
+          return obj[method].apply(null, attrs);
+        }
+      }
+    }
+  },
+
+  // code branching
+  if: {
+    argumentCount: '2-3',
+    code: function(condition, ifbody, elsebody) {
+      if (condition) {
+        return ifbody;
+      } else {
+        return elsebody;
+      }
+    }
+  },
+
+
+  // arithmetics
+  scalarOp : {
+    argumentCount: '3',
+    code: function(a, b, op) {
+      switch (op) {
+        case '+':
+          return a + b;
+        case '-':
+          return a - b;
+        case '*':
+          return a * b;
+        case '/':
+          return a / b;
+      }
+    }
+  },
+
+  arrayScalarOp: {
+    argumentCount: '3',
+    code: function(first, second, op) {
+      if (_.isArray(first)) {
+        return _.map(first, function(el) {
+          return this.scalarOp.code(el, second, op);
+        });
+      } else {
+        return _.map(second, function(el) {
+          return this.scalarOp.code(first, el, op);
+        });
+      }
+    }
+  },
+
+  arrayArrayOp: {
+    argumentCount: '3',
+    code: function(array1, array2, op) {
+      if (array1.length !== array2.length) {
+        return NaN;
+      }
+      return _.zip(array1, array2).map(function(pair) {
+        return this.scalarOp.code(pair[0], pair[1], op);
+      });
+    }
+  },
+
+  op: {
+    argumentCount: '3',
+    code: function(item1, item2, op) {
+      // scalar + scalar todo: isNumber/isFInite/isNaN what do we want?
+      if (_.isNumber(item1) && _.isNumber(item2)) {
+        return this.scalarOp.code(item1, item2, op);
+      } else if (_.isArray(item1) && _.isArray(item2)) {
+        return this.arrayArrayOp.code(item1, item2, op);
+      } else {
+        return this.arrayScalarOp.code(item1, item2, op);
+      }
+    }
+  },
+
+  '+' : {
+    argumentCount: '2',
+    code: function(a, b) {
+      return this.op.code(a, b, '+');
+    }
+  },
+  '-' : {
+    argumentCount: '2',
+    code: function(a, b) {
+      return this.op.code(a, b, '-');
+    }
+  },
+  '*' : {
+    argumentCount: '2',
+    code: function(a, b) {
+      return this.op.code(a, b, '*');
+    }
+  },
+  '/' : {
+    argumentCount: '2',
+    code: function(a, b) {
+      return this.op.code(a, b, '/');
+    }
+  },
+
+  sum: {
+    argumentCount: '1',
+    code: function(array) {
+      return _.reduce(array, function(sum, num) {
+        return sum + num;
+      });
+    }
+  },
+  avg: {
+    argumentCount: '1',
+    code: function(array) {
+      return this['sum'].code(array) / array.length;
+    }
+  },
+  // array reduction commands
+  len: {
+    implicitForeach: false,
+    code: function(obj) {
+      return obj.length;
+    }
+  },
+
+  at: {
+    argumentCount: '2',
+    implicitForeach: false,
+    code: function(array, index) {
+      // here we have a list of indices (8 lines todo)
+      if (_.isArray(index)) {
+        return _.map(index, function(i) {
+          return array[i < 0 ? array.length - i : i];
+        });
+      } else { // isInt
+        return array[index < 0 ? array.length - index : index];
+      }
+    }
+  },
+
+  first: {
+    argumentCount: '1',
+    implicitForeach: false,
+    code: function(array) {
+      return array[0];
+    }
+  },
+
+  last: {
+    argumentCount: '1',
+    implicitForeach: false,
+    code: function(array) {
+      return array[array.length - 1];
+    }
+  },
+
+  // convenience commands
+  concat: { // fixme this is not working how it is supposed to...
     argumentCount: '1-',
     implicitForeach: false,
     code: function(pieces, glue) {
@@ -141,7 +387,14 @@ var builtinCommands = {
       return pieces.join(glue);
     }
   },
-
+  union: {
+    argumentCount: '1-',
+    implicitForeach: false,
+    code: function() {
+      var args = Array.prototype.slice.call(arguments);
+      return _(args).flatten().union().valueOf();
+    }
+  },
   replace: {
     argumentCount: '3',
     code: function (str, old, n) {
@@ -163,14 +416,9 @@ var builtinCommands = {
       condition=0;
       //return evaluate([obj, condition]);
     }
-  },
-
-  len: {
-    implicitForeach: false,
-    code: function(obj) {
-      return obj.length;
-    }
   }
+
+
 };
 
 
@@ -200,7 +448,6 @@ function JQueryDependentCommands($) {
 /**
  * These commands are not used in the production version and are used only for
  * testing purposes.
- * @type {{acceptsOneToFiveArguments: {argumentCount: string, code: code}, acceptsZeroToOneArguments: {argumentCount: string, code: code}, secondArgumentIsRaw: {argumentCount: string, rawArguments: number[], code: code}}}
  */
 var testCommands = {
   acceptsOneToFiveArguments : {
@@ -248,14 +495,14 @@ var testCommands = {
     }
   },
   stringifyFirstArgument: {
-    argumentCount: '2',
+    argumentCount: '1',
     code: function(impl, first) {
       return JSON.stringify(first);
     }
   },
 
   stringifyRawFirstArgument: {
-    argumentCount: '2',
+    argumentCount: '1',
     rawArguments: [1],
     code: function(impl, first) {
       return JSON.stringify(first);
@@ -358,7 +605,7 @@ function isDecoratedName(name) {
  * @returns {boolean}
  */
 function isSelector(selector) {
-  return _.isArray(selector) && selector.length === 1 && isDecoratedName(selector[0][0]);
+  return _.isArray(selector) && selector.length === 1 && isDecoratedName(selector[0]);
 }
 
 /**
