@@ -17,7 +17,7 @@ function excFactory(name) {
 
 var modExports = {};
 
-for (var i = 0; i < excTypes; i++) {
+for (var i = 0; i < excTypes.length; i++) {
   var type = excTypes[i];
   modExports[type + 'Error'] = excFactory(type);
 }

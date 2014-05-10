@@ -15,7 +15,7 @@ function isValidSignature(signature) {
       up = limits[1];
 
     // invalid number of delimiters
-    if (!_.contains([1,2], limits.length)) {
+    if (limits.length > 2) {
       return false;
     }
 
@@ -31,9 +31,7 @@ function isValidSignature(signature) {
   }
 
   var intervals = signature.split(',');
-  return _.every(intervals, function(sInterval){
-    return isValidInterval(sInterval);
-  });
+  return _.every(intervals, isValidInterval);
 }
 
 /**
@@ -60,11 +58,11 @@ module.exports.checkArgumentCount = function(argc, signature)
     return low <= num && num <= up;
   }
 
-  var intervals = signature.split(',');
-
   if (!isValidSignature(signature)) {
     return false;
   }
+
+  var intervals = signature.split(',');
 
   return _.some(intervals, function(int) {
     var limits = int.split('-');
@@ -74,13 +72,7 @@ module.exports.checkArgumentCount = function(argc, signature)
     // will be NaN if error
     var up = parseInt(limits[1], 10);
 
-    if (len === 1) {
-      return inInterval(argc, low, low);
-    } else if(len === 2) {
-      return inInterval(argc, low, up);
-    } else {
-      return false;
-    }
+    return inInterval(argc, low, (len === 1) ? low : up);
   });
 };
 

@@ -6,59 +6,79 @@ var commands = require('./commands');
 var argumentCountChecker = require('./argumentCountChecker');
 var exceptions = require('./exceptions');
 
+// takes ['$selector'] returns ['!jQuery', 'selector']
+// e.g.2: ['>~$selector'] ->  [['>!jQuery', 'selector'] ['!arr']]
 function simplifySelector(selector) {
-  var result = [],
-    selName = selector[0],
-    decorator = selName[0];
+  var piped = commands.isPipedName(selector[0]),
+    removedPipe = selector[0].substr(piped ? 1 : 0),
+    decorator = removedPipe[0];
 
   // in every case
-  result.push(['!jQuery', selName.substr(1)]);
+  var jqCommand = [(piped ? '>' : '') + '!jQuery', removedPipe.substr(1)];
 
+  // ['$<sel>'] returns a command
+  if (decorator === '$') {
+    return jqCommand;
+  }
+
+  // ['~<sel>'] and ['=<sel>'] return an instruction
+  var result = [jqCommand];
   switch (decorator) {
     case '~':
-      result.push(['!arr']);
+      result.push(['>!arr']);
       break;
     case '=':
-      result.push(['!call', 'text']);
+      result.push(['>!call', 'text']);
       break;
   }
   return result;
 }
 
+// takes an instruction returns an instruction
+// Syntactic check: CANNOT be complete because simplifier doesn't know about
+// the implementation of the commands (whether they call evalInstruction(),...)
+// to it doesn't check raw arguments that
+// further it assumes, that whenever a command/selector is prefixed with '>'
+// then it surely gets this implicit argument. (otherwise gets undefined)
 function simplifyInstruction(instruction) {
-  var result = [],
-    returnsValue = false; // 5 + true = 6,...
-
+  var result = [];
   for (var i = 0; i < instruction.length; ++i) {
-    var selcmd = instruction[i];
+    var selcmd = instruction[i],
+      commFullName = selcmd[0],
+      piped = commands.isPipedName(commFullName);
+
 
     if (commands.isSelector(selcmd)) {
-      result.push(simplifySelector(selcmd));
-      returnsValue = true;
+      // simplifySelector returns command or instruction
+      result = result.concat(commands.getDecorator(selcmd)==='$' ?
+        [simplifySelector(selcmd)] : simplifySelector(selcmd));
     } else if (commands.isCommand(selcmd)) {
-      var argcSupplied = selcmd.length - 1 + returnsValue, // -1 for the head==commName
-        commName = selcmd[0].substr(1),
-        cmd = commands.getCommand(commName),
-        signature = cmd.argumentCount;
+      var commName = commands.getCommandName(selcmd[0]),
+        signature = commands.getCommand(commName).argumentCount;
 
+      // -1 for the head==commName, +1 if it receives an explicit argument ('>')
+      var argcSupplied = selcmd.length - 1 + (piped ? 1 : 0);
       if (!argumentCountChecker.checkArgumentCount(argcSupplied, signature)) {
-        var msg = 'Command ' + selcmd[0] + ' was supplied with invalid number of arguments';
+        var msg = 'Command ' + commFullName + ' was supplied with invalid number of arguments';
         throw new exceptions.WrongArgumentError(msg);
       }
-      returnsValue = cmd.returnsValue;
       /*global simplifyCommand*/
       result.push(simplifyCommand(selcmd));
     } else {
-      throw new TypeError('In instruction, selector or command expected');
+      throw new TypeError('In instruction, selector or command expected'+
+        ' in' + JSON.stringify(instruction));
     }
   }
+
   return result;
 }
 
+// takes command, returns command
 function simplifyCommand(command) {
   var result = [command[0]], // command head stays the same
-    commName = command[0].substr(1),
+    commName = commands.getCommandName(command[0]),
     args = command.slice(1);
+
 
   var rawArguments = commands.getCommand(commName).rawArguments;
 
@@ -78,23 +98,6 @@ function simplifyCommand(command) {
     }
   }
   return result;
-}
-
-/**
- * Initialises commands with right jQuery object.
- * @param $ jQuery object
- */
-function init($) {
-  commands.init($);
-}
-
-/**
- * Initialises commands, including some testCommands. Used for testing.
- * @param $
- */
-function testInit($) {
-  init($);
-  commands.addTestCommands();
 }
 
 /**
@@ -118,10 +121,6 @@ function simplifyScrapingDirective(directive) {
   }
 }
 
-
-
 module.exports = {
-  init: init,
-  testInit: testInit,
   simplifyScrapingDirective: simplifyScrapingDirective
 };

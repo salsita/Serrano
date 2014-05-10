@@ -8,15 +8,17 @@ var commands = require('./commands');
 /**
  * Evaluates given command.
  * @param cmd Command to evaluate.
- * @param implicitArgument Optional implicit argument.
+ * @param implicitArgument Optional implicit argument. If the command is not
+ *   piped, ignore the implicit argument.
  * @returns {*} Returns the result of command execution.
  */
 function evalCommand(cmd, implicitArgument) {
   var args = [],
-    commName = cmd[0].substr(1),
+    piped = commands.isPipedName(cmd[0]),
+    commName = commands.getCommandName(cmd[0]),
     command = commands.getCommand(commName);
 
-  if (!_.isUndefined(implicitArgument) && implicitArgument !== null) {
+  if (piped) {
     args.push(implicitArgument);
   }
 
@@ -34,7 +36,7 @@ function evalCommand(cmd, implicitArgument) {
     }
   }
 
-  return command.code.apply(undefined, args);
+  return command.code.apply(commands.getCommands(), args);
 }
 
 /**
@@ -44,10 +46,14 @@ function evalCommand(cmd, implicitArgument) {
  * @returns {*} Returns the result of the instruction.
  */
 function evalInstruction(instruction, implicitArgument) {
+  /*globals currCommand*/ // currCmd is only used within the loop
+  function _mapper(item) { return evalCommand(currCommand, item); }
+
+
   // instruction after simplification is just an array of commands
   for (var i = 0; i < instruction.length; ++i) {
     var currCommand = instruction[i],
-      commName = currCommand[0].substr(1),
+      commName = commands.getCommandName(currCommand[0]),
       command = commands.getCommand(commName);
 
     if (!command.implicitForeach ||
@@ -55,10 +61,7 @@ function evalInstruction(instruction, implicitArgument) {
       implicitArgument = evalCommand(currCommand, implicitArgument);
     } else {
       if (_.isArray(implicitArgument)) {
-        /*jshint -W083 */ // for jshint: Don't make functions within a loop.
-        implicitArgument = _.map(implicitArgument, function(retVal) {
-          return evalCommand(currCommand, retVal);
-        });
+        implicitArgument = _.map(implicitArgument, _mapper);
       } else {
         implicitArgument = evalCommand(currCommand, implicitArgument);
       }
@@ -67,25 +70,7 @@ function evalInstruction(instruction, implicitArgument) {
   return implicitArgument;
 }
 
-/**
- * Initialises commands with right jQuery object.
- * @param $ jQuery object
- */
-function init($) {
-  commands.init($);
-}
-
-/**
- * Initialises commands, including some testCommands. Used for testing.
- * @param $
- */
-function testInit($) {
-  init($);
-  commands.addTestCommands();
-}
 
 module.exports = {
-  init: init,
-  testInit: testInit,
   evalInstruction: evalInstruction
 };
