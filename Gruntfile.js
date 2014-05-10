@@ -9,7 +9,7 @@ module.exports = function(grunt) {
       all: {
         // http://gruntjs.com/configuring-tasks#globbing-patterns
         src: ['package.json', 'lint-options.json', 'Gruntfile.js',
-              'code/**/*.js', 'code/commands.js' /*, 'tests/*.js' */]
+              'code/js/modules/*.js']
 
 
       }
@@ -22,7 +22,7 @@ module.exports = function(grunt) {
 
     browserify: {
       build: {
-        files: { 'build/<%= pkg.name %>-<%= pkg.version %>.js': 'code/main.js' },
+        files: { 'build/<%= pkg.name %>-<%= pkg.version %>.js': 'code/js/main.js' },
         options: { bundleOptions: {
           debug: true,  // for source maps
           standalone: '<%= pkg["export-symbol"]%>'

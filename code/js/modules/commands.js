@@ -1,4 +1,4 @@
-var jq = require('../libs/jquery');
+var $ = require('../libs/jquery');
 var _ = require('../libs/lodash');
 
 var exceptions = require('./exceptions');
@@ -6,28 +6,22 @@ var exceptions = require('./exceptions');
 /**
  * Container used for storing all the variables and values from scraping directives.
  * Functions like getVal and setVal have direct access to this object.
- *
- * @type {{}}
  */
 var storage = {};
 
 /**
  * Set of commands in use.
  * We can manipulate with this object using addCommands() and init() functions.
- * @type {{}}
  */
 var commands = {};
 
 /**
  * Contains all the default values for a command
- * @type {{argumentCount: string, implicitForeach: boolean, rawArguments: Array,
- *   returnsValue: boolean}}
  */
 var commandDefaults = {
   argumentCount: '',
   implicitForeach: true,
   rawArguments: [],
-  returnsValue: true,
   code: function() {
     throw new exceptions.NotImplementedError();
   }
@@ -40,18 +34,39 @@ var commandDefaults = {
  *     used when specifying pages to be printed e.g. '1,3-8, 10, 13-'
  *   implicitForeach: (default) true // if the return value of the previous function is array ->
  *     decides whether pass it as it is, or run an implicit foreach
- *   rawArguments: (default)[] // array of argument positions that should be passed raw (without preprocessing) ->
- *     those at that positions there are ARRAYS that we do not want to preprocess
- *   returnsValue: (default) true // indicates whether a command returns a value
+ *   rawArguments: (default)[] // array of argument positions that should be passed
+ *     raw (without preprocessing) -> those at that positions there are ARRAYS that we
+ *     do not want to preprocess
  *   code: Function (the code of the function itself)
  * }
  *
  * Note: sometimes a function can have conflicting atributes,
- * i.e. implicitForeach==true and 0 is in rawArguments array.
- * In that case, rawArguments application has higher priority, i.e it functions the same
+ *   i.e. implicitForeach==true and 0 is in rawArguments array.
+ *   In that case, rawArguments application has higher priority, i.e it functions the same
  * as if implicitForeach would be set to false.
  */
 var builtinCommands = {
+  // jQuery-based element(s) selecting
+  jQuery : {
+    argumentCount: '1-2',
+    code: function(obj1, obj2) {
+      if (arguments.length === 1) {
+        return $(obj1);
+      } else { // it's chained
+        return $(obj2, obj1);
+      }
+    }
+  },
+
+  // converts a jQuery object into an array - https://api.jquery.com/jQuery.makeArray/
+  arr: {
+    argumentCount: '1',
+    code: function(obj) {
+      return $.makeArray(obj);
+    }
+  },
+
+  // storing and fetching variables
   getVal: {
     argumentCount: '1',
     code: function(key) {
@@ -87,7 +102,7 @@ var builtinCommands = {
     }
   },
 
-  // ***conditions*****************
+  // *** conditions *****************
 
   // existence tests
   'exists': {
@@ -100,19 +115,20 @@ var builtinCommands = {
   'nexists': {
     argumentCount: '1',
     code: function(arg) {
-      return !(arg !== undefined && arg !== null);
+      return !this.exists.code(arg);
     }
   },
   'empty': {
     argumentCount: '1',
     code: function(arg) {
-      return typeof(arg) === 'object' && 'length' in Object.keys(arg) ? 0 === arg.length : 0 === Object.keys(arg);
+      return typeof(arg) === 'object' &&
+        'length' in Object.keys(arg) ? 0 === arg.length : 0 === Object.keys(arg);
     }
   },
   'nempty': {
     argumentCount: '1',
     code: function(arg) {
-      return !(typeof(arg) === 'object' && 'length' in Object.keys(arg) ? 0 === arg.length : 0 === Object.keys(arg));
+      return !this.empty.code(arg);
     }
   },
   // comparisons
@@ -143,12 +159,14 @@ var builtinCommands = {
   eq: {
     argumentCount: '2',
     code: function(left, right) {
+      /*jslint eqeq: true*/
       return left == right;
     }
   },
   neq: {
     argumentCount: '2',
     code: function(left, right) {
+      /*jslint eqeq: true*/
       return left != right;
     }
   },
@@ -163,7 +181,7 @@ var builtinCommands = {
   },
 
   //alias
-  and: this['all'],
+  and: this.all,
 
   any: {
     argumentCount:'1-',
@@ -172,7 +190,7 @@ var builtinCommands = {
       return _.any(args);
     }
   },
-  or: this['any'],
+  or: this.any,
 
   filter: {
     argumentCount: '1',
@@ -336,14 +354,14 @@ var builtinCommands = {
   avg: {
     argumentCount: '1',
     code: function(array) {
-      return this['sum'].code(array) / array.length;
+      return this.sum.code(array) / array.length;
     }
   },
   // array reduction commands
   len: {
     implicitForeach: false,
     code: function(obj) {
-      return obj.length;
+      return obj && obj.length;
     }
   },
 
@@ -351,13 +369,13 @@ var builtinCommands = {
     argumentCount: '2',
     implicitForeach: false,
     code: function(array, index) {
-      // here we have a list of indices (8 lines todo)
       if (_.isArray(index)) {
         return _.map(index, function(i) {
-          return array[i < 0 ? array.length - i : i];
+          // array.length + negativeNumber (this is why it is not -i but +i).
+          return array[i < 0 ? array.length + i : i];
         });
       } else { // isInt
-        return array[index < 0 ? array.length - index : index];
+        return array[index < 0 ? array.length + index : index];
       }
     }
   },
@@ -382,11 +400,12 @@ var builtinCommands = {
   concat: { // fixme this is not working how it is supposed to...
     argumentCount: '1-',
     implicitForeach: false,
-    code: function(pieces, glue) {
-      glue = typeof glue !== 'undefined' ? glue : ' '; // default glue is ' '
-      return pieces.join(glue);
+    code: function() {
+      var args = Array.prototype.slice.call(arguments);
+      Array.prototype.concat.apply([], args);
     }
   },
+
   union: {
     argumentCount: '1-',
     implicitForeach: false,
@@ -400,123 +419,15 @@ var builtinCommands = {
     code: function (str, old, n) {
       return str.replace(old, n);
     }
-  },
-  noop: {
-    argumentCount: '0,1',
-    returnsValue: false,
-    code : function() {
-      return undefined;
-    }
-
-  },
-
-  filter: { // will be rewritten
-    rawArguments: [1],
-    code: function(obj, condition) {
-      condition=0;
-      //return evaluate([obj, condition]);
-    }
   }
-
-
-};
-
-
-function JQueryDependentCommands($) {
-  return {
-    jQuery : {
-      argumentCount: '1',
-      code: function(obj1, obj2) {
-        if (arguments.length === 1) {
-          return $(obj1);
-        } else { // it's chained
-          return $(obj2, obj1);
-        }
-      }
-    },
-
-    // converts a jQuery object into an array - https://api.jquery.com/jQuery.makeArray/
-    arr: {
-      argumentCount: '1',
-      code: function(obj) {
-        return $.makeArray(obj);
-      }
-    }
-  };
-}
-
-/**
- * These commands are not used in the production version and are used only for
- * testing purposes.
- */
-var testCommands = {
-  acceptsOneToFiveArguments : {
-    argumentCount: '1-5',
-    code: function() {
-      var args = Array.prototype.slice.call(arguments);
-      return args;
-    }
-  },
-  acceptsZeroToOneArguments : {
-    argumentCount: '0-1',
-    code: function() {
-      var args = Array.prototype.slice.call(arguments);
-      return args;
-    }
-  },
-  secondArgumentIsRaw: {
-    argumentCount: '0-2',
-    rawArguments: [2],
-    code: function() {
-      var args = Array.prototype.slice.call(arguments);
-      return args;
-    }
-  },
-
-  nonForeachable: {
-    argumentCount: '1-2',
-    code: function(impl) {
-      return impl;
-    }
-  },
-
-  foreachableImplicitRawArgument: { // same as non foreachable
-    argumentCount: '1-2',
-    rawArguments: [0],
-    code: function(impl) {
-      return impl;
-    }
-  },
-
-  constant: {
-    argumentCount: '1',
-    code: function(c) {
-      return c;
-    }
-  },
-  stringifyFirstArgument: {
-    argumentCount: '1',
-    code: function(impl, first) {
-      return JSON.stringify(first);
-    }
-  },
-
-  stringifyRawFirstArgument: {
-    argumentCount: '1',
-    rawArguments: [1],
-    code: function(impl, first) {
-      return JSON.stringify(first);
-    }
-  }
-
-
-};
+ };
 
 /**
  * In case some commands properties are not explicitly filled,
- * set their default according to commandDefaults object
- * @param commands
- * @returns {{}}
+ * set their default according to commandDefaults object.
+ * @private
+ * @param {Array of commands} commands.
+ * @returns {Array of commands} Commands with default properties.
  */
 function setDefaultCommandProperties(commands) {
   var result = {};
@@ -540,65 +451,90 @@ function addCommands() {
   });
 }
 
-/**
- * Used for testing purposes. Adds tests commands.
- */
-function addTestCommands() {
-  addCommands(testCommands);
-}
+// 'init' - add basic commands to use
+addCommands(builtinCommands);
 
 /**
- * Returns an object that corresponds with a command
- * @param command
- * @returns {*}
+ * Creates a completely new command set.
+ * @param different Array of available commands .
  */
-function getCommand(command) {
-  return commands[command];
-}
-
-/**
- * Returns object that contains all the commands.
- * @returns {{}}
- */
-function getCommands(){
-  return commands;
-}
-
-/**
- * Initializes the global object 'commands' with builtin commands and jQuery-dependent
- * commands.
- * @param $
- */
-function init($) {
-  $ = $ || jq;
+function setCommands(different) {
   commands = {};
-  var jQueryDependentCommands = new JQueryDependentCommands($);
-
-  addCommands(jQueryDependentCommands, builtinCommands);
+  addCommands(different);
 }
-
 
 
 // utility functions
 /**
- * Checks whether name is a valid command name.
- * @param name Potential comand name.
- * @returns {boolean} True if name is a command name.
+ * Checks whether a command/selector starts with a '>'. Longer sequences of '>'
+ * are not allowed.
+ * @param {String} name Potential command/selector name with all the prefixes/decorators,...
+ * @returns {boolean} True, if command/selector starts with a pipe.
  */
-function isCommandName(name) {
-  return typeof(name) === 'string' && name[0] === '!' && name.substr(1) in commands;
+function isPipedName(name) {
+  return typeof(name) === 'string' && name[0] === '>' && name[1] !== '>';
 }
 
+/**
+ * Retrieves a proper command name that is found in the `commands` object.
+ * @param {String} Potential command name used in the instruction.
+ * @returns {String| undefined} Corresponding command name.
+ */
+function getCommandName(commandName) {
+  if (typeof (commandName) !== 'string' || commandName.length < 2) {
+    return;
+  }
+
+  var piped = isPipedName(commandName);
+
+  // '>!command' or '!command' => '>command' or 'command', respectively
+  var  removedExclamationMark = piped ? (commandName.substr(0,1)+commandName.substr(2)) :
+    commandName.substr(1);
+
+  if (piped) { // '>cmd' searches for '>cmd' and 'cmd'
+    if (commands[removedExclamationMark]) {
+      return removedExclamationMark;
+    } else if (commands[removedExclamationMark.substr(1)]) {
+      return removedExclamationMark.substr(1);
+    }
+  } else { // cmd searches for 'cmd'
+    if (commands[removedExclamationMark]) {
+      return removedExclamationMark;
+    }
+  }
+}
 
 /**
  * Checks whether it starts with a decorator. Decorators are '$', '~', and '='.
- * @param name
+ * @private
+ * @param {string} name
  * @returns {boolean}
  */
 function isDecoratedName(name) {
-  return typeof(name) === 'string' && _.contains(['$', '~', '='], name[0]);
+  return (typeof(name) === 'string' && _.contains(['$', '~', '='], name[0])) ||
+    (isPipedName(name) && isDecoratedName(name.substr(1)));
 }
 
+/**
+ * Checks if the given array looks like a command (has a valid command name in the head).
+ * @param command
+ * @returns {boolean}
+ */
+function isCommand(command) {
+  return _.isArray(command) && command.length !== 0 && Boolean(getCommandName(command[0]));
+}
+
+/**
+ * Returns the decorator of the selector.
+ * @param selector
+ * @returns {Char} The decorator. ('$' or '=' or '~')
+ */
+function getDecorator(selector) {
+  var selName = selector[0],
+    piped = isPipedName(selName);
+
+  return selName[piped? 1 : 0];
+}
 /**
  * Checks whether the argument is a selector.
  * @param selector Potential selector.
@@ -608,14 +544,6 @@ function isSelector(selector) {
   return _.isArray(selector) && selector.length === 1 && isDecoratedName(selector[0]);
 }
 
-/**
- * Checks whether the argument is a valid command.
- * @param array Potential command.
- * @returns {boolean}
- */
-function isCommand(array) {
-  return _.isArray(array) && array.length > 0 && isCommandName(array[0]);
-}
 
 /**
  * Checks whether the argument is a valid instruction.
@@ -624,21 +552,22 @@ function isCommand(array) {
  */
 function isInstruction(array) {
   return _.isArray(array) && array.length !== 0 &&
-    (isSelector(array[0]) || isCommand(array[0]));
+    _.all(array, function(item){
+      return isSelector(item) || isCommand(item);
+    });
 }
 
-
 module.exports = {
-  init: init,
   addCommands: addCommands,
-  addTestCommands: addTestCommands,
-  getCommands: getCommands,
-  getCommand: getCommand,
+  setCommands: setCommands,
+  getCommand: function(command) { return commands[command]; },
+  getCommands: function() {return commands;},
+  __setJQuery: function(different) {$ = different;},
 
-
-  isCommandName: isCommandName,
-  isDecoratedName: isDecoratedName,
-  isSelector: isSelector,
+  isPipedName: isPipedName,
+  getCommandName: getCommandName,
   isCommand: isCommand,
+  getDecorator: getDecorator,
+  isSelector: isSelector,
   isInstruction: isInstruction
 };
