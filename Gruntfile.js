@@ -34,6 +34,16 @@ module.exports = function(grunt) {
       min: { files: { 'build/<%= pkg.name %>-<%= pkg.version %>.min.js': 'build/<%= pkg.name %>-<%= pkg.version %>.js' } }
     },
 
+    copy: {
+      artifact: { files: [ {
+        expand: true,
+        cwd: 'build/',
+        src: [ '<%= pkg.name %>-<%= pkg.version %>.js',
+               '<%= pkg.name %>-<%= pkg.version %>.min.js' ],
+        dest: process.env.CIRCLE_ARTIFACTS
+      } ] }
+    },
+
     symlink: {
       options: { overwrite: true },
       develop: {
@@ -53,7 +63,14 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-browserify');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-symlink');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
-  grunt.registerTask('default', ['jshint', 'mochaTest', 'browserify', 'uglify', 'symlink']);
+  grunt.registerTask('default', ['jshint', 'mochaTest', 'browserify',
+    'uglify', 'symlink', 'circleci']);
+
+  grunt.registerTask('circleci', 'Store built libraries as CircleCI arfitacts', function() {
+    if (process.env.CIRCLE_ARTIFACTS) { grunt.task.run('copy:artifact'); }
+    else { grunt.log.ok('not on CircleCI, skipped'); }
+  });
 
 };
