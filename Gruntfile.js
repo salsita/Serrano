@@ -9,7 +9,7 @@ module.exports = function(grunt) {
       all: {
         // http://gruntjs.com/configuring-tasks#globbing-patterns
         src: ['package.json', 'lint-options.json', 'Gruntfile.js',
-              'code/js/modules/*.js']
+              'code/js/modules/*.js', 'code/js/libs/jquery-mock.js']
 
 
       }
@@ -18,6 +18,7 @@ module.exports = function(grunt) {
     mochaTest: {
       options: { colors: true, reporter: 'spec' },
       files: ['code/**/*.spec.js']
+
     },
 
     browserify: {

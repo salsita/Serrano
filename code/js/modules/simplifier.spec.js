@@ -1,12 +1,12 @@
 var assert = require('assert');
 
 var _ = require('../libs/lodash');
-var jQueryMock = require('../libs/jquery-mock');
-var commands = require('./commands');
-commands.__setJQuery(jQueryMock);
+var $ = require('../libs/jquery-mock');
+
 
 var simplifier = require('./simplifier');
 var exceptions = require('./exceptions');
+var commands = require('./commands');
 
 var testCommands = {
   acceptsOneToFiveArguments : {
@@ -24,7 +24,7 @@ var testCommands = {
     }
   },
   secondArgumentIsRaw: {
-    argumentCount: '0-2',
+    argumentCount: '0-3',
     rawArguments: [2],
     code: function() {
       var args = Array.prototype.slice.call(arguments);
@@ -45,16 +45,37 @@ var testCommands = {
     code: function(c) {
       return c;
     }
+  },
+  arr: {
+    argumentCount: '1',
+    code: function(obj) {
+      return $.makeArray(obj);
+    }
+  },
+  prop: {
+    argumentCount: '2-3',
+    implicitForeach: false, // get prop of the whole object
+    code: function(obj, prop, inner) {
+      if (inner || ! _.has(obj, prop)) {
+        return _.map(obj, function(item) {
+          return item[prop];
+        });
+      } else {
+        return obj[prop];
+      }
+    }
   }
 };
 
-commands.addCommands(testCommands);
 
 describe('module for grammar simplification', function() {
-  it('should verify whether the grammar is correctly simplified', function() {
+  beforeEach(function(){
+    commands.setCommands(testCommands);
+  });
+  var simplify = simplifier.simplifyScrapingDirective;
 
-    var simplify = simplifier.simplifyScrapingDirective;
 
+  it('should check the selectors are correctly simplified', function() {
     assert.ok(_.size(commands.getCommands()) > 0);
     assert.ok(commands.getCommand('constant'));
 
@@ -67,6 +88,7 @@ describe('module for grammar simplification', function() {
 
     var selArg = [['$.sel'], ['>!arr']];
     var rSelArg = [['!jQuery', '.sel'], ['>!arr']];
+
     assert.deepEqual(simplify(selArg), rSelArg);
 
     var sel2 = [ ['=.to text'],[">!prop", "length"]];
@@ -76,10 +98,20 @@ describe('module for grammar simplification', function() {
     var sel3 = ['~to .array h5'];
     var res3 = [ [ '!jQuery', 'to .array h5' ], [ '>!arr' ] ];
     assert.deepEqual(simplify(sel3), res3);
+  });
 
+  it('should make sure that all commands exist and comply with their signatures', function(){
     var unknownCommand = ['!unknowCommand', 5];
     assert.throws(function() { simplify(unknownCommand);}, TypeError);
 
+    var wrongArgc = [['$users'], ['!acceptsOneToFiveArguments']]; // received zero
+    var wrongArgc2 = [['~blahblah'], ['>!acceptsZeroToOneArguments', 'secondArg']]; // two
+    assert.throws(function() { simplify(wrongArgc); }, exceptions.WrongArgumentError);
+    assert.throws(function() { simplify(wrongArgc2); }, exceptions.WrongArgumentError);
+
+  });
+
+  it('should verify that raw argument is left raw', function(){
     // implicit arg, first arg, second arg...
     var secondRaw = ['!secondArgumentIsRaw',
       ['$implicitArg [to=be] simplified'],
@@ -93,24 +125,22 @@ describe('module for grammar simplification', function() {
       [ '$thisArgumentIsRaw' ] ];
 
     assert.deepEqual(simplify(secondRaw), rSecondRaw);
-
-    var wrongArgc = [['$users'], ['!acceptsOneToFiveArguments']]; // received zero
-    var wrongArgc2 = [['~blahblah'], ['>!acceptsZeroToOneArguments', 'secondArg']]; // two
-    assert.throws(function() { simplify(wrongArgc); }, exceptions.WrongArgumentError);
-    assert.throws(function() { simplify(wrongArgc2); }, exceptions.WrongArgumentError);
-
-
-    var correctArgc = [ ['$users'],
-      ['>!acceptsOneToFiveArguments'],
-      ['>!acceptsOneToFiveArguments',
-        ['~selectorIsSecondArgument.div'],
-        ['!acceptsZeroToOneArguments'] ] ];
-
-    var rCorrectArgc = [["!jQuery","users"],
-      [">!acceptsOneToFiveArguments"],
-      [">!acceptsOneToFiveArguments",
-        [["!jQuery","selectorIsSecondArgument.div"],[">!arr"]],
-        ["!acceptsZeroToOneArguments"] ]];
-    assert.deepEqual(simplify(correctArgc), rCorrectArgc);
   });
+
+  it('should make sure that pipes and complicated expressions are simplified correctly',
+    function(){
+      var correctArgc = [ ['$users'],
+        ['>!acceptsOneToFiveArguments'],
+        ['>!acceptsOneToFiveArguments',
+          ['~selectorIsSecondArgument.div'],
+          ['!acceptsZeroToOneArguments'] ] ];
+
+      var rCorrectArgc = [["!jQuery","users"],
+        [">!acceptsOneToFiveArguments"],
+        [">!acceptsOneToFiveArguments",
+          [["!jQuery","selectorIsSecondArgument.div"],[">!arr"]],
+          ["!acceptsZeroToOneArguments"] ]];
+      assert.deepEqual(simplify(correctArgc), rCorrectArgc);
+  });
+
 });

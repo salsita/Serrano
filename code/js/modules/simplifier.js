@@ -43,25 +43,12 @@ function simplifySelector(selector) {
 function simplifyInstruction(instruction) {
   var result = [];
   for (var i = 0; i < instruction.length; ++i) {
-    var selcmd = instruction[i],
-      commFullName = selcmd[0],
-      piped = commands.isPipedName(commFullName);
-
-
+    var selcmd = instruction[i];
     if (commands.isSelector(selcmd)) {
       // simplifySelector returns command or instruction
       result = result.concat(commands.getDecorator(selcmd)==='$' ?
         [simplifySelector(selcmd)] : simplifySelector(selcmd));
     } else if (commands.isCommand(selcmd)) {
-      var commName = commands.getCommandName(selcmd[0]),
-        signature = commands.getCommand(commName).argumentCount;
-
-      // -1 for the head==commName, +1 if it receives an explicit argument ('>')
-      var argcSupplied = selcmd.length - 1 + (piped ? 1 : 0);
-      if (!argumentCountChecker.checkArgumentCount(argcSupplied, signature)) {
-        var msg = 'Command ' + commFullName + ' was supplied with invalid number of arguments';
-        throw new exceptions.WrongArgumentError(msg);
-      }
       /*global simplifyCommand*/
       result.push(simplifyCommand(selcmd));
     } else {
@@ -76,12 +63,21 @@ function simplifyInstruction(instruction) {
 // takes command, returns command
 function simplifyCommand(command) {
   var result = [command[0]], // command head stays the same
-    commName = commands.getCommandName(command[0]),
-    args = command.slice(1);
+    commFullName = command[0],
+    commName = commands.getCommandName(commFullName),
+    args = command.slice(1),
+    signature = commands.getCommand(commName).argumentCount,
+    piped = commands.isPipedName(commFullName);
+
+  // -1 for the head==commName, +1 if it receives an explicit argument ('>')
+  var argcSupplied = command.length - 1 + (piped ? 1 : 0);
+  if (!argumentCountChecker.checkArgumentCount(argcSupplied, signature)) {
+    var msg = 'Command ' + commFullName + ' was supplied with invalid number of arguments';
+    throw new exceptions.WrongArgumentError(msg);
+  }
 
 
   var rawArguments = commands.getCommand(commName).rawArguments;
-
   for (var i=0; i < args.length; ++i) {
     var arg1 = args[i];
     if (_.isString(arg1) || _.isNumber(arg1) || _.isPlainObject(arg1) || // basic types
@@ -117,7 +113,8 @@ function simplifyScrapingDirective(directive) {
   } else if (commands.isInstruction(directive)) {
     return simplifyInstruction(directive);
   } else {
-    throw new TypeError('selector/command/instruction expected');
+    throw new TypeError('selector/command/instruction expected. Received '+
+    JSON.stringify(directive));
   }
 }
 
