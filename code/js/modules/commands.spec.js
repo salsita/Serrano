@@ -162,4 +162,33 @@ describe('module for testing commands module', function() {
       assert.deepEqual(prop(obj, 'pr', 'inner'), [1, 2]);
       assert.deepEqual(prop(obj, 'i'), [3, 4]);
     });
+
+    it('object method invocation (call, apply)', function() {
+      var call = _cmdCode('call'),
+        apply = _cmdCode('apply');
+
+      assert(call('serrano', 'toUpperCase'), 'SERRANO');
+      assert(apply('test?driven development','replace',['?','-']),
+        'test-driven development');
+
+      // inner property
+      var inn = {
+        0: { plus:function(x,y){return (x?x:0) + (y?y:0);}, c:function(x){return (x?x:13);} },
+        1: { plus:function(x,y){return (x?x:0) + (y?y:0);}, c:function(x){return (x?x:13);} },
+        plus: function(x,y){return 'outer plus='+( (x?x:0) + (y?y:0));},
+        length: 2
+      };
+
+      // Three test cases for `call` and `apply`:
+      // 1. invoke outer method
+      // 2. by setting 'inner', invoke inner method
+      // 3. invoke inner method because element doesn't have outer function w that name
+      assert.strictEqual(call(inn, 'plus'), 'outer plus=0');
+      assert.deepEqual(call(inn, 'plus', 'inner'), [0, 0]);
+      assert.deepEqual(call(inn, 'c'), [13, 13]);
+
+      assert.strictEqual(apply(inn, 'plus', [1,2]), 'outer plus=3');
+      assert.deepEqual(apply(inn, 'plus', [1,2], 'inner'), [3, 3]);
+      assert.deepEqual(apply(inn, 'c', [5]), [5, 5]);
+    });
 });
