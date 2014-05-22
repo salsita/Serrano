@@ -214,4 +214,23 @@ describe('module for testing commands module', function() {
 
       assert.deepEqual(filter(ages, ['>!lt', 5]), [2,4,1,3]);
     });
+
+    it('array reduction (len/at/first/last)', function() {
+      var arr = [10,20,30,40,50],
+        h2 = _cmdCode('jQuery')('h2');
+
+      assert.strictEqual(_cmdCode('len')(arr), 5);
+      assert.strictEqual(_cmdCode('len')([]), 0);
+      assert.strictEqual(_cmdCode('len')(h2), 2);
+
+      assert.strictEqual(_cmdCode('at')(arr, 0), 10);
+      assert.strictEqual(_cmdCode('at')(arr, -2), 40);
+      assert.deepEqual(_cmdCode('at')(arr, [0, -2,-6, 5]), [10, 40, undefined, undefined]);
+
+      assert.strictEqual(_cmdCode('first')(arr), 10);
+      assert.strictEqual(_cmdCode('first')([]), undefined);
+
+      assert.strictEqual(_cmdCode('last')(arr), 50);
+      assert.strictEqual(_cmdCode('last')([]), undefined);
+    });
 });

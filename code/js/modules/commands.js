@@ -263,6 +263,45 @@ var builtinCommands = {
         return core.interpretScrapingDirective(condition, item);
       });
     }
+  },
+  // array reduction commands
+  len: {
+    argumentCount:'1',
+    implicitForeach: false,
+    code: function(obj) {
+      return obj && obj.length;
+    }
+  },
+
+  at: {
+    argumentCount: '2',
+    implicitForeach: false,
+    code: function(array, index) {
+      if (_.isArray(index)) {
+        return _.map(index, function(i) {
+          // array.length + negativeNumber (this is why it is not -i but +i).
+          return array[i < 0 ? array.length + i : i];
+        });
+      } else { // isInt
+        return array[index < 0 ? array.length + index : index];
+      }
+    }
+  },
+
+  first: {
+    argumentCount: '1',
+    implicitForeach: false,
+    code: function(array) {
+      return array[0];
+    }
+  },
+
+  last: {
+    argumentCount: '1',
+    implicitForeach: false,
+    code: function(array) {
+      return array[array.length - 1];
+    }
   }
 };
 
