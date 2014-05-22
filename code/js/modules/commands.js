@@ -60,6 +60,8 @@ var builtinCommands = {
     }
   },
 
+
+
   // storing and fetching variables
   getVal: {
     argumentCount: '1',
@@ -75,6 +77,7 @@ var builtinCommands = {
       return storage.setVal(key, value);
     }
   },
+
   // conditions
   // existence tests
   'exists': {
@@ -184,6 +187,7 @@ var builtinCommands = {
       });
     }
   },
+
   // converts a jQuery object into an array - https://api.jquery.com/jQuery.makeArray/
   arr: {
     argumentCount: '1',
@@ -206,6 +210,7 @@ var builtinCommands = {
       }
     }
   },
+
   // access object methods
   call: {
     argumentCount: '2-3', // depending whether it has "inner" argument...
@@ -264,6 +269,8 @@ var builtinCommands = {
       });
     }
   },
+
+
   // array reduction commands
   len: {
     argumentCount:'1',
@@ -303,6 +310,7 @@ var builtinCommands = {
       return array[array.length - 1];
     }
   },
+
   // arithmetics
   scalarOp : {
     argumentCount: '3',
@@ -388,7 +396,6 @@ var builtinCommands = {
     }
   },
 
-  // convenience commands
   sum: {
     argumentCount: '1',
     code: function(array) {
@@ -402,8 +409,83 @@ var builtinCommands = {
     code: function(array) {
       return this.sum.code(array) / array.length;
     }
-  }
+  },
 
+  // convenience commands
+  lower: {
+    argumentCount: '1',
+    code: function(str) {
+      return str.toLowerCase();
+
+    }
+  },
+
+  upper: {
+    argumentCount: '1',
+    code: function(str) {
+      return str.toUpperCase();
+    }
+  },
+
+  trim: {
+    argumentCount: '1',
+    code: function(str) {
+      return str.trim();
+    }
+  },
+  split: {
+    argumentCount: '2',
+    code: function(str, sep) {
+      return str.split(sep);
+    }
+  },
+  substr: {
+    argumentCount: '2-3',
+    code: function(str, start, length) {
+      return str.substr(start, length);
+    }
+  },
+
+  // convenience commands
+  concat: {
+    argumentCount: '1-',
+    implicitForeach: false,
+    code: function() {
+      return Array.prototype.concat.apply([], arguments);
+    }
+  },
+
+  union: {
+    argumentCount: '1-',
+    implicitForeach: false,
+    code: function() {
+      return _(arguments).flatten().union().valueOf();
+    }
+  },
+  splice: {
+    argumentCount: '3',
+    implicitForeach: false,
+    code: function(array, index, howmany) {
+      // array.length - (-positiveIndex) === array.length + positiveIndex
+      index = (index < 0) ? (array.length) + index : index;
+      array.splice(index, howmany);
+      return array;
+    }
+  },
+  join: {
+    argumentCount:'2',
+    implicitForeach: false,
+    code: function(array, separator) {
+      return array.join(separator);
+    }
+  },
+  replace: {
+    argumentCount: '3',
+    code: function (str, old, n) {
+      var reg = new RegExp(old, 'g');
+      return str.replace(reg, n);
+    }
+  }
 };
 
 
