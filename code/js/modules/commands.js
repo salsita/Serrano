@@ -235,6 +235,22 @@ var builtinCommands = {
         });
       }
     }
+  },
+
+  // code branching
+  if: {
+    argumentCount: '2-3',
+    rawArguments: '1,2',
+    // `ifbody` and `elsebody` must be raw because they
+    // can be instructions with side effects (setVal)
+    // so I cannot let interpret them before knowing which one I want to...
+    code: function(condition, ifbody, elsebody) {
+      if (condition) {
+        return core.interpretScrapingDirective(ifbody);
+      } else {
+        return core.interpretScrapingDirective(elsebody);
+      }
+    }
   }
 };
 
