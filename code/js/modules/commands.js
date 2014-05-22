@@ -190,6 +190,21 @@ var builtinCommands = {
     code: function(obj) {
       return $.makeArray(obj);
     }
+  },
+
+  // access object properties
+  prop: {
+    argumentCount: '2-3',
+    implicitForeach: false, // get prop of the whole object
+    code: function(obj, prop, inner) {
+      if (inner || ! _.has(obj, prop)) {
+        return _.map(obj, function(item) {
+          return item[prop];
+        });
+      } else {
+        return obj[prop];
+      }
+    }
   }
 };
 

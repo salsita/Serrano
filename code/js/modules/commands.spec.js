@@ -148,4 +148,18 @@ describe('module for testing commands module', function() {
       assert.ok(_.isArray(arrSelector));
       assert.strictEqual(arrSelector.length, 2);
     });
+
+    it('access object properties (prop)', function() {
+      var prop = _cmdCode('prop'),
+        obj = {
+          0: {pr:1, i:3},
+          1: {pr:2, i:4},
+          length: 2, // length property is crucial
+          pr: 'outer property'
+        };
+
+      assert.strictEqual(prop(obj, 'pr'), 'outer property');
+      assert.deepEqual(prop(obj, 'pr', 'inner'), [1, 2]);
+      assert.deepEqual(prop(obj, 'i'), [3, 4]);
+    });
 });
