@@ -51,5 +51,10 @@ describe('module for testing commands module', function() {
       // nothing
       assert.strictEqual(jqEmpty.length, 0);
     });
-
+  
+    it('getVal/setVal commands', function(){
+      _cmdCode('setVal')('Test storage value', 'mykey');
+      assert.strictEqual(_cmdCode('getVal')('mykey'), 'Test storage value');
+      assert.throws( function() {_cmdCode('getVal')('undefinedKey');}, exceptions.RuntimeError);
+    });
 });
