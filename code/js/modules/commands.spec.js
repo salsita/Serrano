@@ -140,4 +140,12 @@ describe('module for testing commands module', function() {
       assert.ok(lor(5, ['>!lt', 6], ['>!gt', 4], ['>!lt', 0]));
       assert.ifError(lor(5, ['>!lt', 0]));
     });
+
+    it('converting argument into true array (arr)', function(){
+      var arr = _cmdCode('arr'),
+        arrSelector = arr(_cmdCode('jQuery')('h2'));
+
+      assert.ok(_.isArray(arrSelector));
+      assert.strictEqual(arrSelector.length, 2);
+    });
 });
