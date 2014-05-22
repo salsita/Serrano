@@ -233,4 +233,48 @@ describe('module for testing commands module', function() {
       assert.strictEqual(_cmdCode('last')(arr), 50);
       assert.strictEqual(_cmdCode('last')([]), undefined);
     });
+
+    it('arithmetic operations (+,-,*,/) on both scalars and vectors and (sum,avg)',
+      function() {
+
+      var plus = _cmdCode('+'),
+        minus = _cmdCode('-'),
+        times = _cmdCode('*'),
+        divide = _cmdCode('/');
+
+      // scalars
+      assert.strictEqual(plus(3, 5), 8);
+      assert.strictEqual(minus(3, 5), -2);
+      assert.strictEqual(times(3, 5), 15);
+      assert.strictEqual(divide(3, 5), 0.6);
+
+      var data = [ 1, -1, 2, 5, 3, 7 ];
+
+      // array + scalar
+      assert.deepEqual(plus(data, 5), [ 6, 4, 7, 10, 8, 12 ]);
+      assert.deepEqual(times(data, 5),[ 5, -5, 10, 25, 15, 35 ]);
+      assert.deepEqual(minus(5, data), [ 4, 6, 3, 0, 2, -2 ]);
+
+      var TOLERANCE = 0.0001,
+        divResults = [ 5, -5, 2.5, 1, 1.6667, 0.7143 ];
+
+      assert.ok(_.all(divide(5,data), function(val, index){
+        return Math.abs(val - divResults[index]) < TOLERANCE;
+      }));
+
+      // array + array
+      assert.deepEqual(plus(data, data), [ 2, -2, 4, 10, 6, 14 ]);
+      assert.deepEqual(times(data, data), [ 1, 1, 4, 25, 9, 49 ]);
+      assert.deepEqual(minus(data, data), [ 0, 0, 0, 0, 0, 0 ]);
+      assert.deepEqual(divide(data, data), [ 1, 1, 1, 1, 1, 1 ]);
+
+      var tmp = [0, 1];
+      assert.ok(_.isNaN(plus(tmp, data)));
+
+      // sum
+      assert.strictEqual(_cmdCode('sum')(data), 17);
+
+      // avg
+      assert.ok(Math.abs(_cmdCode('avg')(data) - 2.8333) < TOLERANCE);
+    });
 });

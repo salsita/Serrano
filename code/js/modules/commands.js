@@ -302,7 +302,108 @@ var builtinCommands = {
     code: function(array) {
       return array[array.length - 1];
     }
+  },
+  // arithmetics
+  scalarOp : {
+    argumentCount: '3',
+    code: function(a, b, op) {
+      switch (op) {
+        case '+':
+          return a + b;
+        case '-':
+          return a - b;
+        case '*':
+          return a * b;
+        case '/':
+          return a / b;
+      }
+    }
+  },
+
+  arrayScalarOp: {
+    argumentCount: '3',
+    code: function(first, second, op) {
+      var that = this;
+      if (_.isArray(first)) {
+        return _.map(first, function(el) {
+          return that.scalarOp.code.call(that, el, second, op);
+        });
+      } else {
+        return _.map(second, function(el) {
+          return that.scalarOp.code.call(that, first, el, op);
+        });
+      }
+    }
+  },
+
+  arrayArrayOp: {
+    argumentCount: '3',
+    code: function(array1, array2, op) {
+      if (array1.length !== array2.length) {
+        return NaN;
+      }
+      var that = this;
+      return _.zip(array1, array2).map(function(pair) {
+        return that.scalarOp.code.call(that, pair[0], pair[1], op);
+      });
+    }
+  },
+
+  op: {
+    argumentCount: '3',
+    code: function(item1, item2, op) {
+      // scalar + scalar
+      if (_.isNumber(item1) && _.isNumber(item2)) {
+        return this.scalarOp.code(item1, item2, op);
+      } else if (_.isArray(item1) && _.isArray(item2)) {
+        return this.arrayArrayOp.code.call(this, item1, item2, op);
+      } else {
+        return this.arrayScalarOp.code.call(this, item1, item2, op);
+      }
+    }
+  },
+
+  '+' : {
+    argumentCount: '2',
+    code: function(a, b) {
+      return this.op.code.call(this, a, b, '+');
+    }
+  },
+  '-' : {
+    argumentCount: '2',
+    code: function(a, b) {
+      return this.op.code.call(this, a, b, '-');
+    }
+  },
+  '*' : {
+    argumentCount: '2',
+    code: function(a, b) {
+      return this.op.code.call(this, a, b, '*');
+    }
+  },
+  '/' : {
+    argumentCount: '2',
+    code: function(a, b) {
+      return this.op.code.call(this, a, b, '/');
+    }
+  },
+
+  // convenience commands
+  sum: {
+    argumentCount: '1',
+    code: function(array) {
+      return _.reduce(array, function(sum, num) {
+        return sum + num;
+      });
+    }
+  },
+  avg: {
+    argumentCount: '1',
+    code: function(array) {
+      return this.sum.code(array) / array.length;
+    }
   }
+
 };
 
 
