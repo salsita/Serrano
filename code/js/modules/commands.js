@@ -205,6 +205,36 @@ var builtinCommands = {
         return obj[prop];
       }
     }
+  },
+  // access object methods
+  call: {
+    argumentCount: '2-3', // depending whether it has "inner" argument...
+    implicitForeach: false,
+    code: function(obj, method, inner) {
+      if (!inner && obj && _.isFunction(obj[method])) { // outer obj
+        return obj[method]();
+      } else {
+        return _.map(obj, function(item) {
+          return item[method]();
+        });
+      }
+    }
+  },
+
+  apply: {
+    argumentCount: '3-4',
+    implicitForeach: false,
+    code: function(obj, method, attrs, inner) {
+      if (!inner && obj && _.isFunction(obj[method])) { // outer obj
+        return obj[method].apply(obj, attrs);
+      } else {
+        return _.map(obj, function(item) {
+          if (_.isFunction(item[method])) {
+            return item[method].apply(item, attrs);
+          }
+        });
+      }
+    }
   }
 };
 
