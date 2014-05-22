@@ -251,6 +251,18 @@ var builtinCommands = {
         return core.interpretScrapingDirective(elsebody);
       }
     }
+  },
+
+  // filtering
+  filter: {
+    argumentCount: '1',
+    implicitForeach: false,
+    rawArguments: '1',
+    code: function(data, condition) {
+      return _.filter(data, function(item) {
+        return core.interpretScrapingDirective(condition, item);
+      });
+    }
   }
 };
 
