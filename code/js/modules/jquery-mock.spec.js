@@ -33,14 +33,14 @@ describe('module with mock jQuery library', function() {
   it('should check the innerHTML property', function(){
     assert.equal(singleSelector[0].innerHTML, 'This is the first h2 heading');
     assert.equal(singleSelector[1].innerHTML, 'Followed by another h2 heading');
-    assert.equal(doubleSelector[0].innerHTML, 'Double filtrated paragraph');
+    assert.equal(doubleSelector[0].innerHTML, 'Double filtered paragraph');
     assert.throws(function() { return defaultSelector[0].innerHTML; }, TypeError);
   });
 
   it('should check the outerHTML property', function(){
     assert.equal(singleSelector[0].outerHTML, '<h2>This is the first h2 heading</h2>');
     assert.equal(singleSelector[1].outerHTML, '<h2>Followed by another h2 heading</h2>');
-    assert.equal(doubleSelector[0].outerHTML, '<p>Double filtrated paragraph</p>');
+    assert.equal(doubleSelector[0].outerHTML, '<p>Double filtered paragraph</p>');
     assert.throws(function() { return defaultSelector[0].outerHTML; }, TypeError);
   });
 

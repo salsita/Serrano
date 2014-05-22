@@ -25,7 +25,7 @@ var testCommands = {
   },
   secondArgumentIsRaw: {
     argumentCount: '0-3',
-    rawArguments: [2],
+    rawArguments: '2',
     code: function() {
       var args = Array.prototype.slice.call(arguments);
       return args;
@@ -34,7 +34,7 @@ var testCommands = {
 
   foreachableImplicitRawArgument: { // same as non foreachable
     argumentCount: '1-2',
-    rawArguments: [0],
+    rawArguments: '0',
     code: function(impl) {
       return impl;
     }

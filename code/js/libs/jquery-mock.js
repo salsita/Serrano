@@ -1,5 +1,13 @@
 /**
  * A node.js mock for jQuery library. Used in unit tests.
+ *
+ * DOM to be roughly simulated:
+ * <h2><span>Child1</span>This is the first h2 heading</h2>
+ * <h2><span>Child1</span>Followed by another h2 heading</h2>
+ *
+ * <_anytag_>
+ *   <p>Double filtered paragraph</p>
+ * <_anytag_>
  */
 
 
@@ -31,7 +39,7 @@ var fixtures = {
   },
 
   'double' : {
-    0: new HTMLElement('Double filtrated paragraph', 'p'),
+    0: new HTMLElement('Double filtered paragraph', 'p'),
     'html': function(){return this[0].innerHTML;},
     'text': function(){return this[0].innerHTML + this[1].innerHTML;},
     'length': 1,

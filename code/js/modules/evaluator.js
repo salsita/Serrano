@@ -3,6 +3,7 @@
  */
 
 var _ = require('../libs/lodash');
+var argumentCountChecker = require('./argumentCountChecker');
 var commands = require('./commands');
 
 /**
@@ -24,7 +25,7 @@ function evalCommand(cmd, implicitArgument) {
 
   for (var i = 1; i < cmd.length; ++i) {
     var arg = cmd[i];
-    if (_.contains(command.rawArguments, i)) {
+    if (argumentCountChecker.checkArgumentCount(i, command.rawArguments)) {
       args.push(arg);
     } else if (commands.isInstruction(arg)) {
       /*globals evalInstruction */
@@ -58,7 +59,7 @@ function evalInstruction(instruction, implicitArgument) {
 
 
 
-    if (!_.contains(command.rawArguments, 0) && command.implicitForeach  &&
+    if (!argumentCountChecker.checkArgumentCount(0, command.rawArguments) && command.implicitForeach  &&
       _.isArray(implicitArgument)) {
       implicitArgument = _.map(implicitArgument, _mapper);
     } else {
