@@ -191,4 +191,21 @@ describe('module for testing commands module', function() {
       assert.deepEqual(apply(inn, 'plus', [1,2], 'inner'), [3, 3]);
       assert.deepEqual(apply(inn, 'c', [5]), [5, 5]);
     });
+
+    it('code branching (if)', function() {
+      var cond = _cmdCode('if');
+
+      commands.addCommands({
+        constant: {
+          argumentCount: '1',
+          rawArguments: '0',
+          code: function(x) {return x;}
+        }
+      });
+
+      assert.strictEqual(cond(true, ['!constant', 'Yes'], ['!constant', 'No']), 'Yes');
+      assert.strictEqual(cond(true, ['!constant', 'Yes']), 'Yes');
+      assert.strictEqual(cond(false, ['!constant', 'Yes'], ['!constant', 'No']), 'No');
+    });
+
 });
