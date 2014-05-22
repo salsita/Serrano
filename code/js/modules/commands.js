@@ -183,6 +183,13 @@ var builtinCommands = {
         return core.interpretScrapingDirective(condition, implicit);
       });
     }
+  },
+  // converts a jQuery object into an array - https://api.jquery.com/jQuery.makeArray/
+  arr: {
+    argumentCount: '1',
+    code: function(obj) {
+      return $.makeArray(obj);
+    }
   }
 };
 
