@@ -208,4 +208,10 @@ describe('module for testing commands module', function() {
       assert.strictEqual(cond(false, ['!constant', 'Yes'], ['!constant', 'No']), 'No');
     });
 
+    it('filtering (filter)', function() {
+      var filter = _cmdCode('filter'),
+        ages = [2,4,6,8,10,1,3,5,7,9];
+
+      assert.deepEqual(filter(ages, ['>!lt', 5]), [2,4,1,3]);
+    });
 });
