@@ -58,7 +58,24 @@ var builtinCommands = {
         return $(obj2, obj1);
       }
     }
+  },
+
+  // storing and fetching variables
+  getVal: {
+    argumentCount: '1',
+    code: function(key) {
+      return storage.getVal(key);
+    }
+  },
+
+  setVal: {
+    argumentCount: '2',
+    implicitForeach: false,
+    code: function(value, key) {
+      return storage.setVal(key, value);
+    }
   }
+
 };
 
 
