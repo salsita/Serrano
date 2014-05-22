@@ -74,8 +74,116 @@ var builtinCommands = {
     code: function(value, key) {
       return storage.setVal(key, value);
     }
-  }
+  },
+  // conditions
+  // existence tests
+  'exists': {
+    argumentCount: '1',
+    code: function(arg) {
+      return arg !== undefined && arg !== null;
+    }
+  },
 
+  'nexists': {
+    argumentCount: '1',
+    code: function(arg) {
+      return !this.exists.code(arg);
+    }
+  },
+  'empty': {
+    argumentCount: '1',
+    code: function(arg) {
+      return typeof(arg) === 'object' &&
+        ('length' in arg ? (0 === arg.length) : (0 === Object.keys(arg).length));
+    }
+  },
+  'nempty': {
+    argumentCount: '1',
+    code: function(arg) {
+      return !this.empty.code(arg);
+    }
+  },
+
+  // comparisons
+  lt: {
+    argumentCount: '2',
+    code: function(left, right) {
+      return left < right;
+    }
+  },
+  le: {
+    argumentCount: '2',
+    code: function(left, right) {
+      return left <= right;
+    }
+  },
+  gt: {
+    argumentCount: '2',
+    code: function(left, right) {
+      return left > right;
+    }
+  },
+  ge: {
+    argumentCount: '2',
+    code: function(left, right) {
+      return left >= right;
+    }
+  },
+  eq: {
+    argumentCount: '2',
+    code: function(left, right) {
+      /*jslint eqeq: true*/
+      return left == right;
+    }
+  },
+  neq: {
+    argumentCount: '2',
+    code: function(left, right) {
+      /*jslint eqeq: true*/
+      return left != right;
+    }
+  },
+
+  // compound conditions
+  all: {
+    argumentCount: '1-',
+    code: function() {
+      var args = Array.prototype.slice.call(arguments);
+      return _.all(args);
+    }
+  },
+  '>all': {
+    argumentCount: '2-',
+    rawArguments: '1-',
+    code: function() {
+      var implicit = arguments[0],
+        rest = Array.prototype.slice.call(arguments, 1);
+
+      return _.all(rest, function(condition) {
+        return core.interpretScrapingDirective(condition, implicit);
+      });
+    }
+  },
+
+  any: {
+    argumentCount:'1-',
+    code: function() {
+      var args = Array.prototype.slice.call(arguments);
+      return _.any(args);
+    }
+  },
+  '>any': {
+    argumentCount: '2-',
+    rawArguments:'1-',
+    code: function() {
+      var implicit = arguments[0],
+        rest = Array.prototype.slice.call(arguments, 1);
+
+      return _.any(rest, function(condition) {
+        return core.interpretScrapingDirective(condition, implicit);
+      });
+    }
+  }
 };
 
 
