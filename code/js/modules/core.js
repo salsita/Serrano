@@ -3,9 +3,6 @@
  */
 
 var _ = require('../libs/lodash');
-var storageFactory = require('./storageFactory');
-
-var commands = require('./commands');
 var depthChecker = require('./depthChecker');
 var simplifier = require('./simplifier');
 var evaluator = require('./evaluator');
@@ -46,14 +43,11 @@ function fillObject(json) {
 }
 
 /**
- * Interprets the JSON.
+ * Interprets the JSON. TODO will be rewritte...
  * @param json A JSON object to be processed by the Serrano Interpreter.
  * @returns {Object}
  */
 function runJson(json) {
-  var storage = storageFactory.createStorage();
-  commands.__setStorage(storage);
-
   fillObject(json._tmp);
   delete json._tmp;
   return fillObject(json);

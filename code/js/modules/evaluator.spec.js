@@ -16,7 +16,7 @@ var testCommands = {
   },
   foreachableImplicitRawArgument: { // same as non foreachable
     argumentCount: '1-2',
-    rawArguments: [0],
+    rawArguments: '0',
     code: function(impl) {
       return impl;
     }
@@ -24,7 +24,7 @@ var testCommands = {
 
   constant: {
     argumentCount: '1',
-    rawArguments: [1],
+    rawArguments: '1',
     code: function(c) {
       return c;
     }
@@ -67,7 +67,7 @@ var testCommands = {
 
   stringifyRawFirstArgument: {
     argumentCount: '1',
-    rawArguments: [1],
+    rawArguments: '1',
     code: function(impl, first) {
       return JSON.stringify(first);
     }

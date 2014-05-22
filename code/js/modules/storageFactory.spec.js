@@ -31,4 +31,3 @@ describe('module for storing temporary variables', function() {
     assert.equal(storage.size(), 2);
   });
 });
-

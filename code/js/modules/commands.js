@@ -3,6 +3,7 @@ var _ = require('../libs/lodash');
 
 var storageFactory = require('./storageFactory');
 var exceptions = require('./exceptions');
+var core; /* defined at the of the file */
 
 /**
  * Default place for storage of helper values, used by setVal and getVal.
@@ -22,7 +23,7 @@ var commands = {};
 var commandDefaults = {
   argumentCount: '',
   implicitForeach: true,
-  rawArguments: [],
+  rawArguments: '',
   code: function() {
     throw new exceptions.NotImplementedError();
   }
@@ -31,30 +32,42 @@ var commandDefaults = {
 /**
  * Contains all the available functions in the following format:
  * 'function name': {
- *   argumentCount: number of arguments a command takes. Denoted as a string in a format
+ *   argumentCount: (default=''_ number of arguments a command takes. Denoted as a string in a format
  *     used when specifying pages to be printed e.g. '1,3-8, 10, 13-'
- *   implicitForeach: (default) true // if the return value of the previous function is array ->
+ *   implicitForeach: (default=true) // if the return value of the previous function is array ->
  *     decides whether pass it as it is, or run an implicit foreach
- *   rawArguments: (default)[] // array of argument positions that should be passed
+ *   rawArguments: (default='') // array of argument positions that should be passed
  *     raw (without preprocessing) -> those at that positions there are ARRAYS that we
  *     do not want to preprocess
  *   code: Function (the code of the function itself)
  * }
  *
  * Note: sometimes a function can have conflicting atributes,
- *   i.e. implicitForeach==true and 0 is in rawArguments array.
+ *   i.e. implicitForeach==true and 0 is in rawArguments 'array'.
  *   In that case, rawArguments application has higher priority, i.e it functions the same
  * as if implicitForeach would be set to false.
  */
 var builtinCommands = {
- };
+  // jQuery-based element(s) selecting
+  jQuery : {
+    argumentCount: '1-2',
+    code: function(obj1, obj2) {
+      if (arguments.length === 1) {
+        return $(obj1);
+      } else { // it's chained
+        return $(obj2, obj1);
+      }
+    }
+  }
+};
+
 
 /**
  * In case some commands properties are not explicitly filled,
  * set their default according to commandDefaults object.
  * @private
- * @param {Array of commands} commands.
- * @returns {Array of commands} Commands with default properties.
+ * @param {Object} commands Commands.
+ * @returns {Object} Commands with default properties.
  */
 function setDefaultCommandProperties(commands) {
   var result = {};
@@ -193,8 +206,9 @@ function isInstruction(array) {
     });
 }
 
+
 module.exports = {
-  init: init, // todo
+  init: init, // only needed when we need to refresh commands from scratch
   addCommands: addCommands,
   setCommands: setCommands,
   getCommand: function(command) { return commands[command]; },
@@ -210,3 +224,7 @@ module.exports = {
   isSelector: isSelector,
   isInstruction: isInstruction
 };
+
+// circular dependency fix. commands->core->(simplifier+evaluator)->commands
+// https://coderwall.com/p/myzvmg
+core = require('./core');

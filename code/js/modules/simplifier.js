@@ -81,7 +81,7 @@ function simplifyCommand(command) {
   for (var i=0; i < args.length; ++i) {
     var arg1 = args[i];
     if (_.isString(arg1) || _.isNumber(arg1) || _.isPlainObject(arg1) || // basic types
-      _.contains(rawArguments, i)) { // is raw
+      argumentCountChecker.checkArgumentCount(i, rawArguments)) { // is raw
       result.push(arg1);
     } else if (commands.isSelector(arg1)) {
       result.push(simplifySelector(arg1));
@@ -113,8 +113,8 @@ function simplifyScrapingDirective(directive) {
   } else if (commands.isInstruction(directive)) {
     return simplifyInstruction(directive);
   } else {
-    throw new TypeError('selector/command/instruction expected. Received '+
-    JSON.stringify(directive));
+    throw new TypeError('(simplifier) selector/command/instruction expected. Received '+
+    JSON.stringify(directive)  );
   }
 }
 
