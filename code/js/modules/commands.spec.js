@@ -10,232 +10,232 @@ var commands = require('./commands');
 
 describe('module for testing commands module', function() {
 
-    commands.__setJQuery(require('../libs/jquery-mock'));
-    commands.__setStorage(require('./storageFactory').createStorage());
+  commands.__setJQuery(require('../libs/jquery-mock'));
+  commands.__setStorage(require('./storageFactory').createStorage());
 
-    commands.init(); // I want the basic set of commands
+  commands.init(); // I want the basic set of commands
 
 
 
-    var _cmd = commands.getCommand; // shortcut
-    var _cmdCode = function (commandName) {
-      return _cmd(commandName).code.bind(commands.getCommands());
-    };
+  var _cmd = commands.getCommand; // shortcut
+  var _cmdCode = function (commandName) {
+    return _cmd(commandName).code.bind(commands.getCommands());
+  };
 
-    it('should verify if the default signature is set correctly', function() {
-      commands.addCommands({
-        defaultCommand: {
-        }
-      });
-      var defaultCmd = _cmd('defaultCommand');
-
-      assert.strictEqual(defaultCmd.argumentCount, '');
-      assert.strictEqual(defaultCmd.implicitForeach, true);
-      assert.deepEqual(defaultCmd.rawArguments, '');
-      assert.throws(function(){ defaultCmd.code(); });
+  it('should verify if the default signature is set correctly', function() {
+    commands.addCommands({
+      defaultCommand: {
+      }
     });
+    var defaultCmd = _cmd('defaultCommand');
+
+    assert.strictEqual(defaultCmd.argumentCount, '');
+    assert.strictEqual(defaultCmd.implicitForeach, true);
+    assert.deepEqual(defaultCmd.rawArguments, '');
+    assert.throws(function(){ defaultCmd.code(); });
+  });
 
 
-    it('jQuery-based element(s) selecting', function(){
-      var jq = _cmdCode('jQuery'),
-        jqOneArgument = jq('h2'),
-        jqTwoArguments = jq('body', 'p'),// [['$body'], ['>$p']] // reverser order
-        jqEmpty = jq('whatever');
+  it('jQuery-based element(s) selecting', function(){
+    var jq = _cmdCode('jQuery'),
+      jqOneArgument = jq('h2'),
+      jqTwoArguments = jq('body', 'p'),// [['$body'], ['>$p']] // reverser order
+      jqEmpty = jq('whatever');
 
-      // two <h2> elements
-      assert.strictEqual(jqOneArgument.length, 2);
+    // two <h2> elements
+    assert.strictEqual(jqOneArgument.length, 2);
 
-      // <p>
-      assert.strictEqual(jqTwoArguments.length, 1);
+    // <p>
+    assert.strictEqual(jqTwoArguments.length, 1);
 
-      // nothing
-      assert.strictEqual(jqEmpty.length, 0);
-    });
+    // nothing
+    assert.strictEqual(jqEmpty.length, 0);
+  });
 
-    it('getVal/setVal commands', function(){
-      _cmdCode('setVal')('Test storage value', 'mykey');
-      assert.strictEqual(_cmdCode('getVal')('mykey'), 'Test storage value');
-      assert.throws( function() {_cmdCode('getVal')('undefinedKey');}, exceptions.RuntimeError);
-    });
+  it('getVal/setVal commands', function(){
+    _cmdCode('setVal')('Test storage value', 'mykey');
+    assert.strictEqual(_cmdCode('getVal')('mykey'), 'Test storage value');
+    assert.throws( function() {_cmdCode('getVal')('undefinedKey');}, exceptions.RuntimeError);
+  });
 
-    it('conditions', function(){
-      var exists = _cmdCode('exists'),
-        nexists = _cmdCode('nexists');
+  it('conditions', function(){
+    var exists = _cmdCode('exists'),
+      nexists = _cmdCode('nexists');
 
-      assert.ifError(exists(null));
-      assert.ifError(exists(undefined));
-      assert.ifError(!nexists(null));
-      assert.ifError(!nexists(undefined));
+    assert.ifError(exists(null));
+    assert.ifError(exists(undefined));
+    assert.ifError(!nexists(null));
+    assert.ifError(!nexists(undefined));
 
-      assert.ok(exists(''));
-      assert.ok(exists({}));
-      assert.ok(exists(0));
-      assert.ifError(nexists(''));
-      assert.ifError(nexists({}));
-      assert.ifError(nexists(0));
+    assert.ok(exists(''));
+    assert.ok(exists({}));
+    assert.ok(exists(0));
+    assert.ifError(nexists(''));
+    assert.ifError(nexists({}));
+    assert.ifError(nexists(0));
 
-      var empty = _cmdCode('empty'),
-        nempty = _cmdCode('nempty');
-
-
-      assert.ok(empty([]));
-      assert.ok(empty({}));
-      assert.ifError(nempty([]));
-      assert.ifError(nempty({}));
-
-      assert.ifError(empty([1]));
-      assert.ifError(empty({a:1}));
-      assert.ok(nempty([1]));
-      assert.ok(nempty({a:1}));
+    var empty = _cmdCode('empty'),
+      nempty = _cmdCode('nempty');
 
 
-      // comparisons
-      var lt = _cmdCode('lt'),
-        le = _cmdCode('le'),
-        gt = _cmdCode('gt'),
-        ge = _cmdCode('ge'),
-        eq = _cmdCode('eq'),
-        neq = _cmdCode('neq');
+    assert.ok(empty([]));
+    assert.ok(empty({}));
+    assert.ifError(nempty([]));
+    assert.ifError(nempty({}));
 
-      assert.ok(lt(4, 5));
-      assert.ifError(lt(5, 5));
-      assert.ifError(lt(6, 5));
+    assert.ifError(empty([1]));
+    assert.ifError(empty({a:1}));
+    assert.ok(nempty([1]));
+    assert.ok(nempty({a:1}));
 
-      assert.ok(le(4, 5));
-      assert.ok(le(5, 5));
-      assert.ifError(le(6, 5));
 
-      assert.ok(gt(5, 4));
-      assert.ifError(gt(5, 5));
-      assert.ifError(gt(5, 6));
+    // comparisons
+    var lt = _cmdCode('lt'),
+      le = _cmdCode('le'),
+      gt = _cmdCode('gt'),
+      ge = _cmdCode('ge'),
+      eq = _cmdCode('eq'),
+      neq = _cmdCode('neq');
 
-      assert.ok(ge(5, 4));
-      assert.ok(ge(5, 5));
-      assert.ifError(ge(5, 6));
+    assert.ok(lt(4, 5));
+    assert.ifError(lt(5, 5));
+    assert.ifError(lt(6, 5));
 
-      assert.ok(eq(42, 42));
-      assert.ok(eq(42, '42'));
-      assert.ifError(eq(6, 5));
+    assert.ok(le(4, 5));
+    assert.ok(le(5, 5));
+    assert.ifError(le(6, 5));
 
-      assert.ifError(neq(47, 47));
-      assert.ifError(neq(47,'47'));
-      assert.ok(neq(6, 5));
+    assert.ok(gt(5, 4));
+    assert.ifError(gt(5, 5));
+    assert.ifError(gt(5, 6));
 
-      // and, all, or, any
-      // will only test `and` and `or` since `all` and `any` are just synonyms
-      var and = _cmdCode('and'),
-        or = _cmdCode('or'),
-        land = _cmdCode('>and'),
-        lor = _cmdCode('>or');
+    assert.ok(ge(5, 4));
+    assert.ok(ge(5, 5));
+    assert.ifError(ge(5, 6));
 
-      assert.ok(and(true, true, true));
-      assert.ifError(and(true, false, true));
-      assert.ok(or(true, false, true));
-      assert.ifError(or(false, false, false));
+    assert.ok(eq(42, 42));
+    assert.ok(eq(42, '42'));
+    assert.ifError(eq(6, 5));
 
-      assert.ok(land(5, ['>!lt', 6], ['>!gt', 4]));
-      assert.ifError(land(5, ['>!lt', 6], ['>!gt', 4], ['>!lt', 0]));
+    assert.ifError(neq(47, 47));
+    assert.ifError(neq(47,'47'));
+    assert.ok(neq(6, 5));
 
-      assert.ok(lor(5, ['>!lt', 6], ['>!gt', 4]));
-      assert.ok(lor(5, ['>!lt', 6], ['>!gt', 4], ['>!lt', 0]));
-      assert.ifError(lor(5, ['>!lt', 0]));
-    });
+    // and, all, or, any
+    // will only test `and` and `or` since `all` and `any` are just synonyms
+    var and = _cmdCode('and'),
+      or = _cmdCode('or'),
+      land = _cmdCode('>and'),
+      lor = _cmdCode('>or');
 
-    it('converting argument into true array (arr)', function(){
-      var arr = _cmdCode('arr'),
-        arrSelector = arr(_cmdCode('jQuery')('h2'));
+    assert.ok(and(true, true, true));
+    assert.ifError(and(true, false, true));
+    assert.ok(or(true, false, true));
+    assert.ifError(or(false, false, false));
 
-      assert.ok(_.isArray(arrSelector));
-      assert.strictEqual(arrSelector.length, 2);
-    });
+    assert.ok(land(5, ['>!lt', 6], ['>!gt', 4]));
+    assert.ifError(land(5, ['>!lt', 6], ['>!gt', 4], ['>!lt', 0]));
 
-    it('access object properties (prop)', function() {
-      var prop = _cmdCode('prop'),
-        obj = {
-          0: {pr:1, i:3},
-          1: {pr:2, i:4},
-          length: 2, // length property is crucial
-          pr: 'outer property'
-        };
+    assert.ok(lor(5, ['>!lt', 6], ['>!gt', 4]));
+    assert.ok(lor(5, ['>!lt', 6], ['>!gt', 4], ['>!lt', 0]));
+    assert.ifError(lor(5, ['>!lt', 0]));
+  });
 
-      assert.strictEqual(prop(obj, 'pr'), 'outer property');
-      assert.deepEqual(prop(obj, 'pr', 'inner'), [1, 2]);
-      assert.deepEqual(prop(obj, 'i'), [3, 4]);
-    });
+  it('converting argument into true array (arr)', function(){
+    var arr = _cmdCode('arr'),
+      arrSelector = arr(_cmdCode('jQuery')('h2'));
 
-    it('object method invocation (call, apply)', function() {
-      var call = _cmdCode('call'),
-        apply = _cmdCode('apply');
+    assert.ok(_.isArray(arrSelector));
+    assert.strictEqual(arrSelector.length, 2);
+  });
 
-      assert(call('serrano', 'toUpperCase'), 'SERRANO');
-      assert(apply('test?driven development','replace',['?','-']),
-        'test-driven development');
-
-      // inner property
-      var inn = {
-        0: { plus:function(x,y){return (x?x:0) + (y?y:0);}, c:function(x){return (x?x:13);} },
-        1: { plus:function(x,y){return (x?x:0) + (y?y:0);}, c:function(x){return (x?x:13);} },
-        plus: function(x,y){return 'outer plus='+( (x?x:0) + (y?y:0));},
-        length: 2
+  it('access object properties (prop)', function() {
+    var prop = _cmdCode('prop'),
+      obj = {
+        0: {pr:1, i:3},
+        1: {pr:2, i:4},
+        length: 2, // length property is crucial
+        pr: 'outer property'
       };
 
-      // Three test cases for `call` and `apply`:
-      // 1. invoke outer method
-      // 2. by setting 'inner', invoke inner method
-      // 3. invoke inner method because element doesn't have outer function w that name
-      assert.strictEqual(call(inn, 'plus'), 'outer plus=0');
-      assert.deepEqual(call(inn, 'plus', 'inner'), [0, 0]);
-      assert.deepEqual(call(inn, 'c'), [13, 13]);
+    assert.strictEqual(prop(obj, 'pr'), 'outer property');
+    assert.deepEqual(prop(obj, 'pr', 'inner'), [1, 2]);
+    assert.deepEqual(prop(obj, 'i'), [3, 4]);
+  });
 
-      assert.strictEqual(apply(inn, 'plus', [1,2]), 'outer plus=3');
-      assert.deepEqual(apply(inn, 'plus', [1,2], 'inner'), [3, 3]);
-      assert.deepEqual(apply(inn, 'c', [5]), [5, 5]);
+  it('object method invocation (call, apply)', function() {
+    var call = _cmdCode('call'),
+      apply = _cmdCode('apply');
+
+    assert(call('serrano', 'toUpperCase'), 'SERRANO');
+    assert(apply('test?driven development','replace',['?','-']),
+      'test-driven development');
+
+    // inner property
+    var inn = {
+      0: { plus:function(x,y){return (x?x:0) + (y?y:0);}, c:function(x){return (x?x:13);} },
+      1: { plus:function(x,y){return (x?x:0) + (y?y:0);}, c:function(x){return (x?x:13);} },
+      plus: function(x,y){return 'outer plus='+( (x?x:0) + (y?y:0));},
+      length: 2
+    };
+
+    // Three test cases for `call` and `apply`:
+    // 1. invoke outer method
+    // 2. by setting 'inner', invoke inner method
+    // 3. invoke inner method because element doesn't have outer function w that name
+    assert.strictEqual(call(inn, 'plus'), 'outer plus=0');
+    assert.deepEqual(call(inn, 'plus', 'inner'), [0, 0]);
+    assert.deepEqual(call(inn, 'c'), [13, 13]);
+
+    assert.strictEqual(apply(inn, 'plus', [1,2]), 'outer plus=3');
+    assert.deepEqual(apply(inn, 'plus', [1,2], 'inner'), [3, 3]);
+    assert.deepEqual(apply(inn, 'c', [5]), [5, 5]);
+  });
+
+  it('code branching (if)', function() {
+    var cond = _cmdCode('if');
+
+    commands.addCommands({
+      constant: {
+        argumentCount: '1',
+        rawArguments: '0',
+        code: function(x) {return x;}
+      }
     });
 
-    it('code branching (if)', function() {
-      var cond = _cmdCode('if');
+    assert.strictEqual(cond(true, ['!constant', 'Yes'], ['!constant', 'No']), 'Yes');
+    assert.strictEqual(cond(true, ['!constant', 'Yes']), 'Yes');
+    assert.strictEqual(cond(false, ['!constant', 'Yes'], ['!constant', 'No']), 'No');
+  });
 
-      commands.addCommands({
-        constant: {
-          argumentCount: '1',
-          rawArguments: '0',
-          code: function(x) {return x;}
-        }
-      });
+  it('filtering (filter)', function() {
+    var filter = _cmdCode('filter'),
+      ages = [2,4,6,8,10,1,3,5,7,9];
 
-      assert.strictEqual(cond(true, ['!constant', 'Yes'], ['!constant', 'No']), 'Yes');
-      assert.strictEqual(cond(true, ['!constant', 'Yes']), 'Yes');
-      assert.strictEqual(cond(false, ['!constant', 'Yes'], ['!constant', 'No']), 'No');
-    });
+    assert.deepEqual(filter(ages, ['>!lt', 5]), [2,4,1,3]);
+  });
 
-    it('filtering (filter)', function() {
-      var filter = _cmdCode('filter'),
-        ages = [2,4,6,8,10,1,3,5,7,9];
+  it('array reduction (len/at/first/last)', function() {
+    var arr = [10,20,30,40,50],
+      h2 = _cmdCode('jQuery')('h2');
 
-      assert.deepEqual(filter(ages, ['>!lt', 5]), [2,4,1,3]);
-    });
+    assert.strictEqual(_cmdCode('len')(arr), 5);
+    assert.strictEqual(_cmdCode('len')([]), 0);
+    assert.strictEqual(_cmdCode('len')(h2), 2);
 
-    it('array reduction (len/at/first/last)', function() {
-      var arr = [10,20,30,40,50],
-        h2 = _cmdCode('jQuery')('h2');
+    assert.strictEqual(_cmdCode('at')(arr, 0), 10);
+    assert.strictEqual(_cmdCode('at')(arr, -2), 40);
+    assert.deepEqual(_cmdCode('at')(arr, [0, -2,-6, 5]), [10, 40, undefined, undefined]);
 
-      assert.strictEqual(_cmdCode('len')(arr), 5);
-      assert.strictEqual(_cmdCode('len')([]), 0);
-      assert.strictEqual(_cmdCode('len')(h2), 2);
+    assert.strictEqual(_cmdCode('first')(arr), 10);
+    assert.strictEqual(_cmdCode('first')([]), undefined);
 
-      assert.strictEqual(_cmdCode('at')(arr, 0), 10);
-      assert.strictEqual(_cmdCode('at')(arr, -2), 40);
-      assert.deepEqual(_cmdCode('at')(arr, [0, -2,-6, 5]), [10, 40, undefined, undefined]);
+    assert.strictEqual(_cmdCode('last')(arr), 50);
+    assert.strictEqual(_cmdCode('last')([]), undefined);
+  });
 
-      assert.strictEqual(_cmdCode('first')(arr), 10);
-      assert.strictEqual(_cmdCode('first')([]), undefined);
-
-      assert.strictEqual(_cmdCode('last')(arr), 50);
-      assert.strictEqual(_cmdCode('last')([]), undefined);
-    });
-
-    it('arithmetic operations (+,-,*,/) on both scalars and vectors and (sum,avg)',
-      function() {
+  it('arithmetic operations (+,-,*,/) on both scalars and vectors and (sum,avg)',
+    function() {
 
       var plus = _cmdCode('+'),
         minus = _cmdCode('-'),
@@ -277,4 +277,28 @@ describe('module for testing commands module', function() {
       // avg
       assert.ok(Math.abs(_cmdCode('avg')(data) - 2.8333) < TOLERANCE);
     });
+
+  it('convenience commands (concat, union, splice, join', function() {
+    assert.deepEqual(_cmdCode('concat')([1,2,3], [2,3,4],[5]), [1,2,3,2,3,4,5]);
+    assert.deepEqual(_cmdCode('union')([1,2,3], [2,3,4],[5]), [1,2,3,4,5]);
+
+    assert.deepEqual(_cmdCode('splice')([10,20,30,40,50], 1, 3), [10,50]);
+    assert.deepEqual(_cmdCode('splice')([10,20,30,40,50], -4, 3), [10,50]);
+
+    assert.deepEqual(_cmdCode('join')(['A','P','W','B', 'Dumbledore'], '. '),
+      'A. P. W. B. Dumbledore');
+  });
+
+  it('more convenience commands (lower/upper, trim, split, substr, replace)', function(){
+    assert.strictEqual(_cmdCode('upper')('serrano'), 'SERRANO');
+    assert.strictEqual(_cmdCode('lower')('SERRANO'), 'serrano');
+    assert.strictEqual(_cmdCode('trim')('\t\ntrimmed   \t  '), 'trimmed');
+
+    assert.deepEqual(_cmdCode('split')('24.12.2014','.'), ['24','12','2014']);
+    assert.strictEqual(_cmdCode('substr')('serrano', 4), 'ano');
+    assert.strictEqual(_cmdCode('substr')('serrano', 1,3), 'err');
+    assert.strictEqual(_cmdCode('replace')('Hello Hello world', 'Hello', 'Goodbye'),
+      'Goodbye Goodbye world');
+  });
+
 });
