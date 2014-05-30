@@ -32,11 +32,17 @@ var scrapingDirectives = [
 [["$table:eq(0) tr td:nth-child(2)"],['>!prop', 'innerHTML'],[">!upper"], ['>!setVal', 'people']],
 //[["$table:eq(0) tr"], [">!filter", [['>$td:nth-child(3)'] ]  ]   ], //
 
-[['=h2:eq(1)'], ['>!split', ':'], ['>!at', 1], ['>!setVal', 'weddate']],
+[['=h2:eq(1)'], ['>!split', ': '], ['>!at', 1], ['>!split', '.'], ['>!setVal', 'weddate']],
+[['!concat', ['!+', 1, [['!getVal', 'weddate'], ['>!at', 2]]  ], [['!getVal', 'weddate'], ['>!at', [1,0]]]  ], ['>!join', '/']],
 
+[['!getVal', 'weddate'], , ['>!setVal', 'arrweddate'] ],
 ['jk']
 
 ];
+
+
+['>!at', [0, 1]],
+
 // [["$table:eq(0) tr"], [">!filter", [['>$td:nth-child(3)'], ['>!prop', 'innerHTML'], ['>!eq', 13] ]  ], ['>$td:nth-child(2)'], ['>!prop', 'innerHTML']], // indefined is not a function
 // serrano> [['=h2:eq(1)'], ['>!split', ':'], ['>!at', 1], ['>!setVal', 'n']]
 // serrano>  [['!getVal', 'n'], ['>!split', '.'], ['>!at', 1    ]]
