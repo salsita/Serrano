@@ -1,9 +1,8 @@
 // entry point of the library
 
 /*exported simplifier */
-var simplifier = require('./modules/simplifier');
-var core = require('./modules/simplifier');
+var core = require('./modules/core');
+
 module.exports = {
-  simplifier: simplifier,
-  core: core
+  interpretScrapingDirective: core.interpretScrapingDirective
 }

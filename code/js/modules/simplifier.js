@@ -72,7 +72,8 @@ function simplifyCommand(command) {
   // -1 for the head==commName, +1 if it receives an explicit argument ('>')
   var argcSupplied = command.length - 1 + (piped ? 1 : 0);
   if (!argumentCountChecker.checkArgumentCount(argcSupplied, signature)) {
-    var msg = 'Command ' + commFullName + ' was supplied with invalid number of arguments';
+    var msg = 'Command ' + commFullName + ' was supplied with invalid number of arguments.' +
+      argcSupplied + ' argument(s) supplied';
     throw new exceptions.WrongArgumentError(msg);
   }
 
@@ -81,7 +82,7 @@ function simplifyCommand(command) {
   for (var i=0; i < args.length; ++i) {
     var arg1 = args[i];
     if (_.isString(arg1) || _.isNumber(arg1) || _.isPlainObject(arg1) || // basic types
-      argumentCountChecker.checkArgumentCount(i, rawArguments)) { // is raw
+      argumentCountChecker.checkArgumentCount(i + (piped ? 1 : 0), rawArguments)) { // is raw
       result.push(arg1);
     } else if (commands.isSelector(arg1)) {
       result.push(simplifySelector(arg1));
@@ -90,7 +91,8 @@ function simplifyCommand(command) {
     } else if (commands.isInstruction(arg1)) {
       result.push(simplifyInstruction(arg1));
     } else {
-      throw new TypeError('Invalid command argument at position ' + i + ' for '+ commName);
+      throw new TypeError('Invalid command argument at position ' + i + ' for '+ commName+
+        ". Argument: " + JSON.stringify(arg1) );
     }
   }
   return result;

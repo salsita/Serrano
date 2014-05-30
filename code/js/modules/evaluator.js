@@ -25,7 +25,8 @@ function evalCommand(cmd, implicitArgument) {
 
   for (var i = 1; i < cmd.length; ++i) {
     var arg = cmd[i];
-    if (argumentCountChecker.checkArgumentCount(i, command.rawArguments)) {
+
+    if (argumentCountChecker.checkArgumentCount(i+ (piped? 0: -1) , command.rawArguments)) {
       args.push(arg);
     } else if (commands.isInstruction(arg)) {
       /*globals evalInstruction */

@@ -23,7 +23,7 @@ var testCommands = {
       return args;
     }
   },
-  secondArgumentIsRaw: {
+  thirdArgumentIsRaw: {
     argumentCount: '0-3',
     rawArguments: '2',
     code: function() {
@@ -42,6 +42,7 @@ var testCommands = {
 
   constant: {
     argumentCount: '1',
+    rawArguments: '0',
     code: function(c) {
       return c;
     }
@@ -113,18 +114,24 @@ describe('module for grammar simplification', function() {
 
   it('should verify that raw argument is left raw', function(){
     // implicit arg, first arg, second arg...
-    var secondRaw = ['!secondArgumentIsRaw',
+    var secondRaw = ['!thirdArgumentIsRaw',
       ['$implicitArg [to=be] simplified'],
       {prop1:42, prop2:47},
       ['$thisArgumentIsRaw']];
 
 
-    var rSecondRaw = [ '!secondArgumentIsRaw',
+    var rSecondRaw = [ '!thirdArgumentIsRaw',
       [ '!jQuery', 'implicitArg [to=be] simplified' ],
       { prop1: 42, prop2: 47 },
       [ '$thisArgumentIsRaw' ] ];
 
     assert.deepEqual(simplify(secondRaw), rSecondRaw);
+
+    var pipedThird = [['!constant', 'anything'],
+      ['>!thirdArgumentIsRaw', ['$notraw'], ['$raw']]];
+    var rpipedThird = [['!constant', 'anything'],
+      ['>!thirdArgumentIsRaw', ['!jQuery', 'notraw'], ['$raw']]];
+    assert.deepEqual(simplify(pipedThird), rpipedThird);
   });
 
   it('should make sure that pipes and complicated expressions are simplified correctly',

@@ -24,7 +24,7 @@ var testCommands = {
 
   constant: {
     argumentCount: '1',
-    rawArguments: '1',
+    rawArguments: '0',
     code: function(c) {
       return c;
     }
@@ -65,11 +65,11 @@ var testCommands = {
     }
   },
 
-  stringifyRawFirstArgument: {
-    argumentCount: '1',
+  stringifyRawSecondArgument: {
+    argumentCount: '1-',
     rawArguments: '1',
-    code: function(impl, first) {
-      return JSON.stringify(first);
+    code: function(impl, second) {
+      return JSON.stringify(second);
     }
   },
 
@@ -95,6 +95,7 @@ describe('interpreter evaluator', function() {
     beforeEach(function(){
       commands.setCommands(testCommands);
     });
+
     it('should verify chaining and implicit argument passing', function(){
       var explicit = [['!replace', 'Hello world!', 'world', 'Roman']],
         implicit = [['!constant', 'Hello world!'], ['>!replace', 'world', 'Roman']],
@@ -129,9 +130,13 @@ describe('interpreter evaluator', function() {
     // 3. raw vs processed arguments
     it('should verify raw vs processed argument passing', function(){
       var raw = [ ['!constant', 'whatever'],
-        ['>!stringifyRawFirstArgument', [['!jQuery', 'h2'], ['>!arr'], ['>!len']] ] ];
-      assert.strictEqual(ei(raw), '[["!jQuery","h2"],[">!arr"],[">!len"]]');
+        ['>!stringifyRawSecondArgument', [['!jQuery', 'h2'], ['>!arr'], ['>!len']] ]],
+        rraw = '[["!jQuery","h2"],[">!arr"],[">!len"]]';
 
+      assert.deepEqual(ei(raw), rraw);
+
+      var raw2 = ['!stringifyRawSecondArgument', ['!constant', 'whatever'],[['!jQuery', 'h2'], ['>!arr'], ['>!len']] ];
+      assert.deepEqual(ei(raw2), rraw);
 
       var processed = [ ['!constant', 'whatever'],
         ['>!stringifyFirstArgument', [['!jQuery', 'h2'], ['>!arr'], ['>!len']] ] ];
