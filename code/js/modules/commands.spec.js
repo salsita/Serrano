@@ -248,6 +248,9 @@ describe('module for testing commands module', function() {
       assert.strictEqual(times(3, 5), 15);
       assert.strictEqual(divide(3, 5), 0.6);
 
+      // string scalars
+      assert.strictEqual(plus('3', '5'), 8);
+
       var data = [ 1, -1, 2, 5, 3, 7 ];
 
       // array + scalar
