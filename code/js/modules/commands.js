@@ -315,6 +315,9 @@ var builtinCommands = {
   scalarOp : {
     argumentCount: '3',
     code: function(a, b, op) {
+      a = parseFloat(a);
+      b = parseFloat(b);
+
       switch (op) {
         case '+':
           return a + b;
@@ -360,13 +363,20 @@ var builtinCommands = {
   op: {
     argumentCount: '3',
     code: function(item1, item2, op) {
-      // scalar + scalar
-      if (_.isNumber(item1) && _.isNumber(item2)) {
-        return this.scalarOp.code(item1, item2, op);
-      } else if (_.isArray(item1) && _.isArray(item2)) {
-        return this.arrayArrayOp.code.call(this, item1, item2, op);
-      } else {
-        return this.arrayScalarOp.code.call(this, item1, item2, op);
+      var arrCount = 0;
+      if (_.isArray(item1)) {
+        ++arrCount;
+      }
+      if(_.isArray(item2)) {
+        ++arrCount;
+      }
+      switch (arrCount) {
+        case 2: // array + array
+          return this.arrayArrayOp.code.call(this, item1, item2, op);
+        case 1: // array + scalar || scalar + array
+          return this.arrayScalarOp.code.call(this, item1, item2, op);
+        case 0: // scalar + scalar
+          return this.scalarOp.code(item1, item2, op);
       }
     }
   },

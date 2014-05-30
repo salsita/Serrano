@@ -90,8 +90,10 @@ function simplifyCommand(command) {
       result.push(simplifyCommand(arg1));
     } else if (commands.isInstruction(arg1)) {
       result.push(simplifyInstruction(arg1));
+    } else if (_.isArray(arg1)) {
+      result.push(arg1);
     } else {
-      throw new TypeError('Invalid command argument at position ' + i + ' for '+ commName+
+      throw new TypeError('Invalid command argument at position ' + (i+(piped?1:0)) + ' for '+ commName+
         ". Argument: " + JSON.stringify(arg1) );
     }
   }
