@@ -10,14 +10,14 @@ var testCommands = {
   nonForeachable: {
     implicitForeach: false,
     argumentCount: 1,
-    code: function(impl) {
+    code: function(context, impl) {
       return impl;
     }
   },
   foreachableImplicitRawArgument: { // same as non foreachable
     argumentCount: '1-2',
     rawArguments: '0',
-    code: function(impl) {
+    code: function(context, impl) {
       return impl;
     }
   },
@@ -25,32 +25,32 @@ var testCommands = {
   constant: {
     argumentCount: '1',
     rawArguments: '0',
-    code: function(c) {
+    code: function(context, c) {
       return c;
     }
   },
   replace: {
     argumentCount: '3',
-    code: function (str, old, n) {
+    code: function (context, str, old, n) {
       return str.replace(old, n);
     }
   },
   arr: {
     argumentCount: '1',
-    code: function(obj) {
+    code: function(context, obj) {
       return $.makeArray(obj);
     }
   },
   len: {
     implicitForeach: false,
-    code: function(obj) {
+    code: function(context, obj) {
       return obj && obj.length;
     }
   },
   jQuery : {
     argumentCount: '1-2',
-    code: function(obj1, obj2) {
-      if (arguments.length === 1) {
+    code: function(context, obj1, obj2) {
+      if (arguments.length === 2) {
         return $(obj1);
       } else { // it's chained
         return $(obj2, obj1);
@@ -60,7 +60,7 @@ var testCommands = {
 
   stringifyFirstArgument: {
     argumentCount: '1',
-    code: function(impl, first) {
+    code: function(context, impl, first) {
       return JSON.stringify(first);
     }
   },
@@ -68,20 +68,20 @@ var testCommands = {
   stringifyRawSecondArgument: {
     argumentCount: '1-',
     rawArguments: '1',
-    code: function(impl, second) {
+    code: function(context, impl, second) {
       return JSON.stringify(second);
     }
   },
 
   '>implDifferent': {
     argumentCount: '1-2',
-    code: function() {
+    code: function(context) {
       return 'with >';
     }
   },
   'implDifferent': {
     argumentCount: '0-1',
-    code: function() {
+    code: function(context) {
       return 'without >';
     }
   }
@@ -90,7 +90,9 @@ var testCommands = {
 var evaluator = require('./evaluator');
 
 describe('interpreter evaluator', function() {
-    var ei = evaluator.evalScrapingDirective;
+    function ei(directive, implicitArgument) {
+      return evaluator.evalScrapingDirective(directive, {storage:{}}, implicitArgument);
+    }
 
     beforeEach(function(){
       commands.setCommands(testCommands);

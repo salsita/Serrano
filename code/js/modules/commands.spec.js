@@ -10,7 +10,6 @@ var core = require('./core');
 
 describe('module for testing commands module', function() {
   commands.__setJQuery(require('../libs/jquery-mock'));
-  commands.__setStorage(require('./storageFactory').createStorage());
   commands.init(); // I want the basic set of commands
 
   var _i = core.interpretScrapingDirective; // shortcut
@@ -111,7 +110,7 @@ describe('module for testing commands module', function() {
       assert.ok(_i(['!neq', 6, 5]));
     });
 
-    it('should verify logical and/or/>and/>or', function() {
+    it('should verify logical and, or, >and, >or', function() {
       // and, all, or, any
       // will only test `and` and `or` since `all` and `any` are just synonyms
 
@@ -150,7 +149,7 @@ describe('module for testing commands module', function() {
     assert.deepEqual(_i(['!prop', null, 'prop']), []);
     assert.deepEqual(_i(['!prop', 1, 'prop']), []);
 
-    //first tries acess hello['prop'], fails and tries on every element of the object
+    //first tries access hello['prop'], fails and tries on every element of the object
     assert.deepEqual(_i(['!prop', 'hello', 'prop']), [undefined,undefined,undefined,undefined, undefined]);
     assert.deepEqual(_i(['!prop', [0,1,2], 'prop']), [undefined, undefined, undefined]);
 

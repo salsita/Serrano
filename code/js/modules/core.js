@@ -8,6 +8,12 @@ var simplifier = require('./simplifier');
 var evaluator = require('./evaluator');
 
 /**
+ * Context in which the commands are executed.
+ * (todo: Temporary solution.)
+ */
+var context = {storage: {}};
+
+/**
  * Gets one raw scraping directive. Checks for the depth, simplifies and runs it.
  * Don't forget, it manipulates with the global storage object.
  * @param directive Directive to run
@@ -21,7 +27,7 @@ function interpretScrapingDirective(directive, implicitArgument) {
 
   var simplified = simplifier.simplifyScrapingDirective(directive);
 
-  return evaluator.evalScrapingDirective(simplified, implicitArgument);
+  return evaluator.evalScrapingDirective(simplified, context, implicitArgument );
 }
 
 /**
