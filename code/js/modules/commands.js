@@ -32,11 +32,11 @@ var commandDefaults = {
 /**
  * Contains all the available functions in the following format:
  * 'function name': {
- *   argumentCount: (default=''_ number of arguments a command takes. Denoted as a string in a format
+ *   argumentCount: (default='') number of arguments a command takes. Denoted as a string in a format
  *     used when specifying pages to be printed e.g. '1,3-8, 10, 13-'
- *   implicitForeach: (default=true) // if the return value of the previous function is array ->
+ *   implicitForeach: (default=true) if the return value of the previous function is array ->
  *     decides whether pass it as it is, or run an implicit foreach
- *   rawArguments: (default='') // array of argument positions that should be passed
+ *   rawArguments: (default='') array of argument positions that should be passed
  *     raw (without preprocessing) -> those at that positions there are ARRAYS that we
  *     do not want to preprocess
  *   code: Function (the code of the function itself)
@@ -48,6 +48,14 @@ var commandDefaults = {
  * as if implicitForeach would be set to false.
  */
 var builtinCommands = {
+  constant: {
+    argumentCount: '1',
+    rawArguments: '0',
+    code: function(value) {
+      return value;
+    }
+  },
+
   // jQuery-based element(s) selecting
   jQuery : {
     argumentCount: '1-2',
@@ -191,6 +199,7 @@ var builtinCommands = {
   // converts a jQuery object into an array - https://api.jquery.com/jQuery.makeArray/
   arr: {
     argumentCount: '1',
+    implicitForeach: false,
     code: function(obj) {
       return $.makeArray(obj);
     }
@@ -253,20 +262,24 @@ var builtinCommands = {
       if (condition) {
         return core.interpretScrapingDirective(ifbody);
       } else {
-        return core.interpretScrapingDirective(elsebody);
+        return elsebody && core.interpretScrapingDirective(elsebody);
       }
     }
   },
 
   // filtering
   filter: {
-    argumentCount: '1',
+    argumentCount: '2',
     implicitForeach: false,
     rawArguments: '1',
     code: function(data, condition) {
-      return _.filter(data, function(item) {
-        return core.interpretScrapingDirective(condition, item);
-      });
+      if (_.isArray(data)) {
+        return  _.filter(data, function(item) {
+            return core.interpretScrapingDirective(condition, item);
+        });
+      } else {
+        return core.interpretScrapingDirective(condition, data)? data : undefined;
+      }
     }
   },
 
@@ -276,7 +289,7 @@ var builtinCommands = {
     argumentCount:'1',
     implicitForeach: false,
     code: function(obj) {
-      return obj && obj.length;
+      return _.size(obj);
     }
   },
 
@@ -312,7 +325,7 @@ var builtinCommands = {
   },
 
   // arithmetics
-  scalarOp : {
+  _scalarOp : {
     argumentCount: '3',
     code: function(a, b, op) {
       a = parseFloat(a);
@@ -331,23 +344,23 @@ var builtinCommands = {
     }
   },
 
-  arrayScalarOp: {
+  _arrayScalarOp: {
     argumentCount: '3',
     code: function(first, second, op) {
       var that = this;
       if (_.isArray(first)) {
         return _.map(first, function(el) {
-          return that.scalarOp.code.call(that, el, second, op);
+          return that._scalarOp.code.call(that, el, second, op);
         });
       } else {
         return _.map(second, function(el) {
-          return that.scalarOp.code.call(that, first, el, op);
+          return that._scalarOp.code.call(that, first, el, op);
         });
       }
     }
   },
 
-  arrayArrayOp: {
+  _arrayArrayOp: {
     argumentCount: '3',
     code: function(array1, array2, op) {
       if (array1.length !== array2.length) {
@@ -355,12 +368,12 @@ var builtinCommands = {
       }
       var that = this;
       return _.zip(array1, array2).map(function(pair) {
-        return that.scalarOp.code.call(that, pair[0], pair[1], op);
+        return that._scalarOp.code.call(that, pair[0], pair[1], op);
       });
     }
   },
 
-  op: {
+  _op: {
     argumentCount: '3',
     code: function(item1, item2, op) {
       var arrCount = 0;
@@ -370,13 +383,14 @@ var builtinCommands = {
       if(_.isArray(item2)) {
         ++arrCount;
       }
+
       switch (arrCount) {
         case 2: // array + array
-          return this.arrayArrayOp.code.call(this, item1, item2, op);
+          return this._arrayArrayOp.code.call(this, item1, item2, op);
         case 1: // array + scalar || scalar + array
-          return this.arrayScalarOp.code.call(this, item1, item2, op);
+          return this._arrayScalarOp.code.call(this, item1, item2, op);
         case 0: // scalar + scalar
-          return this.scalarOp.code(item1, item2, op);
+          return this._scalarOp.code(item1, item2, op);
       }
     }
   },
@@ -384,34 +398,38 @@ var builtinCommands = {
   '+' : {
     argumentCount: '2',
     code: function(a, b) {
-      return this.op.code.call(this, a, b, '+');
+      return this._op.code.call(this, a, b, '+');
     }
   },
   '-' : {
     argumentCount: '2',
     code: function(a, b) {
-      return this.op.code.call(this, a, b, '-');
+      return this._op.code.call(this, a, b, '-');
     }
   },
   '*' : {
     argumentCount: '2',
     code: function(a, b) {
-      return this.op.code.call(this, a, b, '*');
+      return this._op.code.call(this, a, b, '*');
     }
   },
   '/' : {
     argumentCount: '2',
     code: function(a, b) {
-      return this.op.code.call(this, a, b, '/');
+      return this._op.code.call(this, a, b, '/');
     }
   },
 
   sum: {
     argumentCount: '1',
     code: function(array) {
-      return _.reduce(array, function(sum, num) {
-        return sum + num;
-      });
+      if (_.isArray(array)) {
+        return _.reduce(array, function(sum, num) {
+          return sum + parseFloat(num);
+        }, 0);
+      } else {
+        throw new exceptions.RuntimeError('Non-array value supplied to !sum.');
+      }
     }
   },
   avg: {

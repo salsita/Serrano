@@ -26,16 +26,16 @@ td {
 var serranoInterpreter = window.serrano.engine.interpretScrapingDirective;
 
 var scrapingDirectives = [
-[['$h1'], ['>!first'], ['>!prop', 'innerHTML'] ],
-['!lower', 'Tomas Novella'],
-[['$table:eq(0) th'], ['>!prop', 'innerHTML'], ['>!split', ','], ['>!join', ';']],
-[["$table:eq(0) tr td:nth-child(2)"],['>!prop', 'innerHTML'],[">!upper"], ['>!setVal', 'people']],
+"get first heading", [['$h1'], ['>!first'], ['>!prop', 'innerHTML'] ],
+"lowercase my name", ['!lower', 'Tomas Novella'],
+"get th elements", [['$table:eq(0) th'], ['>!prop', 'innerHTML'], ['>!split', ','], ['>!join', ';']],
+"get all he people", [["$table:eq(0) tr td:nth-child(2)"],['>!prop', 'innerHTML'],[">!upper"], ['>!setVal', 'people']],
 //[["$table:eq(0) tr"], [">!filter", [['>$td:nth-child(3)'] ]  ]   ], //
 
-[['=h2:eq(1)'], ['>!split', ': '], ['>!at', 1], ['>!split', '.'], ['>!setVal', 'weddate']],
-[['!concat', ['!+', 1, [['!getVal', 'weddate'], ['>!at', 2]]  ], [['!getVal', 'weddate'], ['>!at', [1,0]]]  ], ['>!join', '/']],
-
-[['!getVal', 'weddate'], , ['>!setVal', 'arrweddate'] ],
+"save weddate as array", [['=h2:eq(1)'], ['>!split', ': '], ['>!at', 1], ['>!split', '.'], ['>!setVal', 'weddate']],
+"reverse plus add year", [['!concat', ['!+', 1, [['!getVal', 'weddate'], ['>!at', 2]]  ], [['!getVal', 'weddate'], ['>!at', [1,0]]]  ], ['>!join', '/']],
+"reverse plus add one", [["!+",1,["!getVal","weddate"]] ,[">!join","/"]],
+"filter people w lucky number=13", [["$table:eq(0) tr"], [">!filter", [['>$td:nth-child(3)'], ['>!prop', 'innerHTML'], ['>!eq', 13] ]  ], ['>$td:nth-child(2)'], ['>!prop', 'innerHTML']],
 ['jk']
 
 ];
