@@ -491,6 +491,7 @@ var builtinCommands = {
       return _(args).flatten().union().valueOf();
     }
   },
+
   splice: {
     argumentCount: '3',
     implicitForeach: false,
@@ -501,6 +502,7 @@ var builtinCommands = {
       return array;
     }
   },
+
   join: {
     argumentCount:'2',
     implicitForeach: false,
@@ -508,6 +510,7 @@ var builtinCommands = {
       return array.join(separator);
     }
   },
+
   replace: {
     argumentCount: '3',
     code: function (context, str, old, n) {

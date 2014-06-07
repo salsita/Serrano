@@ -29,7 +29,7 @@ describe('module for testing commands module', function() {
 
 
   it('should check the !constant command', function(){
-    var arr = [5,3,5,8,9,7,9,3,2,3],
+    var arr = [5, 3, 5, 8, 9, 7, 9, 3, 2, 3],
       str = 'test string',
       bool = true;
 
@@ -38,7 +38,7 @@ describe('module for testing commands module', function() {
     assert.deepEqual(_i(['!constant', bool]), bool);
   });
 
-  it('jQuery-based element(s) selecting', function() {
+  it('should check the jQuery-based element(s) selecting', function() {
     // two <h2> elements
     assert.strictEqual(_i([['$h2'], ['>!len']]), 2);
 
@@ -49,14 +49,14 @@ describe('module for testing commands module', function() {
     assert.strictEqual(_i([['$h16'], ['>!len']]), 0);
   });
 
-  it('getVal/setVal commands', function(){
+  it('should check the getVal/setVal commands', function(){
     _i(['!setVal', 'Test storage value', 'mykey']);
     assert.strictEqual(_i(['!getVal', 'mykey']), 'Test storage value');
     assert.throws(function() {_i(['!getVal', 'undefinedKey']);}, exceptions.RuntimeError);
   });
 
   describe('conditions', function(){
-    it('should verify existence tests', function(){
+    it('should check the should verify existence tests', function(){
       assert.ifError(_i(['!exists', null]));
       assert.ifError(_i(['!exists', undefined]));
       assert.ok(_i(['!nexists', null]));
@@ -115,9 +115,14 @@ describe('module for testing commands module', function() {
       // will only test `and` and `or` since `all` and `any` are just synonyms
 
       assert.ok(_i(['!and', true, true, true]));
+      assert.ok(_i(['!all', true, true, true]));
       assert.ifError(_i(['!and', true, false, true]));
+      assert.ifError(_i(['!all', true, false, true]));
+
       assert.ok(_i(['!or', true, false, true]));
+      assert.ok(_i(['!any', true, false, true]));
       assert.ifError(_i(['!or', false, false, false]));
+      assert.ifError(_i(['!any', false, false, false]));
 
       assert.ok(_i([['!constant', 5],['>!and', ['>!lt', 6], ['>!gt', 4]]]));
       assert.ifError(_i([  ['!constant', 5], ['>!and', ['>!lt', 6], ['>!gt', 4], ['>!lt', 0]]  ]));
@@ -133,7 +138,7 @@ describe('module for testing commands module', function() {
   // the real $.makeArray cannot be tested since jQuery cannot be loaded with the absence of DOM
   // ---
 
-  it('access object properties (prop)', function() {
+  it('should check access to object properties (prop)', function() {
     var obj = {
         0: {pr:1, i:3},
         1: {pr:2, i:4},
@@ -157,7 +162,7 @@ describe('module for testing commands module', function() {
     assert.deepEqual(_i(['!prop', [0,1,2], 'length']), 3);
   });
 
-  it('object method invocation (call, apply)', function() {
+  it('should check the object method invocation (call, apply)', function() {
     assert.strictEqual(_i(['!call', 'serrano', 'toUpperCase']), 'SERRANO');
     assert.strictEqual(_i(['!apply', 'test?driven development', 'replace', ['?','-'] ]),
       'test-driven development');
@@ -184,34 +189,49 @@ describe('module for testing commands module', function() {
     assert.deepEqual(_i(['!apply', inn, 'c', [5]]), [5, 5]);
   });
 
-  it('code branching (if)', function() {
+  it('should check the code branching (if)', function() {
     assert.strictEqual(_i(['!if', true, ['!constant', 'Yes'], ['!constant', 'No']]), 'Yes');
     assert.strictEqual(_i(['!if', ['!eq', 1, 1], ['!constant', 'Yes']]), 'Yes');
     assert.strictEqual(_i(['!if', false, ['!constant', 'Yes'], ['!constant', 'No']]), 'No');
     assert.strictEqual(_i(['!if', false, ['!constant', 'Yes']]), undefined);
   });
 
-  it('filtering (filter)', function() {
-    var ages = [2,4,6,8,10,1,3,5,7,9];
+  it('should check filtering (filter)', function() {
+    var ages = [2, 4, 6, 8, 10, 1, 3, 5, 7, 9];
+
+    // [x | x < 5]
     var instr = _i(  [['!constant', ages], ['>!filter',['>!lt', 5]]]  );
     assert.deepEqual(instr, [2,4,1,3]);
 
+    // [x | 7 <= x < 9]
+    instr = _i([['!constant', ages], ['>!filter', ['>!and',['>!ge', 7], ['>!lt', 9] ]]] );
+    assert.deepEqual(instr, [8, 7]);
+
+    // [x | 3 > x or  9 < x ]
+    instr = _i([['!constant', ages], ['>!filter', ['>!or',['>!gt', 9], ['>!lt', 3] ]]] );
+    assert.deepEqual(instr, [2, 10, 1]);
+
+    // this finds out, which values are `true`
+    assert.deepEqual(
+      _i( ['!filter',[0, 1, 2, true, null, undefined, false, '', 'he', []], ['>!eq', true]] ),
+      [1, true]);
+
+    // single values
     assert.strictEqual(_i( ['!filter', undefined, ['>!lt', 5]]  ), undefined);
 
     // null < 5 == true (sic!)
     assert.strictEqual(_i( ['!filter', null, ['>!lt', 5]]  ), null);
 
+    assert.strictEqual(_i( ['!filter', 6, ['>!lt', 5]]  ), undefined);
+    assert.strictEqual(_i( ['!filter', 4, ['>!lt', 5]]  ), 4);
+
     assert.strictEqual(_i( ['!filter', 'hello', ['>!eq', 'hello']]  ), 'hello');
     assert.strictEqual(_i( ['!filter', 'hello', ['>!eq', 'world']]  ), undefined);
 
-    // this finds out, which values are `true`
-    assert.deepEqual(
-      _i( ['!filter',[0, 1, true, null, undefined, false, '', 'he', 5,[]], ['>!eq', true]] ),
-      [1,true]);
   });
 
-  it('array reduction (len/at/first/last)', function() {
-    var arr = [10,20,30,40,50];
+  it('should check array reduction (len/at/first/last)', function() {
+    var arr = [10, 20, 30, 40, 50];
 
     assert.strictEqual(_i([['!constant', arr], ['>!len']]), 5);
     assert.strictEqual(_i([['!constant', []], ['>!len']]), 0);
@@ -249,7 +269,7 @@ describe('module for testing commands module', function() {
     it('should check if operations work well on scalar arguments', function(){
       // scalars
       assert.strictEqual(_i(['!+', 3, 5]), 8);
-      assert.strictEqual(_i([['!constant', 3], ['!+', 3, 5]]), 8);
+      assert.strictEqual(_i([['!constant', 3], ['>!+', 5]]), 8);
       assert.strictEqual(_i(['!-', 3, 5]), -2);
       assert.strictEqual(_i(['!*', 3, 5]), 15);
       assert.strictEqual(_i(['!/', 3, 5]), 0.6);
@@ -258,6 +278,10 @@ describe('module for testing commands module', function() {
       assert.strictEqual(_i(['!+', '3', '5']), 8);
       assert.strictEqual(_i(['!+', '3haha', '5']), 8);
       assert.ok(_.isNaN(_i(['!+', 'haha3haha', '5'])));
+      assert.ok(_.isNaN(_i(['!+', 3, undefined])));
+      assert.ok(_.isNaN(_i(['!+', 3, null])));
+      assert.ok(_.isNaN(_i(['!+', 3, NaN])));
+
     });
 
     it('should check operations on array + scalar', function() {
@@ -274,12 +298,12 @@ describe('module for testing commands module', function() {
       }));
 
       assert.deepEqual(_i(['!+', 5, [0, 1, '2', '3three']]), [ 5, 6, 7, 8 ]);
-      assert.ok(_.all(_i(['!+', 5, [null, undefined, NaN, 'gg']]), function(val){
+      assert.ok(_.all(_i(['!+', 5, [null, undefined, NaN, 'gg']]), function(val) {
         return _.isNaN(val);
       }));
     });
 
-    it('should check operations on array + array', function(){
+    it('should check operations on array + array', function() {
       // array + array
       assert.deepEqual(_i(['!+', data, data]), [ 2, -2, 4, 10, 6, 14 ]);
       assert.deepEqual(_i(['!-', data, data]), [ 0, 0, 0, 0, 0, 0 ]);
@@ -308,7 +332,7 @@ describe('module for testing commands module', function() {
   });
 
 
-  it('convenience commands (concat, union, splice, join', function() {
+  it('should check the convenience commands (concat, union, splice, join', function() {
     assert.deepEqual(_i(['!concat', [1, 2, 3], [2, 3, 4], [5]]), [1, 2, 3, 2, 3, 4, 5]);
     assert.deepEqual(_i(['!concat', [1, false, 2],['s'], 3, undefined, 4, null,['hello']]),
       [1, false, 2, 's', 3, undefined, 4, null, 'hello']);
@@ -323,6 +347,7 @@ describe('module for testing commands module', function() {
 
     //out of range in the positive direction - return whole array
     assert.deepEqual(_i(['!splice', [10,20,30,40,50], 5, 1]), [10, 20, 30, 40, 50]);
+
     //out of range in the negative direction - return whole array - weird behavior
     assert.deepEqual(_i(['!splice', [10,20,30,40,50], -7, 2]), [10, 20, 30]);
 
@@ -338,7 +363,7 @@ describe('module for testing commands module', function() {
     assert.strictEqual(_i(['!join', [], [1,3]]), '');
   });
 
-  it('more convenience commands (lower/upper, trim, split, substr, replace)', function(){
+  it('should check more convenience commands (lower/upper, trim, split, substr, replace)', function(){
     assert.strictEqual(_i(['!upper', 'serrano']), 'SERRANO');
     assert.strictEqual(_i(['!lower', 'SERRANO']), 'serrano');
 
