@@ -49,7 +49,7 @@ function fillObject(json) {
 }
 
 /**
- * Interprets the JSON. TODO will be rewritte...
+ * Interprets the JSON. TODO will be rewritten (and possibly renamed to interpretScrapingUnit)
  * @param json A JSON object to be processed by the Serrano Interpreter.
  * @returns {Object}
  */

@@ -157,7 +157,7 @@ var builtinCommands = {
   // compound conditions
   all: {
     argumentCount: '1-',
-    code: function(context) { // remove the context
+    code: function() { // remove the context
       var args = Array.prototype.slice.call(arguments, 1);
       return _.all(args);
     }
@@ -165,7 +165,7 @@ var builtinCommands = {
   '>all': {
     argumentCount: '2-',
     rawArguments: '1-',
-    code: function(context) {
+    code: function() { // slice off context
       var implicit = arguments[1],
         rest = Array.prototype.slice.call(arguments, 2);
 
@@ -177,7 +177,7 @@ var builtinCommands = {
 
   any: {
     argumentCount:'1-',
-    code: function(context) {
+    code: function() { // slice off context
       var args = Array.prototype.slice.call(arguments, 1);
       return _.any(args);
     }
@@ -185,7 +185,7 @@ var builtinCommands = {
   '>any': {
     argumentCount: '2-',
     rawArguments:'1-',
-    code: function() {
+    code: function() { // slice off context
       var implicit = arguments[1],
         rest = Array.prototype.slice.call(arguments, 2);
 
@@ -324,7 +324,7 @@ var builtinCommands = {
   },
 
   // arithmetics
-  _scalarOp : { // these privae methods are never invoked directly, so they don't need context
+  _scalarOp : { // these private methods are never invoked directly, so they don't need context
     argumentCount: '3',
     code: function(a, b, op) {
       a = parseFloat(a);
@@ -477,7 +477,7 @@ var builtinCommands = {
   concat: {
     argumentCount: '1-',
     implicitForeach: false,
-    code: function(context) {
+    code: function() { // slice off the context argument
       var args = Array.prototype.slice.call(arguments, 1);
       return Array.prototype.concat.apply([], args);
     }
@@ -486,7 +486,7 @@ var builtinCommands = {
   union: {
     argumentCount: '1-',
     implicitForeach: false,
-    code: function(context) {
+    code: function() { //context
       var args = Array.prototype.slice.call(arguments, 1);
       return _(args).flatten().union().valueOf();
     }
@@ -673,8 +673,6 @@ module.exports = {
   getCommand: function(command) { return commands[command]; },
   getCommands: function() {return commands;},
   __setJQuery: function(different) {return $ = different;},
-  __setStorage: function(different) {return storage = different;},
-  __getStorage: function() {return storage;},
 
   isPipedName: isPipedName,
   getCommandName: getCommandName,

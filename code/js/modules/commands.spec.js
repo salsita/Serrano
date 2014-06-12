@@ -327,7 +327,7 @@ describe('module for testing commands module', function() {
       // avg
       assert.ok(Math.abs(_i(['!avg', data]) - 2.8333) < TOLERANCE);
       assert.strictEqual(_i(['!avg', [1,2,3]]), 2);
-      assert.ok(_.isNaN(_i(['!avg', [1,2,'3three','four']])))
+      assert.ok(_.isNaN(_i(['!avg', [1,2,'3three','four']])));
     });
   });
 
@@ -370,7 +370,7 @@ describe('module for testing commands module', function() {
     assert.deepEqual(_i([['!constant', ['hello', 'world']], ['>!upper']]), ['HELLO', 'WORLD']);
     assert.deepEqual(_i([['!constant', ['HELLO', 'WORLD']], ['>!lower']]), ['hello', 'world']);
 
-    assert.throws(function() {_i([['!constant', ['HELLO', 'WORLD', 5]], ['>!lower']])},
+    assert.throws(function() {_i([['!constant', ['HELLO', 'WORLD', 5]], ['>!lower']]); },
       TypeError);
 
     assert.throws(function() { _i(['!lower', 5]); }, TypeError);

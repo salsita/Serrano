@@ -75,13 +75,13 @@ var testCommands = {
 
   '>implDifferent': {
     argumentCount: '1-2',
-    code: function(context) {
+    code: function() {
       return 'with >';
     }
   },
   'implDifferent': {
     argumentCount: '0-1',
-    code: function(context) {
+    code: function() {
       return 'without >';
     }
   }
