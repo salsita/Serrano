@@ -22,7 +22,10 @@ describe('module for testing Serrano core', function() {
     });
 
     // define instructions
-    var interpret = core.interpretScrapingDirective,
+    var context = {storage: {}},
+      interpret =  function(directive, implicitArgument) { // shortcut
+        return core.interpretScrapingDirective(directive, context, implicitArgument);
+      },
       setV = ['!setVal', 'Tomas', 'myname'],
       cmd = ['!replace', 'Hello Roman!', 'Roman', ['!getVal', 'myname']],
       sel = ['$h2'],

@@ -53,12 +53,15 @@ var fixtures = {
   }
 };
 
+var secondCall = false;
 /**
  * Mock jQuery object.
  *
  * @example
  *
  * $('h2'); // returns 2 <h2> headings
+ *
+ * $('secondCall') // on first call returns nothing, then returns $('h2')
  *
  * $('p', <any_arg>); // returns one <p> paragraph
  *
@@ -69,6 +72,14 @@ var fixtures = {
 var $ = function(sel) {
   if (arguments.length === 2 && arguments[0] === 'p') {
     return fixtures.double;
+  }
+  if (sel === 'secondCall') {
+    if (secondCall) {
+      return fixtures.h2;
+    } else {
+      secondCall = true;
+      return fixtures._default;
+    }
   }
 
   if (sel in fixtures) {

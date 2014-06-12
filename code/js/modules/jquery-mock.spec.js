@@ -48,6 +48,12 @@ describe('module with mock jQuery library', function() {
     assert.equal(singleSelector[0].children().length, 1);
     assert.equal(defaultSelector.children().length, 0);
   });
+  it('should check the secondCall selector', function() {
+    var nothing = $('secondCall');
+    assert.deepEqual(nothing, defaultSelector);
+    var hh2 = $('secondCall');
+    assert.deepEqual(hh2, singleSelector);
+  });
 
 
   it('should test the $.makeArray() method', function(){
