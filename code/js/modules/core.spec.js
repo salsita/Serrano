@@ -31,7 +31,6 @@ describe('module for testing Serrano core', function() {
     // now run them one after another
     assert.strictEqual(interpret(setV), 'Tomas');
     assert.strictEqual(interpret(cmd), 'Hello Tomas!');
-    console.log(interpret(instr));
     assert.strictEqual(interpret(['>!len'],interpret(sel)), 2);
     assert.deepEqual(interpret(instr), '<re>Double filtered paragraph</re>');
 

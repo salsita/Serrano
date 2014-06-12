@@ -1,7 +1,6 @@
 /**
  * Created by tomasnovella on 4/3/14.
  */
-var _ = require('../libs/lodash');
 var commands = require('./commands');
 var argumentCountChecker = require('./argumentCountChecker');
 var exceptions = require('./exceptions');
@@ -73,7 +72,7 @@ function simplifyCommand(command) {
   var argcSupplied = command.length - 1 + (piped ? 1 : 0);
   if (!argumentCountChecker.checkArgumentCount(argcSupplied, signature)) {
     var msg = 'Command ' + commFullName + ' was supplied with invalid number of arguments.' +
-      argcSupplied + ' argument(s) supplied';
+      argcSupplied + ' argument(s) supplied.'+JSON.stringify(command);
     throw new exceptions.WrongArgumentError(msg);
   }
 
@@ -81,8 +80,7 @@ function simplifyCommand(command) {
   var rawArguments = commands.getCommand(commName).rawArguments;
   for (var i=0; i < args.length; ++i) {
     var arg1 = args[i];
-    if (_.isString(arg1) || _.isNumber(arg1) || _.isPlainObject(arg1) || // basic types
-      argumentCountChecker.checkArgumentCount(i + (piped ? 1 : 0), rawArguments)) { // is raw
+    if (argumentCountChecker.checkArgumentCount(i + (piped ? 1 : 0), rawArguments)) { // is raw
       result.push(arg1);
     } else if (commands.isSelector(arg1)) {
       result.push(simplifySelector(arg1));
@@ -90,11 +88,8 @@ function simplifyCommand(command) {
       result.push(simplifyCommand(arg1));
     } else if (commands.isInstruction(arg1)) {
       result.push(simplifyInstruction(arg1));
-    } else if (_.isArray(arg1)) {
+    } else  {
       result.push(arg1);
-    } else {
-      throw new TypeError('Invalid command argument at position ' + (i+(piped?1:0)) + ' for '+ commName+
-        ". Argument: " + JSON.stringify(arg1) );
     }
   }
   return result;
