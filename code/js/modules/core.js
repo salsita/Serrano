@@ -13,7 +13,6 @@ var exceptions = require('./exceptions');
 
 /**
  * Gets one raw scraping directive. Checks for the depth, simplifies and runs it.
- * Don't forget, it manipulates with the global storage object.
  * @param directive Directive to run
  * @param context Context in which the instructions are processed.
  * @param [implicitArgument] Optional implicit argument.
@@ -54,7 +53,7 @@ function processTemp(temp, context) {
   _.forEach(temp, function(item, key){
     var transItem = {name: key};
     if (_.isPlainObject(item)) { // {prio:..., code:...}
-      transItem.prio = item.prio || 0;
+      transItem.prio = (_.isFinite(item.prio) && item.prio >= 0) ?item.prio : 0;
       transItem.code = item.code;
     } else { // just an instruction
       transItem.prio = 0;
@@ -130,24 +129,24 @@ function processScrapingUnit(scrapingUnit) {
 function interpretScrapingUnit(scrapingUnit, doneCallback, failCallback) {
   if (_.isPlainObject(scrapingUnit.waitFor)) {
     var millis = scrapingUnit.waitFor.millis;
-    if (_.isUndefined(millis)) {
+    if (!_.isFinite(millis) || millis < 0) {
       millis = 2000; // default timeout (defined in the spec)
     }
     if (millis === 0) {
       millis = 1000*3600*24; // one day should suffice
     }
-    var waitForSelector = scrapingUnit.waitFor.name;
 
     var deferred = Q.defer();
 
     // test every 300 ms whether the element appeared
     var timer = setInterval(function() {
-      if ($(waitForSelector).length) {
+      if ($(scrapingUnit.waitFor.name).length) {
         deferred.resolve();
         clearInterval(timer);
       }
     }, 300);
 
+    // after `millis` ms give up
     setTimeout(function() {
       clearInterval(timer);
       deferred.reject();

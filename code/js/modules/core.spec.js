@@ -16,6 +16,7 @@ describe('module for testing Serrano core', function() {
     core.__setJQuery(mockJQuery);
   });
 
+  // this is well-tested in commands.spec.js - so just a few quick tests now.
   it('should check the `interpretScrapingDirective` function', function() {
     // define instructions
     var context = {storage: {}},
@@ -47,7 +48,7 @@ describe('module for testing Serrano core', function() {
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
 
-    context = {storage:{}};
+    context = { storage:{} };
     var tempError = {
       tmpVar0: ['!constant', 'tmpVal0'],
       tmpVar1: { // ok
@@ -100,43 +101,46 @@ describe('module for testing Serrano core', function() {
         name: ['!constant', 'Tomas'],
         surname: ['!constantttttt', 'Novella']
       };
-    assert.deepEqual(core.processResult(result1), 1);
-    assert.deepEqual(core.processResult(result2), {name:'Tomas', surname:'Novella'});
-    assert.throws(function(){ core.processResult(result3); }, TypeError);
+    assert.deepEqual(core.processResult(result1, {storage:{}}), 1);
+    assert.deepEqual(core.processResult(result2, {storage:{}}), {name:'Tomas', surname:'Novella'});
+    assert.throws(function(){ core.processResult(result3, {storage:{}}); }, TypeError);
   });
 
-  it('should verify if `waitFor` from scraping unit is correctly processed', function(done) {
-    var scrapingUnit1 = {
-      waitFor: {
-        name: 'secondCall',
-        millis: 1000
-      },
-      result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
-    };
+  describe('`waitFor`', function(){
+    it('should check correct example', function(done) {
+      var scrapingUnit1 = {
+        waitFor: {
+          name: 'secondCall',
+          millis: 1000
+        },
+        result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
+      };
 
-    core.interpretScrapingUnit(scrapingUnit1,
-      function(data){
-        assert.strictEqual(data, 'This is the first h2 heading');
-        done();
-      },
-      done // error function
-    );
+      core.interpretScrapingUnit(scrapingUnit1,
+        function(data){
+          assert.strictEqual(data, 'This is the first h2 heading');
+          done();
+        },
+        done // error function
+      );
+    });
+
+    it('should verify failure (element never appears)', function(done){
+      var scrapingUnit2 = {
+        waitFor: {
+          name: '$nonExistingID', // nonexistent element
+          millis: 500
+        },
+        result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
+      };
+      core.interpretScrapingUnit(scrapingUnit2,
+        done, // error
+        function(){
+          done();
+        }
+      );
+    });
   });
 
-  it('should verify if `waitFor` fails when it should', function(done){
-    var scrapingUnit2 = {
-      waitFor: {
-        name: 'neverCall',
-        millis: 700
-      },
-      result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
-    };
-    core.interpretScrapingUnit(scrapingUnit2,
-      done, // error
-      function(){
-        done();
-      }
-    );
-  });
 });
 
