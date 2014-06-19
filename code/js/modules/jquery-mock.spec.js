@@ -11,11 +11,15 @@ var _ = require('../libs/lodash');
 var $ = require('../libs/jquery-mock');
 
 describe('module with mock jQuery library', function() {
-    assert.equal(typeof $, 'function');
-    var singleSelector = $('h2'),
-      doubleSelector = $('p', '#news'),
-      defaultSelector = $('whatever'),
-      defaultSelector2 = $('whatever', 'else');
+  beforeEach(function(){
+    $.init();
+  });
+
+  assert.equal(typeof $, 'function');
+  var singleSelector = $('h2'),
+    doubleSelector = $('p', '#news'),
+    defaultSelector = $('whatever'),
+    defaultSelector2 = $('whatever', 'else');
 
   it('should check the lengths of the elements', function() {
     // check for length
@@ -48,13 +52,19 @@ describe('module with mock jQuery library', function() {
     assert.equal(singleSelector[0].children().length, 1);
     assert.equal(defaultSelector.children().length, 0);
   });
-  it('should check the secondCall selector', function() {
-    var nothing = $('secondCall');
-    assert.deepEqual(nothing, defaultSelector);
-    var hh2 = $('secondCall');
-    assert.deepEqual(hh2, singleSelector);
-  });
 
+  it('should check the secondCall selector and the $.init() function', function() {
+    var secondCall = $('secondCall');
+    assert.deepEqual(secondCall, defaultSelector);
+    secondCall = $('secondCall');
+    assert.deepEqual(secondCall, singleSelector);
+
+    $.init();
+    secondCall = $('secondCall');
+    assert.deepEqual(secondCall, defaultSelector);
+    secondCall = $('secondCall');
+    assert.deepEqual(secondCall, singleSelector);
+  });
 
   it('should test the $.makeArray() method', function(){
     assert.ifError(_.isArray(singleSelector));

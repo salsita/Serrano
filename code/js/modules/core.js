@@ -3,6 +3,9 @@
  */
 
 var _ = require('../libs/lodash');
+var Q = require('../libs/q');
+var $ = require('../libs/jquery');
+
 var depthChecker = require('./depthChecker');
 var simplifier = require('./simplifier');
 var evaluator = require('./evaluator');
@@ -18,7 +21,7 @@ var exceptions = require('./exceptions');
  */
 function interpretScrapingDirective(directive, context, implicitArgument) {
   if (!depthChecker.isValidDepth(directive)) {
-    throw new SyntaxError('Depth of nesting of the instruction is too high');
+    throw new exceptions.RuntimeError('Depth of nesting of the instruction is too high');
   }
 
   var simplified = simplifier.simplifyScrapingDirective(directive);
@@ -27,16 +30,26 @@ function interpretScrapingDirective(directive, context, implicitArgument) {
 }
 
 
-
+/**
+ * Processes the action part of the scraping unit.
+ * @param actions
+ * @param context
+ */
 function processActions(actions, context) {
   _.forEach(actions, function(action){
     return interpretScrapingDirective(action, context);
   });
 }
 
+/**
+ * Processes the temp variables in the scraping unit.
+ * @param temp
+ * @param context
+ */
 function processTemp(temp, context) {
-  // transform: {name1:tmpVar1, name2:tmpVar2} --> [specialtmpVar1, specialtmpVar2]
+  // 1. transform: {name1:tmpVar1, name2:tmpVar2} --> [specialtmpVar1, specialtmpVar2]
   // where specialTmpVar = {name:..., prio:..., code:...}
+  // and set default priority
   var transformed = [];
   _.forEach(temp, function(item, key){
     var transItem = {name: key};
@@ -50,17 +63,24 @@ function processTemp(temp, context) {
     transformed.push(transItem);
   });
 
-  _.sortBy(transformed, _.property('prio'));
+  // 2. sort
+  transformed = _.sortBy(transformed, _.property('prio'));
 
+  // 3. setVal
   _.forEach(transformed, function(item){ // setVal...
-
     var instr = ['!setVal', interpretScrapingDirective(item.code, context), item.name];
     interpretScrapingDirective(instr, context);
-
   });
 }
 
-function processResult(result) {
+/**
+ * Processes the result part in the scraping unit.
+ * Returns the resulting object of the processed scraping unit.
+ * @param result
+ * @param context
+ * @returns processedResult
+ */
+function processResult(result, context) {
   if (_.isPlainObject(result)) {
     return _.mapValues(result, function(item){
       return interpretScrapingDirective(item, context);
@@ -69,6 +89,13 @@ function processResult(result) {
     return interpretScrapingDirective(result, context);
   }
 }
+
+/**
+ * Using the helper functions above, processes `actions`, `temp` and `result`
+ * from the scraping unit.
+ * @param scrapingUnit
+ * @returns processedResult
+ */
 function processScrapingUnit(scrapingUnit) {
   var context = { storage: {} };
 
@@ -89,53 +116,55 @@ function processScrapingUnit(scrapingUnit) {
   if (!result) {
     throw new exceptions.RuntimeError('No result defined for the scraping unit');
   }
-
- return processResult(result);
+  return processResult(result, context);
 }
 
+/**
+ * Interprets scraping unit. Since it may be waiting for an element to appear,
+ * this method is asynchronous and has two callbacks as parameters.
+ * @param scrapingUnit Unit with instructions for scraping.
+ * @param doneCallback Called when everything was scraped sucessfully, first
+ *   argument contains scraped object.
+ * @param failCallback Called when a `waitFor` promise failed.
+ */
 function interpretScrapingUnit(scrapingUnit, doneCallback, failCallback) {
   if (_.isPlainObject(scrapingUnit.waitFor)) {
     var millis = scrapingUnit.waitFor.millis;
     if (_.isUndefined(millis)) {
-      millis = 2000;
+      millis = 2000; // default timeout (defined in the spec)
     }
     if (millis === 0) {
       millis = 1000*3600*24; // one day should suffice
     }
     var waitForSelector = scrapingUnit.waitFor.name;
-    function process() {
-      var deferred = $.Deferred();
 
-      timer = setInterval(function() {
-        if ($(waitForSelector).length) {
-          deferred.resolve();
-          clearInterval(timer);
-        }
-      }, 500);
+    var deferred = Q.defer();
 
-      setTimeout(function() {
+    // test every 300 ms whether the element appeared
+    var timer = setInterval(function() {
+      if ($(waitForSelector).length) {
+        deferred.resolve();
         clearInterval(timer);
-        deferred.reject();
-      }, millis);
+      }
+    }, 300);
 
-      return deferred.promise();
-    }
-    var promise = process();
-    promise.done(function() {
-      doneCallback(processScrapingUnit(scrapingUnit));
-    }).fail(function(){
-        failCallback(scrapingUnit);
-    });
+    setTimeout(function() {
+      clearInterval(timer);
+      deferred.reject();
+    }, millis);
+
+    deferred.promise.then(
+      function() { doneCallback(processScrapingUnit(scrapingUnit)); },
+      function() { failCallback(scrapingUnit); }
+    );
 
   } else { // no waitfor, everything simple
     doneCallback(processScrapingUnit(scrapingUnit));
   }
 }
 module.exports = {
-  test: function(dir) {return interpretScrapingDirective(dir, {storage:{} }); },
-
   // these four functions are exported only for unit testing
-  processActions: processActions,
+  __setJQuery: function(different) {$ = different;},
   processTemp: processTemp,
   processResult: processResult,
   processScrapingUnit: processScrapingUnit,

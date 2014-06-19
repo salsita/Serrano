@@ -53,7 +53,12 @@ var fixtures = {
   }
 };
 
+/**
+ * Used to imlement the $('secondCall') selector.
+ * At first call returns nothing, then returns $('h2').
+ */
 var secondCall = false;
+
 /**
  * Mock jQuery object.
  *
@@ -103,6 +108,14 @@ $.makeArray = function(obj) {
     ++i;
   }
   return array;
+};
+
+/**
+ * Sets the library to the same state as if was jus loaded.
+ * Important for the $('secondCall') selector.
+ */
+$.init = function() {
+  secondCall = false;
 };
 
 module.exports = $;

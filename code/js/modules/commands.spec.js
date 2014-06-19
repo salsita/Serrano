@@ -13,7 +13,7 @@ describe('module for testing commands module', function() {
   commands.init(); // I want the basic set of commands
 
   var context = {storage: {}};
-  var _i = function(directive, implicitArgument) { // shortcut
+  function _i(directive, implicitArgument) { // shortcut
     return core.interpretScrapingDirective(directive, context, implicitArgument);
   }
 
