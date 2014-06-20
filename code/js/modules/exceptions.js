@@ -2,24 +2,14 @@
  * Created by tomasnovella on 4/3/14.
  */
 
-var excTypes = ['InvalidJSON', 'NotImplemented', 'WrongArgument', 'Runtime'];
+// http://stackoverflow.com/questions/783818/how-do-i-create-a-custom-error-in-javascript
+function RuntimeError() {
+  var tmp = Error.apply(this, arguments);
+  tmp.name = this.name = 'RuntimeError';
 
-function excFactory(name) {
-  var ctor = function(msg) {
-    this.msg = msg;
-    this.type = name;
-  };
-  ctor.prototype.toString = function() {
-    return this.type + 'Error: ' + this.msg;
-  };
-  return ctor;
+  this.stack = tmp.stack;
+  this.message = tmp.message;
 }
+RuntimeError.prototype = Error.prototype;
 
-var modExports = {};
-
-for (var i = 0; i < excTypes.length; i++) {
-  var type = excTypes[i];
-  modExports[type + 'Error'] = excFactory(type);
-}
-
-module.exports = modExports;
+module.exports.RuntimeError = RuntimeError;
