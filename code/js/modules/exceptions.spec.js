@@ -15,11 +15,10 @@ describe('module with custom-defined exceptions', function() {
       assert.strictEqual(_.size(e), 3);
       assert.strictEqual(e.message, 'Error message!');
       assert.strictEqual(e.name, 'RuntimeError');
-      assert.strictEqual(e.toString(), 'RuntimeError: Error message!')
+      assert.strictEqual(e.toString(), 'RuntimeError: Error message!');
       assert.ok(typeof e.stack === 'string');
       assert.ok(e instanceof exceptions.RuntimeError);
       assert.ok(e instanceof Error);
-
     }
     try {
       throw new TypeError('Error message!');

@@ -127,6 +127,7 @@ function processScrapingUnit(scrapingUnit) {
  * @param failCallback Called when a `waitFor` promise failed.
  */
 function interpretScrapingUnit(scrapingUnit, doneCallback, failCallback) {
+  // 1. process `waitFor`
   if (_.isPlainObject(scrapingUnit.waitFor)) {
     var millis = scrapingUnit.waitFor.millis;
     if (!_.isFinite(millis) || millis < 0) {
@@ -151,7 +152,7 @@ function interpretScrapingUnit(scrapingUnit, doneCallback, failCallback) {
       clearInterval(timer);
       deferred.reject();
     }, millis);
-
+    // 2. process the rest
     deferred.promise.then(
       function() { doneCallback(processScrapingUnit(scrapingUnit)); },
       function() { failCallback(scrapingUnit); }
