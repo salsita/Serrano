@@ -9,10 +9,13 @@ var commands = require('./commands');
 var core = require('./core');
 
 describe('module for testing commands module', function() {
-  commands.__setJQuery(require('../libs/jquery-mock'));
   commands.init(); // I want the basic set of commands
-
-  var context = {storage: {}};
+  commands.__setJQuery(require('../libs/jquery-mock'));
+  var context = {
+    storage: {},
+    interpretScrapingDirective: core.interpretScrapingDirective,
+    $: require('../libs/jquery-mock')
+  };
   function _i(directive, implicitArgument) { // shortcut
     return core.interpretScrapingDirective(directive, context, implicitArgument);
   }

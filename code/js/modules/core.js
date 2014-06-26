@@ -141,11 +141,13 @@ function interpretScrapingUnit(scrapingUnit, doneCallback, failCallback) {
 
     // test every 300 ms whether the element appeared
     var timer = setInterval(function() {
+      //todo
+
       if ($(scrapingUnit.waitFor.name).length) {
         deferred.resolve();
         clearInterval(timer);
       }
-    }, 300);
+    }, 50);
 
     // after `millis` ms give up
     setTimeout(function() {
