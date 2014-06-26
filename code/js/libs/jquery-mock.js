@@ -111,7 +111,7 @@ $.makeArray = function(obj) {
 };
 
 /**
- * Sets the library to the same state as if was jus loaded.
+ * Sets the library to the same state as if it were just loaded.
  * Important for the $('secondCall') selector.
  */
 $.init = function() {
