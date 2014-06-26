@@ -21,7 +21,7 @@ describe('module with custom-defined exceptions', function() {
       assert.ok(e instanceof Error);
     }
     try {
-      throw TypeError('Error message!');
+      throw new TypeError('Error message!');
     } catch (e) {
       assert.equal(typeof e, 'object');
       assert.strictEqual(_.size(e), 0); // this is weird
