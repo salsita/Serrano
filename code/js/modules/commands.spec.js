@@ -10,7 +10,7 @@ var core = require('./core');
 
 describe('module for testing commands module', function() {
   commands.init(); // I want the basic set of commands
-  commands.__setJQuery(require('../libs/jquery-mock'));
+  commands.__setJQuery(require('../libs/jquery-mock')); // todo delete
   var context = {
     storage: {},
     interpretScrapingDirective: core.interpretScrapingDirective,

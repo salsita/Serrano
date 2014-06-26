@@ -9,9 +9,18 @@ var exceptions = require('./exceptions');
 var core = require('./core');
 
 describe('module for testing Serrano core', function() {
+  var context;
   beforeEach(function(){
     var mockJQuery = require('../libs/jquery-mock');
     mockJQuery.init();
+
+    context = {
+      storage: {},
+      interpretScrapingDirective: core.interpretScrapingDirective,
+      $: require('../libs/jquery-mock')
+    };
+
+
     commands.__setJQuery(mockJQuery);
     core.__setJQuery(mockJQuery);
   });
@@ -19,8 +28,8 @@ describe('module for testing Serrano core', function() {
   // this is well-tested in commands.spec.js - so just a few quick tests now.
   it('should check the `interpretScrapingDirective` function', function() {
     // define instructions
-    var context = {storage: {}},
-      interpret =  function(directive, implicitArgument) { // shortcut
+    context.storage = {};
+    var interpret =  function(directive, implicitArgument) { // shortcut
         return core.interpretScrapingDirective(directive, context, implicitArgument);
       },
       setV = ['!setVal', 'Tomas', 'myname'],
@@ -43,12 +52,12 @@ describe('module for testing Serrano core', function() {
         code: ['!getVal', 'tmpVar0']
       }
     };
-    var context = { storage:{} };
+    context.storage = {};
     core.processTemp(temp, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
 
-    context = { storage:{} };
+    context.storage = {};
     var tempError = {
       tmpVar0: ['!constant', 'tmpVal0'],
       tmpVar1: { // ok
@@ -83,7 +92,7 @@ describe('module for testing Serrano core', function() {
       }
     };
 
-    context = { storage:{} };
+    context.storage = {};
     core.processTemp(temp2, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar1, 'tmpVal0');
@@ -116,7 +125,7 @@ describe('module for testing Serrano core', function() {
         result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
       };
 
-      core.interpretScrapingUnit(scrapingUnit1,
+      core.interpretScrapingUnit(scrapingUnit1, context,
         function(data){
           assert.strictEqual(data, 'This is the first h2 heading');
           done();
@@ -131,9 +140,9 @@ describe('module for testing Serrano core', function() {
           name: '$nonExistingID', // nonexistent element
           millis: 500
         },
-        result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
+        result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
-      core.interpretScrapingUnit(scrapingUnit2,
+      core.interpretScrapingUnit(scrapingUnit2, context,
         done, // error
         function(){
           done();

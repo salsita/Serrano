@@ -11,6 +11,12 @@ var simplifier = require('./simplifier');
 var evaluator = require('./evaluator');
 var exceptions = require('./exceptions');
 
+var defaultContext = {
+  storage: {},
+  interpretScrapingDirective: require('./core').interpretScrapingDirective,
+  $: require('../libs/jquery')
+};
+
 /**
  * Gets one raw scraping directive. Checks for the depth, simplifies and runs it.
  * @param directive Directive to run
@@ -93,11 +99,10 @@ function processResult(result, context) {
  * Using the helper functions above, processes `actions`, `temp` and `result`
  * from the scraping unit.
  * @param scrapingUnit
+ * @param context
  * @returns processedResult
  */
-function processScrapingUnit(scrapingUnit) {
-  var context = { storage: {} };
-
+function processScrapingUnit(scrapingUnit, context) {
   // 1. process actions
   var actions = scrapingUnit.actions;
   if (_.isArray(actions)) {
@@ -122,11 +127,13 @@ function processScrapingUnit(scrapingUnit) {
  * Interprets scraping unit. Since it may be waiting for an element to appear,
  * this method is asynchronous and has two callbacks as parameters.
  * @param scrapingUnit Unit with instructions for scraping.
+ * @param context Context inside which the scraping unit runs.
  * @param doneCallback Called when everything was scraped sucessfully, first
  *   argument contains scraped object.
  * @param failCallback Called when a `waitFor` promise failed.
  */
-function interpretScrapingUnit(scrapingUnit, doneCallback, failCallback) {
+function interpretScrapingUnit(scrapingUnit, context, doneCallback, failCallback) {
+
   // 1. process `waitFor`
   if (_.isPlainObject(scrapingUnit.waitFor)) {
     var millis = scrapingUnit.waitFor.millis;
@@ -141,8 +148,7 @@ function interpretScrapingUnit(scrapingUnit, doneCallback, failCallback) {
 
     // test every 300 ms whether the element appeared
     var timer = setInterval(function() {
-      //todo
-
+      console.log($.TEST());
       if ($(scrapingUnit.waitFor.name).length) {
         deferred.resolve();
         clearInterval(timer);
@@ -156,7 +162,7 @@ function interpretScrapingUnit(scrapingUnit, doneCallback, failCallback) {
     }, millis);
     // 2. process the rest
     deferred.promise.then(
-      function() { doneCallback(processScrapingUnit(scrapingUnit)); },
+      function() { doneCallback(processScrapingUnit(scrapingUnit, context)); },
       function() { failCallback(scrapingUnit); }
     );
 
