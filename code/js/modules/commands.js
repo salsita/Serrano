@@ -1,6 +1,4 @@
-var $ = require('../libs/jquery');
 var _ = require('../libs/lodash');
-
 var exceptions = require('./exceptions');
 
 /**
@@ -53,14 +51,12 @@ var builtinCommands = {
     argumentCount: '1-2',
     code: function(context, obj1, obj2) {
       if (arguments.length === 2) {
-        return $(obj1);
+        return context.$(obj1);
       } else { // it's chained
-        return $(obj2, obj1);
+        return context.$(obj2, obj1);
       }
     }
   },
-
-
 
   // storing and fetching variables
   getVal: {
@@ -199,7 +195,7 @@ var builtinCommands = {
     argumentCount: '1',
     implicitForeach: false,
     code: function(context, obj) {
-      return $.makeArray(obj);
+      return context.$.makeArray(obj);
     }
   },
 
@@ -671,7 +667,6 @@ module.exports = {
   setCommands: setCommands,
   getCommand: function(command) { return commands[command]; },
   getCommands: function() {return commands;},
-  __setJQuery: function(different) {return $ = different;},
 
   isPipedName: isPipedName,
   getCommandName: getCommandName,

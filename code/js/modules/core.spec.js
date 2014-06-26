@@ -14,15 +14,8 @@ describe('module for testing Serrano core', function() {
     var mockJQuery = require('../libs/jquery-mock');
     mockJQuery.init();
 
-    context = {
-      storage: {},
-      interpretScrapingDirective: core.interpretScrapingDirective,
-      $: require('../libs/jquery-mock')
-    };
-
-
-    commands.__setJQuery(mockJQuery);
     core.__setJQuery(mockJQuery);
+    context = core.__getContext();
   });
 
   // this is well-tested in commands.spec.js - so just a few quick tests now.

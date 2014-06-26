@@ -4,13 +4,16 @@
 
 var _ = require('../libs/lodash');
 var Q = require('../libs/q');
-var $ = require('../libs/jquery');
 
 var depthChecker = require('./depthChecker');
 var simplifier = require('./simplifier');
 var evaluator = require('./evaluator');
 var exceptions = require('./exceptions');
 
+/**
+ * Default context 'prototype' passed to interpretScrapingDirective.
+ * interpretScrapingDirective always makes a clone of this object.
+ */
 var defaultContext = {
   storage: {},
   interpretScrapingDirective: require('./core').interpretScrapingDirective,
@@ -133,6 +136,7 @@ function processScrapingUnit(scrapingUnit, context) {
  * @param failCallback Called when a `waitFor` promise failed.
  */
 function interpretScrapingUnit(scrapingUnit, context, doneCallback, failCallback) {
+  var context = _.clone(defaultContext);
 
   // 1. process `waitFor`
   if (_.isPlainObject(scrapingUnit.waitFor)) {
@@ -148,8 +152,7 @@ function interpretScrapingUnit(scrapingUnit, context, doneCallback, failCallback
 
     // test every 300 ms whether the element appeared
     var timer = setInterval(function() {
-      console.log($.TEST());
-      if ($(scrapingUnit.waitFor.name).length) {
+      if (context.$(scrapingUnit.waitFor.name).length) {
         deferred.resolve();
         clearInterval(timer);
       }
@@ -172,7 +175,8 @@ function interpretScrapingUnit(scrapingUnit, context, doneCallback, failCallback
 }
 module.exports = {
   // these four functions are exported only for unit testing
-  __setJQuery: function(different) {$ = different;},
+  __setJQuery: function(different) {defaultContext.$ = different;},
+  __getContext: function() {return _.clone(defaultContext);},
   processTemp: processTemp,
   processResult: processResult,
   processScrapingUnit: processScrapingUnit,

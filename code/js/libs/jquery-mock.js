@@ -117,5 +117,5 @@ $.makeArray = function(obj) {
 $.init = function() {
   secondCall = false;
 };
-$.TEST = function() {return secondCall;}
+
 module.exports = $;
