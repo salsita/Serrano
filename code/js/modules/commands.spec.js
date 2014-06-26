@@ -12,7 +12,10 @@ describe('module for testing commands module', function() {
   commands.__setJQuery(require('../libs/jquery-mock'));
   commands.init(); // I want the basic set of commands
 
-  var _i = core.interpretScrapingDirective; // shortcut
+  var context = {storage: {}};
+  function _i(directive, implicitArgument) { // shortcut
+    return core.interpretScrapingDirective(directive, context, implicitArgument);
+  }
 
   it('should verify if the default signature is set correctly', function() {
     commands.addCommands({

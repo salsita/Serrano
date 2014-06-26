@@ -3,26 +3,24 @@
  */
 
 var _ = require('../libs/lodash');
+var Q = require('../libs/q');
+var $ = require('../libs/jquery');
+
 var depthChecker = require('./depthChecker');
 var simplifier = require('./simplifier');
 var evaluator = require('./evaluator');
-
-/**
- * Context in which the commands are executed.
- * (todo: Temporary solution.)
- */
-var context = {storage: {}};
+var exceptions = require('./exceptions');
 
 /**
  * Gets one raw scraping directive. Checks for the depth, simplifies and runs it.
- * Don't forget, it manipulates with the global storage object.
  * @param directive Directive to run
+ * @param context Context in which the instructions are processed.
  * @param [implicitArgument] Optional implicit argument.
  * @returns The return value of the instruction.
  */
-function interpretScrapingDirective(directive, implicitArgument) {
+function interpretScrapingDirective(directive, context, implicitArgument) {
   if (!depthChecker.isValidDepth(directive)) {
-    throw new SyntaxError('Depth of nesting of the instruction is too high');
+    throw new exceptions.RuntimeError('Depth of nesting of the instruction is too high');
   }
 
   var simplified = simplifier.simplifyScrapingDirective(directive);
@@ -30,37 +28,147 @@ function interpretScrapingDirective(directive, implicitArgument) {
   return evaluator.evalScrapingDirective(simplified, context, implicitArgument );
 }
 
+
 /**
- * Evaluates the given JSON.
- * @param json Object to evaluate.
- * @returns {Object} Object with the same keys,
- *   but with evaluated values instead of scraping directives.
+ * Processes the action part of the scraping unit.
+ * @param actions
+ * @param context
  */
-function fillObject(json) {
-  var output = {};
-  _.forOwn(json, function(val, key) {
-    if (_.isPlainObject(val)) {
-      output[key] = fillObject(val);
-    } else {
-      output[key] = interpretScrapingDirective(val);
-    }
+function processActions(actions, context) {
+  _.forEach(actions, function(action){
+    return interpretScrapingDirective(action, context);
   });
-  return output;
 }
 
 /**
- * Interprets the JSON. TODO will be rewritten (and possibly renamed to interpretScrapingUnit)
- * @param json A JSON object to be processed by the Serrano Interpreter.
- * @returns {Object}
+ * Processes the temp variables in the scraping unit.
+ * @param temp
+ * @param context
  */
-function runJson(json) {
-  fillObject(json._tmp);
-  delete json._tmp;
-  return fillObject(json);
+function processTemp(temp, context) {
+  // 1. transform: {name1:tmpVar1, name2:tmpVar2} --> [specialtmpVar1, specialtmpVar2]
+  // where specialTmpVar = {name:..., prio:..., code:...}
+  // and set default priority
+  var transformed = [];
+  _.forEach(temp, function(item, key){
+    var transItem = {name: key};
+    if (_.isPlainObject(item)) { // {prio:..., code:...}
+      transItem.prio = (_.isFinite(item.prio) && item.prio >= 0) ?item.prio : 0;
+      transItem.code = item.code;
+    } else { // just an instruction
+      transItem.prio = 0;
+      transItem.code = item;
+    }
+    transformed.push(transItem);
+  });
+
+  // 2. sort
+  transformed = _.sortBy(transformed, _.property('prio'));
+
+  // 3. setVal
+  _.forEach(transformed, function(item){ // setVal...
+    var instr = ['!setVal', interpretScrapingDirective(item.code, context), item.name];
+    interpretScrapingDirective(instr, context);
+  });
 }
 
+/**
+ * Processes the result part in the scraping unit.
+ * Returns the resulting object of the processed scraping unit.
+ * @param result
+ * @param context
+ * @returns processedResult
+ */
+function processResult(result, context) {
+  if (_.isPlainObject(result)) {
+    return _.mapValues(result, function(item){
+      return interpretScrapingDirective(item, context);
+    });
+  } else {
+    return interpretScrapingDirective(result, context);
+  }
+}
 
+/**
+ * Using the helper functions above, processes `actions`, `temp` and `result`
+ * from the scraping unit.
+ * @param scrapingUnit
+ * @returns processedResult
+ */
+function processScrapingUnit(scrapingUnit) {
+  var context = { storage: {} };
+
+  // 1. process actions
+  var actions = scrapingUnit.actions;
+  if (_.isArray(actions)) {
+    processActions(actions, context);
+  }
+
+  // 2. process temp
+  var temp = scrapingUnit.temp;
+  if (_.isPlainObject(temp)) {
+    processTemp(temp, context);
+  }
+
+  // 3. process result
+  var result = scrapingUnit.result;
+  if (!result) {
+    throw new exceptions.RuntimeError('No result defined for the scraping unit');
+  }
+  return processResult(result, context);
+}
+
+/**
+ * Interprets scraping unit. Since it may be waiting for an element to appear,
+ * this method is asynchronous and has two callbacks as parameters.
+ * @param scrapingUnit Unit with instructions for scraping.
+ * @param doneCallback Called when everything was scraped sucessfully, first
+ *   argument contains scraped object.
+ * @param failCallback Called when a `waitFor` promise failed.
+ */
+function interpretScrapingUnit(scrapingUnit, doneCallback, failCallback) {
+  // 1. process `waitFor`
+  if (_.isPlainObject(scrapingUnit.waitFor)) {
+    var millis = scrapingUnit.waitFor.millis;
+    if (!_.isFinite(millis) || millis < 0) {
+      millis = 2000; // default timeout (defined in the spec)
+    }
+    if (millis === 0) {
+      millis = 1000*3600*24; // one day should suffice
+    }
+
+    var deferred = Q.defer();
+
+    // test every 300 ms whether the element appeared
+    var timer = setInterval(function() {
+      if ($(scrapingUnit.waitFor.name).length) {
+        deferred.resolve();
+        clearInterval(timer);
+      }
+    }, 300);
+
+    // after `millis` ms give up
+    setTimeout(function() {
+      clearInterval(timer);
+      deferred.reject();
+    }, millis);
+    // 2. process the rest
+    deferred.promise.then(
+      function() { doneCallback(processScrapingUnit(scrapingUnit)); },
+      function() { failCallback(scrapingUnit); }
+    );
+
+  } else { // no waitfor, everything simple
+    doneCallback(processScrapingUnit(scrapingUnit));
+  }
+}
 module.exports = {
-  runJson: runJson,
-  interpretScrapingDirective: interpretScrapingDirective // used in commands.js
+  // these four functions are exported only for unit testing
+  __setJQuery: function(different) {$ = different;},
+  processTemp: processTemp,
+  processResult: processResult,
+  processScrapingUnit: processScrapingUnit,
+
+  interpretScrapingDirective: interpretScrapingDirective, // used in commands.js
+  interpretScrapingUnit: interpretScrapingUnit
 };

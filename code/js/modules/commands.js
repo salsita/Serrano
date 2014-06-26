@@ -165,12 +165,12 @@ var builtinCommands = {
   '>all': {
     argumentCount: '2-',
     rawArguments: '1-',
-    code: function() { // slice off context
+    code: function(context) {
       var implicit = arguments[1],
-        rest = Array.prototype.slice.call(arguments, 2);
+        rest = Array.prototype.slice.call(arguments, 2); // slice off context + implicit arg
 
       return _.all(rest, function(condition) {
-        return core.interpretScrapingDirective(condition, implicit);
+        return core.interpretScrapingDirective(condition, context, implicit);
       });
     }
   },
@@ -185,12 +185,12 @@ var builtinCommands = {
   '>any': {
     argumentCount: '2-',
     rawArguments:'1-',
-    code: function() { // slice off context
+    code: function(context) {
       var implicit = arguments[1],
-        rest = Array.prototype.slice.call(arguments, 2);
+        rest = Array.prototype.slice.call(arguments, 2); // slices off context and implicit arg...
 
       return _.any(rest, function(condition) {
-        return core.interpretScrapingDirective(condition, implicit);
+        return core.interpretScrapingDirective(condition, context, implicit);
       });
     }
   },
@@ -259,9 +259,9 @@ var builtinCommands = {
     // so I cannot let interpret them before knowing which one I want to...
     code: function(context, condition, ifbody, elsebody) {
       if (condition) {
-        return core.interpretScrapingDirective(ifbody);
+        return core.interpretScrapingDirective(ifbody, context);
       } else {
-        return elsebody && core.interpretScrapingDirective(elsebody);
+        return elsebody && core.interpretScrapingDirective(elsebody, context);
       }
     }
   },
@@ -274,10 +274,10 @@ var builtinCommands = {
     code: function(context, data, condition) {
       if (_.isArray(data)) {
         return  _.filter(data, function(item) {
-            return core.interpretScrapingDirective(condition, item);
+            return core.interpretScrapingDirective(condition, context, item);
         });
       } else {
-        return core.interpretScrapingDirective(condition, data)? data : undefined;
+        return core.interpretScrapingDirective(condition, context, data)? data : undefined;
       }
     }
   },
