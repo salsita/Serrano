@@ -279,7 +279,7 @@ function interpretScrapingUnit(scrapingUnit, context, doneCallback) {
 
   return promise.then(
     function(res) {doneCallback(res);}, // success!
-    function(e) {logging.log(e); throw e;} // log errors
+    function(e) {logging.log(e);} // log errors
   );
 }
 
