@@ -117,13 +117,12 @@ describe('module for testing Serrano core', function() {
         },
         result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
       };
-
+      context = core.__getContext();
       core.interpretScrapingUnit(scrapingUnit1, context,
-        function(data){
+        function(data) {
           assert.strictEqual(data, 'This is the first h2 heading');
           done();
-        },
-        done // error function
+        }
       );
     });
 
@@ -135,12 +134,42 @@ describe('module for testing Serrano core', function() {
         },
         result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
-      core.interpretScrapingUnit(scrapingUnit2, context,
-        done, // error
-        function(){
-          done();
-        }
-      );
+      core.interpretScrapingUnit(scrapingUnit2, context).catch(function(err){
+          console.log(99999);console.log(err); done();
+      });
+    });
+  });
+
+
+  describe('promises module', function(){
+    it('check defer', function(done) {
+      done(); return;
+
+      var Q = require('../libs/q');
+      var d = Q.defer();
+      d.resolve();
+
+      var p2 = d.promise.then(function(){
+          var def = Q.defer();
+
+          setTimeout(function() {
+            def.resolve();
+            console.log("p2 resolve");
+          }, 300);
+
+          return def.promise;
+      }, function(){console.log('err')});
+
+      p2 = p2.then(function(){
+          var def = Q.defer();
+
+          setTimeout(function() {
+            def.resolve("VALUE!!!");
+            console.log("p3 resolve");
+
+          }, 200);
+          return def.promise;
+      }).then(function(val){console.log(val); done()}, function(){ console.log("caught!!!");done();});
     });
   });
 
