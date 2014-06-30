@@ -44,21 +44,31 @@ function logglyLog(token, json) {
  * @param error Exception to be logged
  */
 function log(error) {
-  var jsoned = error.toJSON();
+  console.log("log error:"+ error);
 
-  //if (_.isUndefined(document) && document.location && document.location.href) {
-  //  jsoned.url = document.location.href;
-  // }
+  if (error instanceof Error) {
+    var jsoned = error.toJSON();
 
-  if (options.console) {
-    if (options.environment === 'production') {
-      delete jsoned.stack;
+
+    //if (_.isUndefined(document) && document.location && document.location.href) {
+    //  jsoned.url = document.location.href;
+    // }
+    jsoned.description = jsoned.toString();
+
+    if (options.console) {
+      if (options.environment === 'production') {
+        delete jsoned.stack; // todo fixme -> deletes stack even for further use (in loggly)
+      }
+      console.log('Serrano log:' + JSON.stringify(jsoned) );
     }
-    console.log('Serrano log:' + JSON.stringify(jsoned) );
-  }
 
-  if (options.logglyToken) {
-    logglyLog(options.logglyToken, jsoned);
+    if (options.logglyToken) {
+      logglyLog(options.logglyToken, jsoned);
+    }
+  } else {
+    if (options.console) {
+      console.log(error);
+    }
   }
 }
 

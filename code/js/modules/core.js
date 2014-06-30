@@ -202,7 +202,7 @@ function processWait(waitObject, promise, context) {
     // after `millis` ms give up
     setTimeout(function() {
       clearInterval(timer);
-      def.reject();
+      def.reject(new exceptions.RuntimeError('Element with selector '+waitObject.name +' never appeared.'));
     }, millis);
     return def.promise;
   });
@@ -279,7 +279,7 @@ function interpretScrapingUnit(scrapingUnit, context, doneCallback) {
 
   return promise.then(
     function(res) {doneCallback(res);}, // success!
-    function(e) {logging.log(e);} // log errors
+    function(e) {logging.log(e); throw e;} // log errors ->propagate error
   );
 }
 

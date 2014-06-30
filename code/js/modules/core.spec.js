@@ -130,12 +130,13 @@ describe('module for testing Serrano core', function() {
       var scrapingUnit2 = {
         waitFor: {
           name: '$nonExistingID', // nonexistent element
-          millis: 500
+          millis: 200
         },
         result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
-      core.interpretScrapingUnit(scrapingUnit2, context).catch(function(err){
-          console.log(99999);console.log(err); done();
+      core.interpretScrapingUnit(scrapingUnit2, context).catch(function(err) {
+          assert.strictEqual(err.name, 'RuntimeError');
+          done();
       });
     });
   });
@@ -143,6 +144,7 @@ describe('module for testing Serrano core', function() {
 
   describe('promises module', function(){
     it('check defer', function(done) {
+      //console.log("7777777777"+new exceptions.RuntimeError('RUUUN TIME').toString());
       done(); return;
 
       var Q = require('../libs/q');
