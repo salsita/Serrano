@@ -1,8 +1,9 @@
 // entry point of the library
 
-/*exported simplifier */
 var core = require('./modules/core');
+var logging = require('./modules/logging');
 
 module.exports = {
-  interpretScrapingDirective: core.interpretScrapingDirective
-}
+  interpretScrapingDirective: core.interpretScrapingDirective,
+  log: logging.log
+};

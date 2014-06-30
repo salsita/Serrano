@@ -23,7 +23,7 @@ td {
 <script src="../build/serrano.js"></script>
 
 <script>
-var serranoInterpreter = window.serrano.engine.interpretScrapingDirective;
+var serranoInterpreter = function() {window.serrano.engine.interpretScrapingDirective(d, {$:$});}
 
 var scrapingDirectives = [
 "get first heading", [['$h1'], ['>!first'], ['>!prop', 'innerHTML'] ],
