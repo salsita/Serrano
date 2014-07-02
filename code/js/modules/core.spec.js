@@ -3,8 +3,6 @@
  */
 
 var assert = require('assert');
-
-var commands = require('./commands');
 var exceptions = require('./exceptions');
 var core = require('./core');
 
@@ -144,8 +142,7 @@ describe('module for testing Serrano core', function() {
 
   describe('promises module', function(){
     it('check defer', function(done) {
-      //console.log("7777777777"+new exceptions.RuntimeError('RUUUN TIME').toString());
-      done(); return;
+      done(); return; //todo
 
       var Q = require('../libs/q');
       var d = Q.defer();
@@ -160,7 +157,7 @@ describe('module for testing Serrano core', function() {
           }, 300);
 
           return def.promise;
-      }, function(){console.log('err')});
+      }, function(){console.log('err');});
 
       p2 = p2.then(function(){
           var def = Q.defer();
@@ -171,7 +168,7 @@ describe('module for testing Serrano core', function() {
 
           }, 200);
           return def.promise;
-      }).then(function(val){console.log(val); done()}, function(){ console.log("caught!!!");done();});
+      }).then(function(val){console.log(val); done();}, function(){ console.log("caught!!!");done();});
     });
   });
 

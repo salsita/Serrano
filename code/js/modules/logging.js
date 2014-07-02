@@ -2,8 +2,6 @@
  * Created by tomasnovella on 6/26/14.
  */
 
-var $ = require('../libs/jquery');
-
 /**
  * Options object for logging.
  * Possible values:
@@ -17,7 +15,7 @@ var $ = require('../libs/jquery');
 var options = {
   environment: 'production',
   console: false,
-  logglyToken: null
+  logglyToken: '34d8ad21-9eb6-4737-8a47-e0e1657d3c57' // todo testaccount...
 };
 
 /**
@@ -26,50 +24,59 @@ var options = {
  * @param token
  * @param json
  */
-// 34d8ad21-9eb6-4737-8a47-e0e1657d3c57
 function logglyLog(token, json) {
+  return; $ = {ajax:function(){}}; // todo later on solve cyclic dependency logging<->core
   $.ajax({
-    url: 'http://logs-01.loggly.com/inputs/'+ token +'/tag/http/',
+    url: 'http://logs-01.loggly.com/inputs/'+ token +'/tag/serrano/',
     method: 'post',
     dataType: 'json',
     data: json,
     crossDomain: true
-  }).done(function(ret){
-      alert(ret);
   });
+
+  // Since they send no Access-Control-Allow-Origin header, this is not going to work...
+  //    .done(function(ret){
+  //      alert(ret);
+  //  });
 }
 
 /**
  * Logs messages according to the options that were set.
  * @param error Exception to be logged
+ * @returns log object
  */
 function log(error) {
-  console.log("log error:"+ error);
-
-  if (error instanceof Error) {
-    var jsoned = error.toJSON();
-
-
-    //if (_.isUndefined(document) && document.location && document.location.href) {
-    //  jsoned.url = document.location.href;
-    // }
-    jsoned.description = jsoned.toString();
-
-    if (options.console) {
-      if (options.environment === 'production') {
-        delete jsoned.stack; // todo fixme -> deletes stack even for further use (in loggly)
-      }
-      console.log('Serrano log:' + JSON.stringify(jsoned) );
-    }
-
-    if (options.logglyToken) {
-      logglyLog(options.logglyToken, jsoned);
-    }
+  if (! error instanceof Error) {
+    error = { message: error };
   } else {
-    if (options.console) {
-      console.log(error);
-    }
+    error = error.toJSON();
   }
+
+  var doc;
+  try {
+    /*global document*/
+    doc = document;
+  } catch (e) { // reference error
+    doc = false;
+  }
+  if (doc && doc.location && doc.location.href) {
+      error.url = doc.location.href;
+  }
+
+  error.description = error.toString();
+
+  if (options.logglyToken) {
+    logglyLog(options.logglyToken, error);
+  }
+
+  if (options.console) {
+    if (options.environment === 'production') {
+      delete error.stack; // todo fixme -> deletes stack even for further use
+    }
+    console.log('Serrano log:' + JSON.stringify(error) );
+  }
+
+  return error;
 }
 
 module.exports = {

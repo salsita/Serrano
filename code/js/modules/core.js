@@ -17,7 +17,7 @@ var logging = require('./logging');
  */
 var defaultContext = {
   storage: {},
-  interpretScrapingDirective: require('./core').interpretScrapingDirective,
+  interpretScrapingDirective: interpretScrapingDirective,
   $: require('../libs/jquery')
 };
 
