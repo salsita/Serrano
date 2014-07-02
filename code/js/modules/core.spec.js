@@ -3,6 +3,7 @@
  */
 
 var assert = require('assert');
+var _ = require('../libs/lodash');
 var exceptions = require('./exceptions');
 var core = require('./core');
 
@@ -13,7 +14,7 @@ describe('module for testing Serrano core', function() {
     mockJQuery.init();
 
     core.__setJQuery(mockJQuery);
-    context = core.__getContext();
+    context = core.cloneContext();
   });
 
   // this is well-tested in commands.spec.js - so just a few quick tests now.
@@ -35,14 +36,22 @@ describe('module for testing Serrano core', function() {
     assert.deepEqual(interpret(instr), '<re>Double filtered paragraph</re>');
   });
 
+  it('should check if the context is cloned deeply', function(){
+    assert.ok(_.isEqual(core.cloneContext(), core.cloneContext()));
+
+    var ctx1 = core.cloneContext();
+    ctx1.storage.key1 = 5;
+    var ctx2 = core.cloneContext();
+
+    assert.ifError(_.isEqual(ctx1.storage, ctx2.storage)); // deep clone check
+  });
+
   it('should verify if `temp` from scraping unit is correctly processed', function() {
     var temp = {
       tmpVar0: ['!constant', 'tmpVal0'],
-      tmpVar1: { // ok
-        prio: 1,
-        code: ['!getVal', 'tmpVar0']
-      }
+      tmpVar1: ['!getVal', 'tmpVar0']
     };
+
     context.storage = {};
     core.processTemp(temp, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
@@ -51,36 +60,21 @@ describe('module for testing Serrano core', function() {
     context.storage = {};
     var tempError = {
       tmpVar0: ['!constant', 'tmpVal0'],
-      tmpVar1: { // ok
-        prio: 1,
-        code: ['!getVal', 'tmpVar0']
-      },
-      tmpVar2: { // problem, needs value from action of lower importance (higher number)
-        prio: 2,
-        code: ['!getVal', 'tmpVar3']
-      },
-      tmpVar3: {
-        prio: 3,
-        code: ['!constant', 'tmpVal3']
-      }
+      tmpVar1:  ['!getVal', 'tmpVar0'],
+      tmpVar2: ['!getVal', 'tmpVar3'], // this is undefined because of the order...
+      tmpVar3: ['!constant', 'tmpVal3']
     };
-
-    assert.throws(function(){ core.processTemp(tempError, context); }, exceptions.RuntimeError);
+    core.processTemp(tempError, context);
+    assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
+    assert.strictEqual(context.storage.tmpVar1, 'tmpVal0');
+    assert.strictEqual(context.storage.tmpVar2, undefined);
+    assert.strictEqual(context.storage.tmpVar3, 'tmpVal3');
 
     var temp2 = {
       tmpVar0: ['!constant', 'tmpVal0'],
-      tmpVar1: { // ok
-        prio: 1,
-        code: ['!getVal', 'tmpVar0']
-      },
-      tmpVar2: {
-        prio: 2,
-        code: ['!getVal', 'tmpVar3']
-      },
-      tmpVar3: {
-        prio: 0,
-        code: ['!constant', 'tmpVal3']
-      }
+      tmpVar1: ['!getVal', 'tmpVar0'],
+      tmpVar3: ['!constant', 'tmpVal3'],
+      tmpVar2: ['!getVal', 'tmpVar3']
     };
 
     context.storage = {};
@@ -115,7 +109,7 @@ describe('module for testing Serrano core', function() {
         },
         result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
       };
-      context = core.__getContext();
+      context = core.cloneContext();
       core.interpretScrapingUnit(scrapingUnit1, context,
         function(data) {
           assert.strictEqual(data, 'This is the first h2 heading');
@@ -136,39 +130,6 @@ describe('module for testing Serrano core', function() {
           assert.strictEqual(err.name, 'RuntimeError');
           done();
       });
-    });
-  });
-
-
-  describe('promises module', function(){
-    it('check defer', function(done) {
-      done(); return; //todo
-
-      var Q = require('../libs/q');
-      var d = Q.defer();
-      d.resolve();
-
-      var p2 = d.promise.then(function(){
-          var def = Q.defer();
-
-          setTimeout(function() {
-            def.resolve();
-            console.log("p2 resolve");
-          }, 300);
-
-          return def.promise;
-      }, function(){console.log('err');});
-
-      p2 = p2.then(function(){
-          var def = Q.defer();
-
-          setTimeout(function() {
-            def.resolve("VALUE!!!");
-            console.log("p3 resolve");
-
-          }, 200);
-          return def.promise;
-      }).then(function(val){console.log(val); done();}, function(){ console.log("caught!!!");done();});
     });
   });
 

@@ -21,7 +21,11 @@ var defaultContext = {
   $: require('../libs/jquery')
 };
 
-/**
+function cloneContext() {
+  return _.clone(defaultContext, true); // deep clone
+}
+
+  /**
  * Gets one raw scraping directive. Checks for the depth, simplifies and runs it.
  * @param directive Directive to run
  * @param context Context in which the instructions are processed.
@@ -44,7 +48,6 @@ function interpretScrapingDirective(directive, context, implicitArgument) {
     throw e;
   }
 }
-
 
 /**
  * Processes the action part of the scraping unit.
@@ -135,9 +138,7 @@ function processWaitActionsLoop(waitActionsLoop, promise, context) {
   _.forEach(waitActionsLoop, function(item) {
     // each iteration returns a promise
     if (_.isArray(item)) { // <action>
-      promise = promise.then(function() {
-        return Q.Promise.resolve(processActions(item, context));
-      });
+      promise = promise.then(function() { return processActions(item, context); });
     } else if (item && item.name) { // <wait>
       promise = processWait(item, promise, context);
     }
@@ -146,56 +147,40 @@ function processWaitActionsLoop(waitActionsLoop, promise, context) {
 }
 
 function interpretScrapingUnit(scrapingUnit, context, doneCallback) {
+  if (!context) {
+    context = cloneContext();
+  }
   // initial promise
   var promise = Q.Promise.resolve('initial promise');
-
-  // used to determine if I need to use the imaginary 'else' block in the try/catch
-  var success = true;
 
   if (scrapingUnit.waitActionsLoop) {
     promise = processWaitActionsLoop(scrapingUnit.waitActionsLoop, promise, context);
   } else {
     // process single waitfor
     if (scrapingUnit.waitFor) {
-      promise = processWait(scrapingUnit.waitFor, promise, context);
+      promise = processWaitActionsLoop([scrapingUnit.waitFor], promise, context);
     }
 
     // process actions
     var actions = scrapingUnit.actions;
     if (_.isArray(actions)) {
-      try {
-        processActions(actions, context)
-      } catch (e) {
-        promise = promise.thenReject(Q.Promise.reject(e));
-      }
-      promise = promise.then(function() {
-        return Q.Promise.resolve();
-      });
+      promise = promise.then(function() { return processActions(actions, context); });
     }
   }
 
   // process temp
   var temp = scrapingUnit.temp;
   if (_.isPlainObject(temp)) {
-    try {
-      processActions(actions, context)
-    } catch (e) {
-      return Q.Promise.reject(e);
-    }
-    promise = promise.then(function() {
-      return Q.Promise.resolve(processTemp(temp, context));
-    });
+    promise = promise.then(function() { return processTemp(temp, context);} );
   }
 
   // process result
   var result = scrapingUnit.result;
-  promise = promise.then(function() {
-    return Q.Promise.resolve(processResult(result, context));
-  });
+  promise = promise.then(function() { return processResult(result, context); });
 
   return promise.then(
     function(res) {doneCallback(res);}, // success!
-    function(e) {logging.log(e); throw e;} // log errors ->propagate error
+    function(e) {logging.log(e); throw e;} // log errors -> propagate
   );
 }
 
@@ -203,10 +188,9 @@ function interpretScrapingUnit(scrapingUnit, context, doneCallback) {
 module.exports = {
   // these four functions are exported only for unit testing
   __setJQuery: function(different) {defaultContext.$ = different;},
-  __getContext: function() {return _.clone(defaultContext);},
+  cloneContext: cloneContext,
   processTemp: processTemp,
   processResult: processResult,
-  //processScrapingUnit: processScrapingUnit,
   processWaitActionsLoop: processWaitActionsLoop,
 
   interpretScrapingDirective: interpretScrapingDirective, // used in commands.js
