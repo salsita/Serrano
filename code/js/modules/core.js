@@ -11,21 +11,8 @@ var evaluator = require('./evaluator');
 var exceptions = require('./exceptions');
 var logging = require('./logging');
 
+
 /**
- * Default context 'prototype' passed to interpretScrapingDirective.
- * interpretScrapingDirective always makes a clone of this object.
- */
-var defaultContext = {
-  storage: {},
-  interpretScrapingDirective: interpretScrapingDirective,
-  $: require('../libs/jquery')
-};
-
-function cloneContext() {
-  return _.clone(defaultContext, true); // deep clone
-}
-
-  /**
  * Gets one raw scraping directive. Checks for the depth, simplifies and runs it.
  * @param directive Directive to run
  * @param context Context in which the instructions are processed.
@@ -43,11 +30,26 @@ function interpretScrapingDirective(directive, context, implicitArgument) {
     return evaluator.evalScrapingDirective(simplified, context, implicitArgument);
   } catch (e) {
     e.scrapingDirective = directive;
-    e.context.storage = context.storage;
+    e.storage = context.storage;
     e.implicitArgument = implicitArgument;
     throw e;
   }
 }
+
+/**
+ * Default context 'prototype' passed to interpretScrapingDirective.
+ * interpretScrapingDirective always makes a clone of this object.
+ */
+var defaultContext = {
+  storage: {},
+  interpretScrapingDirective: interpretScrapingDirective,
+  $: require('../libs/jquery')
+};
+
+function cloneContext() {
+  return _.clone(defaultContext, true); // deep clone
+}
+
 
 /**
  * Processes the action part of the scraping unit.
@@ -146,7 +148,17 @@ function processWaitActionsLoop(waitActionsLoop, promise, context) {
   return promise;
 }
 
-function interpretScrapingUnit(scrapingUnit, context, doneCallback) {
+/**
+ * Interprets the whole scraping unit as defined in the spec.
+ * Also logs in case of failure. Needs to have the logger set up.
+ * @param scrapingUnit
+ * @param doneCallback Function to be called upon scraping. Takes one argument, the scraped
+ *   result object.
+ * @param [context] Context to be given. If no context is given, set up default context.
+ * @throws TypeError|exceptions.RuntimeError
+ * @returns {Promise} For further chaining.
+ */
+function interpretScrapingUnit(scrapingUnit, doneCallback, context) {
   if (!context) {
     context = cloneContext();
   }
@@ -179,7 +191,7 @@ function interpretScrapingUnit(scrapingUnit, context, doneCallback) {
   promise = promise.then(function() { return processResult(result, context); });
 
   return promise.then(
-    function(res) {doneCallback(res);}, // success!
+    function(res) {doneCallback(res); return res;}, // success! -> propagate
     function(e) {logging.log(e); throw e;} // log errors -> propagate
   );
 }
