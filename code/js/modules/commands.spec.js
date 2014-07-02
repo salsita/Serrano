@@ -57,7 +57,7 @@ describe('module for testing commands module', function() {
   it('should check the getVal/setVal commands', function(){
     _i(['!setVal', 'Test storage value', 'mykey']);
     assert.strictEqual(_i(['!getVal', 'mykey']), 'Test storage value');
-    assert.throws(function() {_i(['!getVal', 'undefinedKey']);}, exceptions.RuntimeError);
+    assert.strictEqual(_i(['!getVal', 'undefinedKey']),  undefined);
   });
 
   describe('conditions', function(){

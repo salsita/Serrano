@@ -62,13 +62,7 @@ var builtinCommands = {
   getVal: {
     argumentCount: '1',
     code: function(context, key) {
-      var value = context.storage[key];
-      if (_.isUndefined(value)) {
-        throw new exceptions.RuntimeError('No value in storage for key ' +
-          JSON.stringify(key) + '.');
-      } else {
-        return value;
-      }
+      return context.storage[key];
     }
   },
 

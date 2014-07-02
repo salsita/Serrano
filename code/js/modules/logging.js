@@ -65,6 +65,15 @@ function log(error) {
 
   error.description = error.toString();
 
+  var manifest;
+  try {
+    manifest = chrome.runtime.getManifest();
+  } catch (e) {
+    manifest = false;
+  } finally {
+    error.manifest = manifest;
+  }
+
   if (options.logglyToken) {
     logglyLog(options.logglyToken, error);
   }
