@@ -42,17 +42,18 @@ function simplifySelector(selector) {
 function simplifyInstruction(instruction) {
   var result = [];
   for (var i = 0; i < instruction.length; ++i) {
-    var selcmd = instruction[i];
-    if (commands.isSelector(selcmd)) {
+    var selCmd = instruction[i];
+    if (commands.isSelector(selCmd)) {
       // simplifySelector returns command or instruction
-      result = result.concat(commands.getDecorator(selcmd)==='$' ?
-        [simplifySelector(selcmd)] : simplifySelector(selcmd));
-    } else if (commands.isCommand(selcmd)) {
+      result = result.concat(commands.getDecorator(selCmd)==='$' ?
+        [simplifySelector(selCmd)] : simplifySelector(selCmd));
+    } else if (commands.isCommand(selCmd)) {
       /*global simplifyCommand*/
-      result.push(simplifyCommand(selcmd));
+      result.push(simplifyCommand(selCmd));
     } else {
-      throw new TypeError('In instruction, selector or command expected'+
-        ' in' + JSON.stringify(instruction));
+      throw new TypeError('Selector or command expected in instruction '+
+        JSON.stringify(instruction) +' at position '+ i +' but found '+
+        JSON.stringify(selCmd) +' instead.');
     }
   }
 
@@ -71,8 +72,9 @@ function simplifyCommand(command) {
   // -1 for the head==commName, +1 if it receives an explicit argument ('>')
   var argcSupplied = command.length - 1 + (piped ? 1 : 0);
   if (!argumentCountChecker.checkArgumentCount(argcSupplied, signature)) {
-    var msg = 'Command ' + commFullName + ' was supplied with invalid number of arguments.' +
-      argcSupplied + ' argument(s) supplied.'+JSON.stringify(command);
+    var msg = 'Command ' + commFullName + ' was supplied with ' + argcSupplied +' arguments '+
+      'while it was expected to be supplied with "'+signature +'" arguments. '+
+      'The whole command is '+ JSON.stringify(command);
     throw new exceptions.WrongArgumentError(msg);
   }
 

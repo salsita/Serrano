@@ -1,9 +1,6 @@
 /**
  * Created by tomasnovella on 5/14/14.
  */
-/**
- * Created by tomasnovella on 5/10/14.
- */
 
 var assert = require('assert');
 var _ = require('../libs/lodash');

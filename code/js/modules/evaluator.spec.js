@@ -90,13 +90,13 @@ var testCommands = {
 var evaluator = require('./evaluator');
 
 describe('interpreter evaluator', function() {
+    /*global before*/
+    before(function(){
+      commands.setCommands(testCommands);
+    });
     function ei(directive, implicitArgument) {
       return evaluator.evalScrapingDirective(directive, {storage:{}}, implicitArgument);
     }
-
-    beforeEach(function(){
-      commands.setCommands(testCommands);
-    });
 
     it('should verify chaining and implicit argument passing', function(){
       var explicit = [['!replace', 'Hello world!', 'world', 'Roman']],

@@ -519,8 +519,8 @@ var builtinCommands = {
  */
 function setDefaultCommandProperties(commands) {
   var result = {};
-  _.forOwn(commands, function(commBody, commName){
-    result[commName] = _.extend({}, commandDefaults, commBody);
+  _.forOwn(commands, function(cmdBody, cmdName){
+    result[cmdName] = _.extend({}, commandDefaults, cmdBody);
   });
   return result;
 }
