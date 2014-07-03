@@ -70,4 +70,16 @@ describe('module with mock jQuery library', function() {
     assert.deepEqual(arrSingleSelector[0], singleSelector[0]);
     assert.deepEqual(arrSingleSelector[1], singleSelector[1]);
   });
+
+  it('should test $.ajax() method', function(){
+    var a = $.ajax({
+      url: 'http://logs-01.loggly.com/inputs/123456789TOKEN/tag/serrano/',
+      method: 'post',
+      dataType: 'json',
+      data: {'key':'val'},
+      crossDomain: true
+    });
+
+    assert.deepEqual($.ajax(a), a);
+  });
 });

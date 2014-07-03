@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Command line demo</title>
+    <script src="../build/serrano.js"></script>
+    <script src="../code/js/libs/jquery.js"></script>
+
+    <script>
+        var _i = window.serrano.engine.interpretScrapingDirective;
+
+        var interpret = function(directive, implicitArgument){
+            return _i(directive, {storage:{}, interpretScrapingDirective:_i, $:$}, implicitArgument);
+        }
+    </script>
+</head>
+<body>
+<h1> Hello </h1>
+Launch the console and use function interpret.
+</body>
+</html>
