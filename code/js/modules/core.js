@@ -37,8 +37,8 @@ function interpretScrapingDirective(directive, context, implicitArgument) {
 }
 
 /**
- * Default context 'prototype' passed to interpretScrapingDirective.
- * interpretScrapingDirective always makes a clone of this object.
+ * Default context 'prototype'.
+ * Everytime a a unit is scraped a new deep clone of this is created.
  */
 var defaultContext = {
   storage: {},
@@ -46,7 +46,10 @@ var defaultContext = {
   $: require('../libs/jquery')
 };
 
-function cloneContext() {
+/**
+ * Creates new context based on the `defaultContext` prototype .
+ */
+function createContext() {
   return _.clone(defaultContext, true); // deep clone
 }
 
@@ -129,12 +132,11 @@ function processWait(waitObject, promise, context) {
 }
 
 /**
- * Processes the whole waitActions loop. If a wait item item fails to appear,
- * stop program execution + log, naturally.
+ * Processes the whole waitActions loop.
  * Othewise only log.
- * Returns a (chained) promise.
  * @param waitActionsLoop
  * @param context
+ * @returns {Promise}
  */
 function processWaitActionsLoop(waitActionsLoop, promise, context) {
   _.forEach(waitActionsLoop, function(item) {
@@ -152,15 +154,14 @@ function processWaitActionsLoop(waitActionsLoop, promise, context) {
  * Interprets the whole scraping unit as defined in the spec.
  * Also logs in case of failure. Needs to have the logger set up.
  * @param scrapingUnit
- * @param doneCallback Function to be called upon scraping. Takes one argument, the scraped
+ * @param doneCallback Function to be called after scraping. Takes one argument, the scraped
  *   result object.
  * @param [context] Context to be given. If no context is given, set up default context.
- * @throws TypeError|exceptions.RuntimeError
  * @returns {Promise} For further chaining.
  */
 function interpretScrapingUnit(scrapingUnit, doneCallback, context) {
   if (!context) {
-    context = cloneContext();
+    context = createContext();
   }
   // initial promise
   var promise = Q.Promise.resolve('initial promise');
@@ -200,7 +201,7 @@ function interpretScrapingUnit(scrapingUnit, doneCallback, context) {
 module.exports = {
   // these four functions are exported only for unit testing
   __setJQuery: function(different) {defaultContext.$ = different;},
-  cloneContext: cloneContext,
+  createContext: createContext,
   processTemp: processTemp,
   processResult: processResult,
   processWaitActionsLoop: processWaitActionsLoop,

@@ -3,24 +3,26 @@
  */
 
 var assert = require('assert');
-var _ = require('../libs/lodash');
 var Q = require('../libs/q');
+var mockJQuery = require('../libs/jquery-mock');
 
 var core = require('./core');
 
 describe('module for testing Serrano core', function() {
   var context;
-  beforeEach(function(){
-    var mockJQuery = require('../libs/jquery-mock');
-    mockJQuery.init();
-
+  /*global before*/
+  before(function() {
     core.__setJQuery(mockJQuery);
-    context = core.cloneContext();
+  });
+  beforeEach(function() {
+    mockJQuery.init();
+    context = core.createContext();
   });
 
-  // this is well-tested in commands.spec.js - so just a few quick tests now.
+
+  // this one is well-tested in commands.spec.js - so just a few quick tests now.
   it('should check the `interpretScrapingDirective` function', function() {
-    context = core.cloneContext();
+    context = core.createContext();
 
     var interpret =  function(directive, implicitArgument) { // shortcut
         return core.interpretScrapingDirective(directive, context, implicitArgument);
@@ -38,13 +40,13 @@ describe('module for testing Serrano core', function() {
   });
 
   it('should check if the context is cloned deeply', function(){
-    assert.ok(_.isEqual(core.cloneContext(), core.cloneContext()));
+    assert.deepEqual(core.createContext(), core.createContext());
 
-    var ctx1 = core.cloneContext();
+    var ctx1 = core.createContext();
     ctx1.storage.key1 = 5;
-    var ctx2 = core.cloneContext();
+    var ctx2 = core.createContext();
 
-    assert.ifError(_.isEqual(ctx1.storage, ctx2.storage)); // deep clone check
+    assert.notDeepEqual(ctx1.storage, ctx2.storage);
   });
 
   it('should verify if `temp` from scraping unit is correctly processed', function() {
@@ -53,16 +55,16 @@ describe('module for testing Serrano core', function() {
       tmpVar1: ['!getVal', 'tmpVar0']
     };
 
-    context = core.cloneContext();
+    context = core.createContext();
     core.processTemp(temp, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
 
-    context = core.cloneContext();
+    context = core.createContext();
     var tempError = {
       tmpVar0: ['!constant', 'tmpVal0'],
       tmpVar1:  ['!getVal', 'tmpVar0'],
-      tmpVar2: ['!getVal', 'tmpVar3'], // this is undefined because of the order...
+      tmpVar2: ['!getVal', 'tmpVar3'], // this is undefined because of the order of execution...
       tmpVar3: ['!constant', 'tmpVal3']
     };
     core.processTemp(tempError, context);
@@ -78,7 +80,7 @@ describe('module for testing Serrano core', function() {
       tmpVar2: ['!getVal', 'tmpVar3']
     };
 
-    context = core.cloneContext();
+    context = core.createContext();
     core.processTemp(temp2, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar1, 'tmpVal0');
@@ -96,13 +98,13 @@ describe('module for testing Serrano core', function() {
         name: ['!constant', 'Tomas'],
         surname: ['!constantttttt', 'Novella']
       };
-    assert.deepEqual(core.processResult(result1, core.cloneContext()), 1);
-    assert.deepEqual(core.processResult(result2, core.cloneContext()), {name:'Tomas', surname:'Novella'});
-    assert.throws(function(){ core.processResult(result3, core.cloneContext(), TypeError);});
+    assert.deepEqual(core.processResult(result1, core.createContext()), 1);
+    assert.deepEqual(core.processResult(result2, core.createContext()), {name:'Tomas', surname:'Novella'});
+    assert.throws(function(){ core.processResult(result3, core.createContext(), TypeError);});
   });
 
   describe('`waitActionsLoop`', function(){
-    it('should check nonexistent element', function(done){
+    it('should check nonexistent element', function(done) {
       var promise = Q.Promise.resolve('initial promise');
       var waitActionsLoop = [
         [
@@ -113,7 +115,7 @@ describe('module for testing Serrano core', function() {
           millis: 120
         }
       ];
-      core.processWaitActionsLoop(waitActionsLoop, promise, core.cloneContext()).catch(
+      core.processWaitActionsLoop(waitActionsLoop, promise, core.createContext()).catch(
         function(e) {
           // stack: 'RuntimeError: Element with selector $nonExistingID never appeared.\n ...
           assert.strictEqual(e.name, 'RuntimeError');
@@ -121,6 +123,7 @@ describe('module for testing Serrano core', function() {
         }
       ).done();
     });
+
     it('should check longer loop with both waits and actions', function(done) {
       var promise = Q.Promise.resolve('initial promise');
       var waitActionsLoop = [
@@ -139,7 +142,7 @@ describe('module for testing Serrano core', function() {
           millis: 60
         }
       ];
-      core.processWaitActionsLoop(waitActionsLoop, promise, core.cloneContext()).then(
+      core.processWaitActionsLoop(waitActionsLoop, promise, core.createContext()).then(
         function() {
           done();
         }
@@ -161,7 +164,7 @@ describe('module for testing Serrano core', function() {
         function(data) {
           assert.strictEqual(data, 'This is the first h2 heading');
           done();
-        }, core.cloneContext()
+        }, core.createContext()
       ).done();
     });
 
@@ -173,7 +176,7 @@ describe('module for testing Serrano core', function() {
         },
         result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
-      core.interpretScrapingUnit(scrapingUnit2, done, core.cloneContext()).catch(function(err) {
+      core.interpretScrapingUnit(scrapingUnit2, done, core.createContext()).catch(function(err) {
           assert.strictEqual(err.name, 'RuntimeError');
           done();
       }).done();
@@ -187,7 +190,7 @@ describe('module for testing Serrano core', function() {
         result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
 
-      core.interpretScrapingUnit(scrapingUnit3, done, core.cloneContext())
+      core.interpretScrapingUnit(scrapingUnit3, done, core.createContext())
         .catch(function(err) {
           // TypeError: (simplifier) selector/command/instruction expected
           assert.strictEqual(err.name, 'TypeError');
