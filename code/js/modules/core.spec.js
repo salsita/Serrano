@@ -3,24 +3,28 @@
  */
 
 var assert = require('assert');
+var Q = require('../libs/q');
+var mockJQuery = require('../libs/jquery-mock');
 
-var commands = require('./commands');
-var exceptions = require('./exceptions');
 var core = require('./core');
 
 describe('module for testing Serrano core', function() {
-  beforeEach(function(){
-    var mockJQuery = require('../libs/jquery-mock');
-    mockJQuery.init();
-    commands.__setJQuery(mockJQuery);
+  var context;
+  /*global before*/
+  before(function() {
     core.__setJQuery(mockJQuery);
   });
+  beforeEach(function() {
+    mockJQuery.init();
+    context = core.createContext();
+  });
 
-  // this is well-tested in commands.spec.js - so just a few quick tests now.
+
+  // this one is well-tested in commands.spec.js - so just a few quick tests now.
   it('should check the `interpretScrapingDirective` function', function() {
-    // define instructions
-    var context = {storage: {}},
-      interpret =  function(directive, implicitArgument) { // shortcut
+    context = core.createContext();
+
+    var interpret =  function(directive, implicitArgument) { // shortcut
         return core.interpretScrapingDirective(directive, context, implicitArgument);
       },
       setV = ['!setVal', 'Tomas', 'myname'],
@@ -35,55 +39,48 @@ describe('module for testing Serrano core', function() {
     assert.deepEqual(interpret(instr), '<re>Double filtered paragraph</re>');
   });
 
+  it('should check if the context is cloned deeply', function(){
+    assert.deepEqual(core.createContext(), core.createContext());
+
+    var ctx1 = core.createContext();
+    ctx1.storage.key1 = 5;
+    var ctx2 = core.createContext();
+
+    assert.notDeepEqual(ctx1.storage, ctx2.storage);
+  });
+
   it('should verify if `temp` from scraping unit is correctly processed', function() {
     var temp = {
       tmpVar0: ['!constant', 'tmpVal0'],
-      tmpVar1: { // ok
-        prio: 1,
-        code: ['!getVal', 'tmpVar0']
-      }
+      tmpVar1: ['!getVal', 'tmpVar0']
     };
-    var context = { storage:{} };
+
+    context = core.createContext();
     core.processTemp(temp, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
 
-    context = { storage:{} };
+    context = core.createContext();
     var tempError = {
       tmpVar0: ['!constant', 'tmpVal0'],
-      tmpVar1: { // ok
-        prio: 1,
-        code: ['!getVal', 'tmpVar0']
-      },
-      tmpVar2: { // problem, needs value from action of lower importance (higher number)
-        prio: 2,
-        code: ['!getVal', 'tmpVar3']
-      },
-      tmpVar3: {
-        prio: 3,
-        code: ['!constant', 'tmpVal3']
-      }
+      tmpVar1:  ['!getVal', 'tmpVar0'],
+      tmpVar2: ['!getVal', 'tmpVar3'], // this is undefined because of the order of execution...
+      tmpVar3: ['!constant', 'tmpVal3']
     };
-
-    assert.throws(function(){ core.processTemp(tempError, context); }, exceptions.RuntimeError);
+    core.processTemp(tempError, context);
+    assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
+    assert.strictEqual(context.storage.tmpVar1, 'tmpVal0');
+    assert.strictEqual(context.storage.tmpVar2, undefined);
+    assert.strictEqual(context.storage.tmpVar3, 'tmpVal3');
 
     var temp2 = {
       tmpVar0: ['!constant', 'tmpVal0'],
-      tmpVar1: { // ok
-        prio: 1,
-        code: ['!getVal', 'tmpVar0']
-      },
-      tmpVar2: {
-        prio: 2,
-        code: ['!getVal', 'tmpVar3']
-      },
-      tmpVar3: {
-        prio: 0,
-        code: ['!constant', 'tmpVal3']
-      }
+      tmpVar1: ['!getVal', 'tmpVar0'],
+      tmpVar3: ['!constant', 'tmpVal3'],
+      tmpVar2: ['!getVal', 'tmpVar3']
     };
 
-    context = { storage:{} };
+    context = core.createContext();
     core.processTemp(temp2, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar1, 'tmpVal0');
@@ -101,13 +98,60 @@ describe('module for testing Serrano core', function() {
         name: ['!constant', 'Tomas'],
         surname: ['!constantttttt', 'Novella']
       };
-    assert.deepEqual(core.processResult(result1, {storage:{}}), 1);
-    assert.deepEqual(core.processResult(result2, {storage:{}}), {name:'Tomas', surname:'Novella'});
-    assert.throws(function(){ core.processResult(result3, {storage:{}}); }, TypeError);
+    assert.deepEqual(core.processResult(result1, core.createContext()), 1);
+    assert.deepEqual(core.processResult(result2, core.createContext()), {name:'Tomas', surname:'Novella'});
+    assert.throws(function(){ core.processResult(result3, core.createContext(), TypeError);});
   });
 
-  describe('`waitFor`', function(){
-    it('should check correct example', function(done) {
+  describe('`waitActionsLoop`', function(){
+    it('should check nonexistent element', function(done) {
+      var promise = Q.Promise.resolve('initial promise');
+      var waitActionsLoop = [
+        [
+          ['!constant', 444] // let's just assume I just clicked on something
+        ],
+        {
+          name: '$nonExistingID',
+          millis: 120
+        }
+      ];
+      core.processWaitActionsLoop(waitActionsLoop, promise, core.createContext()).catch(
+        function(e) {
+          // stack: 'RuntimeError: Element with selector $nonExistingID never appeared.\n ...
+          assert.strictEqual(e.name, 'RuntimeError');
+          done();
+        }
+      ).done();
+    });
+
+    it('should check longer loop with both waits and actions', function(done) {
+      var promise = Q.Promise.resolve('initial promise');
+      var waitActionsLoop = [
+        [
+          ['!constant', 444] // let's just assume I just clicked on something
+        ],
+        {
+          name: 'secondCall',
+          millis: 120
+        },
+        [
+          ['!constant', 445] // another click
+        ],
+        {
+          name: 'h2',
+          millis: 60
+        }
+      ];
+      core.processWaitActionsLoop(waitActionsLoop, promise, core.createContext()).then(
+        function() {
+          done();
+        }
+      ).done();
+    });
+  });
+
+  describe('`interpretScrapingUnit` ', function(){
+    it('should check correct promise flow in case of success', function(done) {
       var scrapingUnit1 = {
         waitFor: {
           name: 'secondCall',
@@ -117,30 +161,41 @@ describe('module for testing Serrano core', function() {
       };
 
       core.interpretScrapingUnit(scrapingUnit1,
-        function(data){
+        function(data) {
           assert.strictEqual(data, 'This is the first h2 heading');
           done();
-        },
-        done // error function
-      );
+        }, core.createContext()
+      ).done();
     });
 
     it('should verify failure (element never appears)', function(done){
       var scrapingUnit2 = {
         waitFor: {
           name: '$nonExistingID', // nonexistent element
-          millis: 500
+          millis: 200
         },
-        result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
+        result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
-      core.interpretScrapingUnit(scrapingUnit2,
-        done, // error
-        function(){
+      core.interpretScrapingUnit(scrapingUnit2, done, core.createContext()).catch(function(err) {
+          assert.strictEqual(err.name, 'RuntimeError');
           done();
-        }
-      );
+      }).done();
+    });
+
+    it('should verify failure (invalid instruction fetching temporary variable)', function(done) {
+      var scrapingUnit3 = {
+        temp: {
+          four: ['!invalidCommand', 4]
+        },
+        result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
+      };
+
+      core.interpretScrapingUnit(scrapingUnit3, done, core.createContext())
+        .catch(function(err) {
+          // TypeError: (simplifier) selector/command/instruction expected
+          assert.strictEqual(err.name, 'TypeError');
+          done();
+        }).done();
     });
   });
-
 });
-

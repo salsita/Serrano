@@ -9,10 +9,12 @@ var commands = require('./commands');
 var core = require('./core');
 
 describe('module for testing commands module', function() {
-  commands.__setJQuery(require('../libs/jquery-mock'));
   commands.init(); // I want the basic set of commands
-
-  var context = {storage: {}};
+  var context = {
+    storage: {},
+    interpretScrapingDirective: core.interpretScrapingDirective,
+    $: require('../libs/jquery-mock')
+  };
   function _i(directive, implicitArgument) { // shortcut
     return core.interpretScrapingDirective(directive, context, implicitArgument);
   }
@@ -55,7 +57,7 @@ describe('module for testing commands module', function() {
   it('should check the getVal/setVal commands', function(){
     _i(['!setVal', 'Test storage value', 'mykey']);
     assert.strictEqual(_i(['!getVal', 'mykey']), 'Test storage value');
-    assert.throws(function() {_i(['!getVal', 'undefinedKey']);}, exceptions.RuntimeError);
+    assert.strictEqual(_i(['!getVal', 'undefinedKey']),  undefined);
   });
 
   describe('conditions', function(){

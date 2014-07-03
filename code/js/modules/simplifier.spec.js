@@ -70,7 +70,8 @@ var testCommands = {
 
 
 describe('module for grammar simplification', function() {
-  beforeEach(function(){
+  /*global before*/
+  before(function(){
     commands.setCommands(testCommands);
   });
   var simplify = simplifier.simplifyScrapingDirective;

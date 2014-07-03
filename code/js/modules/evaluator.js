@@ -30,7 +30,7 @@ function evalCommand(cmd, context, implicitArgument) {
     if (argumentCountChecker.checkArgumentCount(i + (piped? 0: -1) , command.rawArguments)) {
       args.push(arg);
     } else if (commands.isInstruction(arg)) {
-      /*globals evalInstruction */
+      /*global evalInstruction */
       args.push(evalInstruction(arg, context));
     } else if (commands.isCommand(arg)) {
       args.push(evalCommand(arg, context));

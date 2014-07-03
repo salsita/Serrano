@@ -4,28 +4,53 @@
 
 var _ = require('../libs/lodash');
 var Q = require('../libs/q');
-var $ = require('../libs/jquery');
 
 var depthChecker = require('./depthChecker');
 var simplifier = require('./simplifier');
 var evaluator = require('./evaluator');
 var exceptions = require('./exceptions');
+var logging = require('./logging');
+
 
 /**
  * Gets one raw scraping directive. Checks for the depth, simplifies and runs it.
  * @param directive Directive to run
  * @param context Context in which the instructions are processed.
  * @param [implicitArgument] Optional implicit argument.
+ * @note it throws error in well-reasoned cases and it should not be taken lightly
  * @returns The return value of the instruction.
  */
 function interpretScrapingDirective(directive, context, implicitArgument) {
-  if (!depthChecker.isValidDepth(directive)) {
-    throw new exceptions.RuntimeError('Depth of nesting of the instruction is too high');
+  try {
+    if (!depthChecker.isValidDepth(directive)) {
+      throw new exceptions.RuntimeError('Depth of nesting of the instruction is too high');
+    }
+
+    var simplified = simplifier.simplifyScrapingDirective(directive);
+    return evaluator.evalScrapingDirective(simplified, context, implicitArgument);
+  } catch (e) {
+    e.scrapingDirective = directive;
+    e.storage = context.storage;
+    e.implicitArgument = implicitArgument;
+    throw e;
   }
+}
 
-  var simplified = simplifier.simplifyScrapingDirective(directive);
+/**
+ * Default context 'prototype'.
+ * Everytime a a unit is scraped a new deep clone of this is created.
+ */
+var defaultContext = {
+  storage: {},
+  interpretScrapingDirective: interpretScrapingDirective,
+  $: require('../libs/jquery')
+};
 
-  return evaluator.evalScrapingDirective(simplified, context, implicitArgument );
+/**
+ * Creates new context based on the `defaultContext` prototype .
+ */
+function createContext() {
+  return _.clone(defaultContext, true); // deep clone
 }
 
 
@@ -36,45 +61,26 @@ function interpretScrapingDirective(directive, context, implicitArgument) {
  */
 function processActions(actions, context) {
   _.forEach(actions, function(action){
-    return interpretScrapingDirective(action, context);
+      interpretScrapingDirective(action, context);
   });
 }
 
 /**
- * Processes the temp variables in the scraping unit.
+ * Processes the temp variables in scraping units.
  * @param temp
  * @param context
  */
 function processTemp(temp, context) {
-  // 1. transform: {name1:tmpVar1, name2:tmpVar2} --> [specialtmpVar1, specialtmpVar2]
-  // where specialTmpVar = {name:..., prio:..., code:...}
-  // and set default priority
-  var transformed = [];
-  _.forEach(temp, function(item, key){
-    var transItem = {name: key};
-    if (_.isPlainObject(item)) { // {prio:..., code:...}
-      transItem.prio = (_.isFinite(item.prio) && item.prio >= 0) ?item.prio : 0;
-      transItem.code = item.code;
-    } else { // just an instruction
-      transItem.prio = 0;
-      transItem.code = item;
-    }
-    transformed.push(transItem);
-  });
-
-  // 2. sort
-  transformed = _.sortBy(transformed, _.property('prio'));
-
-  // 3. setVal
-  _.forEach(transformed, function(item){ // setVal...
-    var instr = ['!setVal', interpretScrapingDirective(item.code, context), item.name];
-    interpretScrapingDirective(instr, context);
+  _.forEach(temp, function(item, key){ // setVal...
+    context.storage[key] = interpretScrapingDirective(item, context);
   });
 }
 
 /**
  * Processes the result part in the scraping unit.
  * Returns the resulting object of the processed scraping unit.
+ * If individual instruction fails, catch the exception and log.
+ * But never stop.
  * @param result
  * @param context
  * @returns processedResult
@@ -90,84 +96,115 @@ function processResult(result, context) {
 }
 
 /**
- * Using the helper functions above, processes `actions`, `temp` and `result`
- * from the scraping unit.
- * @param scrapingUnit
- * @returns processedResult
+ * Processes a wait object
+ * @returns promise
  */
-function processScrapingUnit(scrapingUnit) {
-  var context = { storage: {} };
-
-  // 1. process actions
-  var actions = scrapingUnit.actions;
-  if (_.isArray(actions)) {
-    processActions(actions, context);
-  }
-
-  // 2. process temp
-  var temp = scrapingUnit.temp;
-  if (_.isPlainObject(temp)) {
-    processTemp(temp, context);
-  }
-
-  // 3. process result
-  var result = scrapingUnit.result;
-  if (!result) {
-    throw new exceptions.RuntimeError('No result defined for the scraping unit');
-  }
-  return processResult(result, context);
-}
-
-/**
- * Interprets scraping unit. Since it may be waiting for an element to appear,
- * this method is asynchronous and has two callbacks as parameters.
- * @param scrapingUnit Unit with instructions for scraping.
- * @param doneCallback Called when everything was scraped sucessfully, first
- *   argument contains scraped object.
- * @param failCallback Called when a `waitFor` promise failed.
- */
-function interpretScrapingUnit(scrapingUnit, doneCallback, failCallback) {
-  // 1. process `waitFor`
-  if (_.isPlainObject(scrapingUnit.waitFor)) {
-    var millis = scrapingUnit.waitFor.millis;
+function processWait(waitObject, promise, context) {
+  return promise.then(function() {
+    // deadline until which the object should appear
+    var millis = waitObject.millis;
     if (!_.isFinite(millis) || millis < 0) {
       millis = 2000; // default timeout (defined in the spec)
     }
+
     if (millis === 0) {
-      millis = 1000*3600*24; // one day should suffice
+      millis = 1000 * 3600 * 24; // one day should suffice
     }
 
-    var deferred = Q.defer();
+    var def = Q.defer();
 
-    // test every 300 ms whether the element appeared
+    // test every 50 ms whether the element appeared
     var timer = setInterval(function() {
-      if ($(scrapingUnit.waitFor.name).length) {
-        deferred.resolve();
+      if (context.$(waitObject.name).length) {
         clearInterval(timer);
+        def.resolve();
       }
-    }, 300);
+    }, 50);
 
     // after `millis` ms give up
     setTimeout(function() {
       clearInterval(timer);
-      deferred.reject();
+      def.reject(new exceptions.RuntimeError('Element with selector '+ waitObject.name +' never appeared.'));
     }, millis);
-    // 2. process the rest
-    deferred.promise.then(
-      function() { doneCallback(processScrapingUnit(scrapingUnit)); },
-      function() { failCallback(scrapingUnit); }
-    );
 
-  } else { // no waitfor, everything simple
-    doneCallback(processScrapingUnit(scrapingUnit));
-  }
+    return def.promise;
+  });
 }
+
+/**
+ * Processes the whole waitActions loop.
+ * Othewise only log.
+ * @param waitActionsLoop
+ * @param context
+ * @returns {Promise}
+ */
+function processWaitActionsLoop(waitActionsLoop, promise, context) {
+  _.forEach(waitActionsLoop, function(item) {
+    // each iteration returns a promise
+    if (_.isArray(item)) { // <action>
+      promise = promise.then(function() { return processActions(item, context); });
+    } else if (item && item.name) { // <wait>
+      promise = processWait(item, promise, context);
+    }
+  });
+  return promise;
+}
+
+/**
+ * Interprets the whole scraping unit as defined in the spec.
+ * Also logs in case of failure. Needs to have the logger set up.
+ * @param scrapingUnit
+ * @param doneCallback Function to be called after scraping. Takes one argument, the scraped
+ *   result object.
+ * @param [context] Context to be given. If no context is given, set up default context.
+ * @returns {Promise} For further chaining.
+ */
+function interpretScrapingUnit(scrapingUnit, doneCallback, context) {
+  if (!context) {
+    context = createContext();
+  }
+  // initial promise
+  var promise = Q.Promise.resolve('initial promise');
+
+  if (scrapingUnit.waitActionsLoop) {
+    promise = processWaitActionsLoop(scrapingUnit.waitActionsLoop, promise, context);
+  } else {
+    // process single waitfor
+    if (scrapingUnit.waitFor) {
+      promise = processWaitActionsLoop([scrapingUnit.waitFor], promise, context);
+    }
+
+    // process actions
+    var actions = scrapingUnit.actions;
+    if (_.isArray(actions)) {
+      promise = promise.then(function() { return processActions(actions, context); });
+    }
+  }
+
+  // process temp
+  var temp = scrapingUnit.temp;
+  if (_.isPlainObject(temp)) {
+    promise = promise.then(function() { return processTemp(temp, context);} );
+  }
+
+  // process result
+  var result = scrapingUnit.result;
+  promise = promise.then(function() { return processResult(result, context); });
+
+  return promise.then(
+    function(res) {doneCallback(res); return res;}, // success! -> propagate
+    function(e) {logging.log(e); throw e;} // log errors -> propagate
+  );
+}
+
+
 module.exports = {
   // these four functions are exported only for unit testing
-  __setJQuery: function(different) {$ = different;},
+  __setJQuery: function(different) {defaultContext.$ = different;},
+  createContext: createContext,
   processTemp: processTemp,
   processResult: processResult,
-  processScrapingUnit: processScrapingUnit,
+  processWaitActionsLoop: processWaitActionsLoop,
 
   interpretScrapingDirective: interpretScrapingDirective, // used in commands.js
   interpretScrapingUnit: interpretScrapingUnit

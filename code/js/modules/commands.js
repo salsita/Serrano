@@ -1,8 +1,5 @@
-var $ = require('../libs/jquery');
 var _ = require('../libs/lodash');
-
 var exceptions = require('./exceptions');
-var core; /* defined at the of the file */
 
 /**
  * Set of commands in use.
@@ -54,26 +51,18 @@ var builtinCommands = {
     argumentCount: '1-2',
     code: function(context, obj1, obj2) {
       if (arguments.length === 2) {
-        return $(obj1);
+        return context.$(obj1);
       } else { // it's chained
-        return $(obj2, obj1);
+        return context.$(obj2, obj1);
       }
     }
   },
-
-
 
   // storing and fetching variables
   getVal: {
     argumentCount: '1',
     code: function(context, key) {
-      var value = context.storage[key];
-      if (_.isUndefined(value)) {
-        throw new exceptions.RuntimeError('No value in storage for key ' +
-          JSON.stringify('key') + '.');
-      } else {
-        return value;
-      }
+      return context.storage[key];
     }
   },
 
@@ -157,7 +146,7 @@ var builtinCommands = {
   // compound conditions
   all: {
     argumentCount: '1-',
-    code: function() { // remove the context
+    code: function(/* context */) {
       var args = Array.prototype.slice.call(arguments, 1);
       return _.all(args);
     }
@@ -170,14 +159,14 @@ var builtinCommands = {
         rest = Array.prototype.slice.call(arguments, 2); // slice off context + implicit arg
 
       return _.all(rest, function(condition) {
-        return core.interpretScrapingDirective(condition, context, implicit);
+        return context.interpretScrapingDirective(condition, context, implicit);
       });
     }
   },
 
   any: {
     argumentCount:'1-',
-    code: function() { // slice off context
+    code: function(/* context */) {
       var args = Array.prototype.slice.call(arguments, 1);
       return _.any(args);
     }
@@ -190,7 +179,7 @@ var builtinCommands = {
         rest = Array.prototype.slice.call(arguments, 2); // slices off context and implicit arg...
 
       return _.any(rest, function(condition) {
-        return core.interpretScrapingDirective(condition, context, implicit);
+        return context.interpretScrapingDirective(condition, context, implicit);
       });
     }
   },
@@ -200,7 +189,7 @@ var builtinCommands = {
     argumentCount: '1',
     implicitForeach: false,
     code: function(context, obj) {
-      return $.makeArray(obj);
+      return context.$.makeArray(obj);
     }
   },
 
@@ -259,9 +248,9 @@ var builtinCommands = {
     // so I cannot let interpret them before knowing which one I want to...
     code: function(context, condition, ifbody, elsebody) {
       if (condition) {
-        return core.interpretScrapingDirective(ifbody, context);
+        return context.interpretScrapingDirective(ifbody, context);
       } else {
-        return elsebody && core.interpretScrapingDirective(elsebody, context);
+        return elsebody && context.interpretScrapingDirective(elsebody, context);
       }
     }
   },
@@ -274,10 +263,10 @@ var builtinCommands = {
     code: function(context, data, condition) {
       if (_.isArray(data)) {
         return  _.filter(data, function(item) {
-            return core.interpretScrapingDirective(condition, context, item);
+            return context.interpretScrapingDirective(condition, context, item);
         });
       } else {
-        return core.interpretScrapingDirective(condition, context, data)? data : undefined;
+        return context.interpretScrapingDirective(condition, context, data)? data : undefined;
       }
     }
   },
@@ -326,7 +315,7 @@ var builtinCommands = {
   // arithmetics
   _scalarOp : { // these private methods are never invoked directly, so they don't need context
     argumentCount: '3',
-    code: function(a, b, op) {
+    code: function(context, a, b, op) {
       a = parseFloat(a);
       b = parseFloat(b);
 
@@ -345,15 +334,15 @@ var builtinCommands = {
 
   _arrayScalarOp: {
     argumentCount: '3',
-    code: function(first, second, op) {
+    code: function(context, first, second, op) {
       var that = this;
       if (_.isArray(first)) {
         return _.map(first, function(el) {
-          return that._scalarOp.code.call(that, el, second, op);
+          return that._scalarOp.code.call(that, context, el, second, op);
         });
       } else {
         return _.map(second, function(el) {
-          return that._scalarOp.code.call(that, first, el, op);
+          return that._scalarOp.code.call(that, context, first, el, op);
         });
       }
     }
@@ -361,20 +350,20 @@ var builtinCommands = {
 
   _arrayArrayOp: {
     argumentCount: '3',
-    code: function(array1, array2, op) {
+    code: function(context, array1, array2, op) {
       if (array1.length !== array2.length) {
         return NaN;
       }
       var that = this;
       return _.zip(array1, array2).map(function(pair) {
-        return that._scalarOp.code.call(that, pair[0], pair[1], op);
+        return that._scalarOp.code.call(that, context, pair[0], pair[1], op);
       });
     }
   },
 
   _op: {
     argumentCount: '3',
-    code: function(item1, item2, op) {
+    code: function(context, item1, item2, op) {
       var arrCount = 0;
       if (_.isArray(item1)) {
         ++arrCount;
@@ -385,11 +374,11 @@ var builtinCommands = {
 
       switch (arrCount) {
         case 2: // array + array
-          return this._arrayArrayOp.code.call(this, item1, item2, op);
+          return this._arrayArrayOp.code.call(this, context, item1, item2, op);
         case 1: // array + scalar || scalar + array
-          return this._arrayScalarOp.code.call(this, item1, item2, op);
+          return this._arrayScalarOp.code.call(this, context, item1, item2, op);
         case 0: // scalar + scalar
-          return this._scalarOp.code(item1, item2, op);
+          return this._scalarOp.code.call(this, context, item1, item2, op);
       }
     }
   },
@@ -397,25 +386,25 @@ var builtinCommands = {
   '+' : {
     argumentCount: '2',
     code: function(context, a, b) {
-      return this._op.code.call(this, a, b, '+');
+      return this._op.code.call(this, context, a, b, '+');
     }
   },
   '-' : {
     argumentCount: '2',
     code: function(context, a, b) {
-      return this._op.code.call(this, a, b, '-');
+      return this._op.code.call(this, context,  a, b, '-');
     }
   },
   '*' : {
     argumentCount: '2',
     code: function(context, a, b) {
-      return this._op.code.call(this, a, b, '*');
+      return this._op.code.call(this, context, a, b, '*');
     }
   },
   '/' : {
     argumentCount: '2',
     code: function(context, a, b) {
-      return this._op.code.call(this, a, b, '/');
+      return this._op.code.call(this, context, a, b, '/');
     }
   },
 
@@ -477,7 +466,7 @@ var builtinCommands = {
   concat: {
     argumentCount: '1-',
     implicitForeach: false,
-    code: function() { // slice off the context argument
+    code: function(/* context */) {
       var args = Array.prototype.slice.call(arguments, 1);
       return Array.prototype.concat.apply([], args);
     }
@@ -486,7 +475,7 @@ var builtinCommands = {
   union: {
     argumentCount: '1-',
     implicitForeach: false,
-    code: function() { //context
+    code: function(/* context */) {
       var args = Array.prototype.slice.call(arguments, 1);
       return _(args).flatten().union().valueOf();
     }
@@ -513,7 +502,7 @@ var builtinCommands = {
 
   replace: {
     argumentCount: '3',
-    code: function (context, str, old, n) {
+    code: function(context, str, old, n) {
       var reg = new RegExp(old, 'g');
       return str.replace(reg, n);
     }
@@ -530,8 +519,8 @@ var builtinCommands = {
  */
 function setDefaultCommandProperties(commands) {
   var result = {};
-  _.forOwn(commands, function(commBody, commName){
-    result[commName] = _.extend({}, commandDefaults, commBody);
+  _.forOwn(commands, function(cmdBody, cmdName){
+    result[cmdName] = _.extend({}, commandDefaults, cmdBody);
   });
   return result;
 }
@@ -672,7 +661,6 @@ module.exports = {
   setCommands: setCommands,
   getCommand: function(command) { return commands[command]; },
   getCommands: function() {return commands;},
-  __setJQuery: function(different) {return $ = different;},
 
   isPipedName: isPipedName,
   getCommandName: getCommandName,
@@ -681,7 +669,3 @@ module.exports = {
   isSelector: isSelector,
   isInstruction: isInstruction
 };
-
-// circular dependency fix. commands->core->(simplifier+evaluator)->commands
-// https://coderwall.com/p/myzvmg
-core = require('./core');
