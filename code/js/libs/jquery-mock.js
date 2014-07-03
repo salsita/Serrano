@@ -118,4 +118,7 @@ $.init = function() {
   secondCall = false;
 };
 
+$.ajax = function(val) {
+  return val;
+};
 module.exports = $;

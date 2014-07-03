@@ -100,7 +100,7 @@ describe('module for testing Serrano core', function() {
       };
     assert.deepEqual(core.processResult(result1, core.createContext()), 1);
     assert.deepEqual(core.processResult(result2, core.createContext()), {name:'Tomas', surname:'Novella'});
-    assert.throws(function(){ core.processResult(result3, core.createContext(), TypeError);});
+    assert.deepEqual(core.processResult(result3, core.createContext()), {name:'Tomas', surname: undefined});
   });
 
   describe('`waitActionsLoop`', function(){

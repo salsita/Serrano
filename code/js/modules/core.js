@@ -87,11 +87,23 @@ function processTemp(temp, context) {
  */
 function processResult(result, context) {
   if (_.isPlainObject(result)) {
-    return _.mapValues(result, function(item){
-      return interpretScrapingDirective(item, context);
+    return _.mapValues(result, function(item) {
+      var r;
+      try {
+        r = interpretScrapingDirective(item, context);
+      } catch (e) {
+        logging.log(e);
+      }
+      return r;
     });
   } else {
-    return interpretScrapingDirective(result, context);
+    var r;
+    try {
+      r = interpretScrapingDirective(result, context);
+    } catch (e) {
+      logging.log(e);
+    }
+    return r;
   }
 }
 
