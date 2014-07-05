@@ -5,5 +5,7 @@ var logging = require('./modules/logging');
 
 module.exports = {
   interpretScrapingDirective: core.interpretScrapingDirective,
+	interpretScrapingUnit: core.interpretScrapingUnit,
+	scrapeUnit: core.interpretScrapingUnit,
   log: logging.log
 };
