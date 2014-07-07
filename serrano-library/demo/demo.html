@@ -1,0 +1,122 @@
+<!doctype html>
+<html>
+<head>
+<title>My demo page</title>
+<style type="text/css">
+td {
+    border: solid;
+}
+.testCommand{
+    font-family: monospace;
+}
+
+.testCommand:hover {
+    text-decoration: underline;
+}
+
+</style>
+<link rel="stylesheet" href="jquery.terminal.css" />
+<script src="../code/js/libs/lodash.js"></script>
+<script src="../code/js/libs/q.js"></script>
+<script src="../code/js/libs/jquery.js"></script>
+<script src="jquery.terminal-0.8.7.js"></script>
+<script src="jquery.mousewheel-min.js"></script>
+<script src="../build/serrano.js"></script>
+
+<script>
+var serranoInterpreter = function() {window.serrano.engine.interpretScrapingDirective(d, {$:$});}
+
+var scrapingDirectives = [
+"get first heading", [['$h1'], ['>!first'], ['>!prop', 'innerHTML'] ],
+"lowercase my name", ['!lower', 'Tomas Novella'],
+"get th elements", [['$table:eq(0) th'], ['>!prop', 'innerHTML'], ['>!split', ','], ['>!join', ';']],
+"get all he people", [["$table:eq(0) tr td:nth-child(2)"],['>!prop', 'innerHTML'],[">!upper"], ['>!setVal', 'people']],
+//[["$table:eq(0) tr"], [">!filter", [['>$td:nth-child(3)'] ]  ]   ], //
+
+"save weddate as array", [['=h2:eq(1)'], ['>!split', ': '], ['>!at', 1], ['>!split', '.'], ['>!setVal', 'weddate']],
+"reverse plus add year", [['!concat', ['!+', 1, [['!getVal', 'weddate'], ['>!at', 2]]  ], [['!getVal', 'weddate'], ['>!at', [1,0]]]  ], ['>!join', '/']],
+"reverse plus add one", [["!+",1,["!getVal","weddate"]] ,[">!join","/"]],
+"filter people w lucky number=13", [["$table:eq(0) tr"], [">!filter", [['>$td:nth-child(3)'], ['>!prop', 'innerHTML'], ['>!eq', 13] ]  ], ['>$td:nth-child(2)'], ['>!prop', 'innerHTML']],
+['jk']
+
+];
+
+
+['>!at', [0, 1]],
+
+// [["$table:eq(0) tr"], [">!filter", [['>$td:nth-child(3)'], ['>!prop', 'innerHTML'], ['>!eq', 13] ]  ], ['>$td:nth-child(2)'], ['>!prop', 'innerHTML']], // indefined is not a function
+// serrano> [['=h2:eq(1)'], ['>!split', ':'], ['>!at', 1], ['>!setVal', 'n']]
+// serrano>  [['!getVal', 'n'], ['>!split', '.'], ['>!at', 1    ]]
+// serrano>  [['!getVal', 'n'], ['>!split', '.'], ['>!at', [0]   ]]
+$(document).ready(function() {
+    _.forEach(scrapingDirectives, function(directive){
+        var el = document.createElement('div');
+        el.innerHTML = JSON.stringify(directive);
+        el.onclick = function() {
+            if (!window.terminal) {
+                alert('Please activate the terminal first!');
+            }
+            window.terminal.exec(JSON.stringify(directive))
+        };
+        el.className = "testCommand";
+        document.getElementById('testCommands').appendChild(el);
+    });
+
+    // terminal
+    jQuery(function($, undefined) {
+        var activated = false;
+        $('#term').terminal(function(command, term) {
+            if (!window.terminal) {
+                window.terminal = term;
+            }
+
+            if (!activated) {
+                activated = true;
+                term.echo("Term activated!");
+                return;
+            }
+            if (command !== '') {
+                try {
+                    var result = serranoInterpreter(eval(command));
+                    if (result !== undefined) {
+                        term.echo(new String(result));
+                    }
+                } catch(e) {
+                    term.error(new String(e));
+                }
+            }
+        }, {
+            greetings: 'Welcome to serrano terminal. Type "activate" to activate.',
+            name: 'serrano_demo',
+            height: 200,
+            prompt: 'serrano> '});
+    });
+});
+</script>
+</head>
+<body>
+    <h1>Demo page heading</h1>
+    <table>
+        <tr><th>id</th><th>name</th><th>lucky number</th></tr>
+        <tr><td>1</td><td>Alice</td><td>3</td></tr>
+        <tr><td>2</td><td>Bob</td><td>13</td></tr>
+        <tr><td>3</td><td>Carol</td><td>23</td></tr>
+        <tr><td>4</td><td>Dan</td><td>33</td></tr>
+    </table>
+    <h2>Online user IDs</h2>
+    <table>
+        <tr><td>1</td></tr>
+        <tr><td>3</td></tr>
+    </table>
+    <h2>Invitation to wedding: 30.5.2014</h2>
+    <h2>Playground</h2>
+
+    Predefined testcommands (click on them to run):<hr />
+    <div id="testCommands"></div>
+<hr />
+    <div id="term"></div>
+<hr />
+
+
+</body>
+</html>

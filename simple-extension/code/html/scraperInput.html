@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scraper</title>
+    <script src="../js/scraperInput.js" type="text/javascript"></script>
+</head>
+<body>
+    <form>
+        <textarea id="scr_unit_input" rows="15" cols="100">
+{"result":
+  {
+    "cCount": [["$p"], [">!len"]],
+    "numba": ["!constant", 123]
+  }
+}
+        </textarea>
+        <br />
+
+        <input type="button" value="Scrape this now!" id="submit" />
+    </form>
+
+    <textarea id="scr_unit_output" rows="15" cols="50"></textarea>
+    <br />
+
+Note: the scraping unit will be run in active tab of all open windows.
+</body>
+</html>
