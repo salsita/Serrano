@@ -7,11 +7,9 @@
   },
   "background": { "scripts": ["js/background.js"] },
   "content_scripts": [{
-    "matches": [ "http://*/*", "https://*/*" ],
+    "matches": [ "<all_urls>" ],
     "js": [ "js/content.js" ]
   }],
-  "options_page": "html/options.html",
-  "devtools_page": "html/devtools.html",
   "permissions": [ "<all_urls>" ],
   "web_accessible_resources": [ "js/*", "html/*", "css/*", "images/*" ],
   "content_security_policy": "script-src 'self'; object-src 'self'"
