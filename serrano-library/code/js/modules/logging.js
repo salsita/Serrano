@@ -115,8 +115,4 @@ module.exports = {
   standardizeError: standardizeError,
   logglyLog: logglyLog,
   log: log,
-  publicApi: {
-    log: log,
-    setOptions: setOptions
-  }
 };

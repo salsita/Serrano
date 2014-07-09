@@ -6,7 +6,7 @@
     <script src="../code/js/libs/jquery.js"></script>
 
     <script>
-        var _i = window.serrano.engine.interpretScrapingDirective;
+        var _i = window.serrano.testing.scrapeDirective;
 
         var interpret = function(directive, implicitArgument){
             return _i(directive, {storage:{}, interpretScrapingDirective:_i, $:$}, implicitArgument);

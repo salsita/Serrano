@@ -2,7 +2,7 @@
   "name": "serrano",
   "version": "0.1.0",
   "description": "High performance jQuery-based DOM scraping engine",
-  "export-symbol": "serrano.engine",
+  "export-symbol": "serrano",
   "dependencies": {},
   "devDependencies": {
     "grunt": "~0.4.4",
