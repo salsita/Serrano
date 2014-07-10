@@ -2,7 +2,7 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
 
-    pkg: grunt.file.readJSON('package.json'),
+    pkg: grunt.file.readJSON('./package.json'),
 
     jshint: {
       options: grunt.file.readJSON('lint-options.json'), // see http://www.jshint.com/docs/options/
