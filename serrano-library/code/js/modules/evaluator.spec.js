@@ -94,6 +94,12 @@ describe('interpreter evaluator', function() {
     before(function(){
       commands.setCommands(testCommands);
     });
+
+    /*global after*/
+    after(function() {
+      commands.init();
+    });
+
     function ei(directive, implicitArgument) {
       return evaluator.evalScrapingDirective(directive, {storage:{}}, implicitArgument);
     }

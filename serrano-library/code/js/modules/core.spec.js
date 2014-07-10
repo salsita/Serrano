@@ -9,20 +9,15 @@ var mockJQuery = require('../libs/jquery-mock');
 var core = require('./core');
 
 describe('module for testing Serrano core', function() {
-  var context;
   /*global before*/
   before(function() {
     core.__setJQuery(mockJQuery);
-  });
-  beforeEach(function() {
-    mockJQuery.init();
-    context = core.createContext();
   });
 
 
   // this one is well-tested in commands.spec.js - so just a few quick tests now.
   it('should check the `interpretScrapingDirective` function', function() {
-    context = core.createContext();
+    var context = core.createContext();
 
     var interpret =  function(directive, implicitArgument) { // shortcut
         return core.interpretScrapingDirective(directive, context, implicitArgument);
@@ -55,7 +50,7 @@ describe('module for testing Serrano core', function() {
       tmpVar1: ['!getVal', 'tmpVar0']
     };
 
-    context = core.createContext();
+    var context = core.createContext();
     core.processTemp(temp, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
@@ -101,9 +96,36 @@ describe('module for testing Serrano core', function() {
     assert.deepEqual(core.processResult(result1, core.createContext()), 1);
     assert.deepEqual(core.processResult(result2, core.createContext()), {name:'Tomas', surname:'Novella'});
     assert.deepEqual(core.processResult(result3, core.createContext()), {name:'Tomas', surname: undefined});
+
+    var nested1 = {
+      age: ['!constant', 29],
+      name: {
+        first: ['!constant', 'Bastian'],
+        last: ['!constant', 'Schweinsteiger'],
+        nick: {
+          old: ['!constant', 'Schweini'],
+          new: ['!constant', 'Basti']
+        }
+      }
+    };
+
+    assert.deepEqual(core.processResult(nested1, core.createContext()), {
+      age: 29,
+      name: {
+        first: 'Bastian',
+        last: 'Schweinsteiger',
+        nick: {
+          old: 'Schweini',
+          new: 'Basti'
+        }
+      }
+    });
   });
 
   describe('`waitActionsLoop`', function(){
+    beforeEach(function() {
+      mockJQuery.init();
+    });
     it('should check nonexistent element', function(done) {
       var promise = Q.Promise.resolve('initial promise');
       var waitActionsLoop = [
@@ -112,7 +134,7 @@ describe('module for testing Serrano core', function() {
         ],
         {
           name: '$nonExistingID',
-          millis: 120
+          millis: 40
         }
       ];
       core.processWaitActionsLoop(waitActionsLoop, promise, core.createContext()).catch(
@@ -150,7 +172,10 @@ describe('module for testing Serrano core', function() {
     });
   });
 
-  describe('`interpretScrapingUnit` ', function(){
+  describe('`interpretScrapingUnit` ', function() {
+    beforeEach(function() {
+      mockJQuery.init();
+    });
     it('should check correct promise flow in case of success', function(done) {
       var scrapingUnit1 = {
         waitFor: {
@@ -160,11 +185,11 @@ describe('module for testing Serrano core', function() {
         result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
       };
 
-      core.interpretScrapingUnit(scrapingUnit1,
-        function(data) {
+      core.interpretScrapingUnit(scrapingUnit1)
+        .then(function(data) {
           assert.strictEqual(data, 'This is the first h2 heading');
           done();
-        }, core.createContext()
+        }
       ).done();
     });
 
@@ -172,14 +197,16 @@ describe('module for testing Serrano core', function() {
       var scrapingUnit2 = {
         waitFor: {
           name: '$nonExistingID', // nonexistent element
-          millis: 200
+          millis: 40
         },
         result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
-      core.interpretScrapingUnit(scrapingUnit2, done, core.createContext()).catch(function(err) {
+      core.interpretScrapingUnit(scrapingUnit2)
+        .catch(function(err) {
           assert.strictEqual(err.name, 'RuntimeError');
           done();
-      }).done();
+        }
+      ).done();
     });
 
     it('should verify failure (invalid instruction fetching temporary variable)', function(done) {
@@ -190,12 +217,12 @@ describe('module for testing Serrano core', function() {
         result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
 
-      core.interpretScrapingUnit(scrapingUnit3, done, core.createContext())
+      core.interpretScrapingUnit(scrapingUnit3)
         .catch(function(err) {
           // TypeError: (simplifier) selector/command/instruction expected
           assert.strictEqual(err.name, 'TypeError');
           done();
-        }).done();
+      }).done();
     });
   });
 });

@@ -74,6 +74,11 @@ describe('module for grammar simplification', function() {
   before(function(){
     commands.setCommands(testCommands);
   });
+
+  /*global after*/
+  after(function(){
+    commands.init();
+  });
   var simplify = simplifier.simplifyScrapingDirective;
 
 

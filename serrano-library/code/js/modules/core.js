@@ -78,32 +78,31 @@ function processTemp(temp, context) {
 
 /**
  * Processes the result part in the scraping unit.
- * Returns the resulting object of the processed scraping unit.
- * If individual instruction fails, catch the exception and log.
- * But never stop.
- * @param result
+ * If any individual instruction fails, catches the exception and logs it.
+ * @param {Object|Array} scrapDirsObj As defined in the spec, either a scraping directive,
+ *   or an object with scraping directives as values.
  * @param context
- * @returns processedResult
+ * @returns processedResult Returns the resulting object of the processed scraping unit.
  */
-function processResult(result, context) {
-  if (_.isPlainObject(result)) {
-    return _.mapValues(result, function(item) {
-      var r;
-      try {
-        r = interpretScrapingDirective(item, context);
-      } catch (e) {
-        logging.log(e);
-      }
-      return r;
-    });
-  } else {
-    var r;
+function processResult(scrapDirsObj, context) {
+  // ending condition = it's a (hopefully valid) scraping directive, interpret it, finish
+  if (_.isArray(scrapDirsObj)) {
+    var res;
     try {
-      r = interpretScrapingDirective(result, context);
+      res = interpretScrapingDirective(scrapDirsObj, context);
     } catch (e) {
       logging.log(e);
     }
-    return r;
+    return res;
+  } else { // _.isPlainObject -> recursively interpret all it's values...
+    return _.mapValues(scrapDirsObj, function(item) {
+      try {
+        res = processResult(item, context);
+      } catch (e) {
+        logging.log(e);
+      }
+      return res;
+    });
   }
 }
 
@@ -125,20 +124,24 @@ function processWait(waitObject, promise, context) {
 
     var def = Q.defer();
 
-    // test every 50 ms whether the element appeared
-    var timer = setInterval(function() {
-      if (context.$(waitObject.name).length) {
+    // test every 10 ms whether the element appeared
+    var timer;
+    if (!context.$(waitObject.name).length) {
+        timer = setInterval(function() {
+        if (context.$(waitObject.name).length) {
+          clearInterval(timer);
+          def.resolve();
+        }
+      }, 10);
+
+      // after `millis` ms give up
+      setTimeout(function() {
         clearInterval(timer);
-        def.resolve();
-      }
-    }, 50);
-
-    // after `millis` ms give up
-    setTimeout(function() {
-      clearInterval(timer);
-      def.reject(new exceptions.RuntimeError('Element with selector '+ waitObject.name +' never appeared.'));
-    }, millis);
-
+        def.reject(new exceptions.RuntimeError('Element with selector '+ waitObject.name +' never appeared.'));
+      }, millis);
+    } else {
+      def.resolve();
+    }
     return def.promise;
   });
 }
@@ -166,12 +169,11 @@ function processWaitActionsLoop(waitActionsLoop, promise, context) {
  * Interprets the whole scraping unit as defined in the spec.
  * Also logs in case of failure. Needs to have the logger set up.
  * @param scrapingUnit
- * @param doneCallback Function to be called after scraping. Takes one argument, the scraped
- *   result object.
  * @param [context] Context to be given. If no context is given, set up default context.
- * @returns {Promise} For further chaining.
+ * @returns {Promise} For further chaining. In case of success a resulting scraped object
+ *   is returned. Otherwise a failed promise is returned.
  */
-function interpretScrapingUnit(scrapingUnit, doneCallback, context) {
+function interpretScrapingUnit(scrapingUnit, context) {
   if (!context) {
     context = createContext();
   }
@@ -203,9 +205,8 @@ function interpretScrapingUnit(scrapingUnit, doneCallback, context) {
   var result = scrapingUnit.result;
   promise = promise.then(function() { return processResult(result, context); });
 
-  return promise.then(
-    function(res) {doneCallback(res); return res;}, // success! -> propagate
-    function(e) {logging.log(e); throw e;} // log errors -> propagate
+  return promise.catch(
+    function(e) {logging.log(e); throw e;} // log errors and propagate (both errors and success)
   );
 }
 
