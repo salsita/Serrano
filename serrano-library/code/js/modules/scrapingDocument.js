@@ -170,8 +170,8 @@ function isMatchingDocumentItem(item, uri) {
 
 /**
  * Returns the first scraping unit from scraping doc that matches the url.
- * '*' is considered bucket for the default scraping unit that is selected when no
- * other scraping unit was selected.
+ * '*' is considered bucket for the default scraping units that is selected when no
+ * other scraping bucket was selected.
  * @param {string} uri
  * @returns {Object| undefined} Returns scraping unit, if found.
  */
