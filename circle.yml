@@ -6,5 +6,4 @@ dependencies:
 
 test:
   override:
-    - grunt --gruntfile ./serrano-library/Gruntfile.js
-    - grunt --gruntfile ./simple-extension/Gruntfile.js
+    - grunt
