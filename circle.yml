@@ -1,0 +1,10 @@
+dependencies:
+  override:
+    - npm install
+  cache_directories:
+    - node_modules
+
+test:
+  override:
+    - grunt --gruntfile ./serrano-library/Gruntfile.js
+    - grunt --gruntfile ./simple-extension/Gruntfile.js
