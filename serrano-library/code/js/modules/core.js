@@ -169,12 +169,11 @@ function processWaitActionsLoop(waitActionsLoop, promise, context) {
  * Interprets the whole scraping unit as defined in the spec.
  * Also logs in case of failure. Needs to have the logger set up.
  * @param scrapingUnit
- * @param doneCallback Function to be called after scraping. Takes one argument, the scraped
- *   result object.
  * @param [context] Context to be given. If no context is given, set up default context.
- * @returns {Promise} For further chaining.
+ * @returns {Promise} For further chaining. In case of success a resulting scraped object
+ *   is returned. Otherwise a failed promise is returned.
  */
-function interpretScrapingUnit(scrapingUnit, doneCallback, context) {
+function interpretScrapingUnit(scrapingUnit, context) {
   if (!context) {
     context = createContext();
   }
@@ -206,9 +205,8 @@ function interpretScrapingUnit(scrapingUnit, doneCallback, context) {
   var result = scrapingUnit.result;
   promise = promise.then(function() { return processResult(result, context); });
 
-  return promise.then(
-    function(res) {doneCallback(res); return res;}, // success! -> propagate
-    function(e) {logging.log(e); throw e;} // log errors -> propagate
+  return promise.catch(
+    function(e) {logging.log(e); throw e;} // log errors and propagate (both errors and success)
   );
 }
 

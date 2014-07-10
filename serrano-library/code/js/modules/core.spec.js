@@ -185,11 +185,11 @@ describe('module for testing Serrano core', function() {
         result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
       };
 
-      core.interpretScrapingUnit(scrapingUnit1,
-        function(data) {
+      core.interpretScrapingUnit(scrapingUnit1)
+        .then(function(data) {
           assert.strictEqual(data, 'This is the first h2 heading');
           done();
-        }, core.createContext()
+        }
       ).done();
     });
 
@@ -201,10 +201,12 @@ describe('module for testing Serrano core', function() {
         },
         result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
-      core.interpretScrapingUnit(scrapingUnit2, done, core.createContext()).catch(function(err) {
+      core.interpretScrapingUnit(scrapingUnit2)
+        .catch(function(err) {
           assert.strictEqual(err.name, 'RuntimeError');
           done();
-      }).done();
+        }
+      ).done();
     });
 
     it('should verify failure (invalid instruction fetching temporary variable)', function(done) {
@@ -215,12 +217,12 @@ describe('module for testing Serrano core', function() {
         result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
 
-      core.interpretScrapingUnit(scrapingUnit3, done, core.createContext())
+      core.interpretScrapingUnit(scrapingUnit3)
         .catch(function(err) {
           // TypeError: (simplifier) selector/command/instruction expected
           assert.strictEqual(err.name, 'TypeError');
           done();
-        }).done();
+      }).done();
     });
   });
 });
