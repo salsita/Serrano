@@ -1,0 +1,7 @@
+# webstorm + macvim
+.idea
+*.swp
+
+.DS_Store
+build
+node_modules
