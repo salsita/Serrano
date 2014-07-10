@@ -79,31 +79,36 @@ var scrapingDocumentHashTable = {};
 /**
  * Creates a hash table from the given scraping document.
  * @param doc Scraping document.
- * @returns {HashTable} Returns the final hashtable.
+ * @returns {Object} Returns the final hashtable.
  */
 function createHashTable(doc) {
   var ht = {};
-  _.forEach(doc, function(item){
-    var domain = item.strictDomain || item.domain;
+  _.forEach(doc, function(item) {
+    var domain = item.domain;
     if (!domain) {
-      throw new exceptions.RuntimeError('Scraping document does not have domain nor strictDomain item');
+      throw new exceptions.RuntimeError('Scraping document does not have domain item!');
     }
     var key = getSecondLevelDomain(domain);
     if (!ht[key]) {
       ht[key] = [];
     }
 
-    var priority = 0;
-    if (item.strictDomain) {
-      priority += 10;
+    // Priority. Internal parameter used for sorting scraping doc items inside a bucket.
+    // It's reverted to negative so that lower numbers imply higher priority, otherwise
+    // I would have to reverse() the buckets in the end
+    // and that would make _.sortBy 'unstable' i.e. if multiple scrap-doc-items of same
+    // priority matched a given uri, the last one would be selected.
+    var priority = (item.domain.split('.').length - 1) * 10;
+
+    if (item.regexp) { // regexp si favoured to path
+      priority += 2;
     }
-    if (item.path) {
-      priority += 20;
+    if(item.path) {
+      priority += 1;
     }
-    if (item.regexp) {
-      priority += 50;
-    }
-    item.priority = priority;
+
+    item.priority = -priority;
+
     ht[key].push(item);
   });
 
@@ -129,7 +134,7 @@ function appendDocument(doc) {
       scrapingDocumentHashTable[key] = [];
     }
     var conc = scrapingDocumentHashTable[key].concat(ht[key]);
-    scrapingDocumentHashTable[key] = _.sortBy(conc, 'priority').reverse();
+    scrapingDocumentHashTable[key] = _.sortBy(conc, 'priority');
   });
 }
 
@@ -151,28 +156,12 @@ function loadDocument(document) {
 function isMatchingDocumentItem(item, uri) {
   var parsedUri = parseUri(uri);
 
-  if (item.domain === '*' || item.strictDomain === '*' ) {
-    return true;
-  }
-
-  // strictDomain requires strict match
-  if (item.strictDomain && item.strictDomain !== parsedUri.hostname) {
-    return false;
-  }
-
-  // domain is less strict -> either strict match, or at least
-  // the second-level domains will match
-  if (item.domain && item.domain !== parsedUri.hostname &&
-    item.domain !== parsedUri.secondLevelDomain) {
-
-    return false;
-  }
-
-  if (item.regexp && _.isEmpty(parsedUri.href.match(new RegExp(item.regexp))) ) {
-    return false;
-  }
-
-  if(item.path && item.path !== parsedUri.pathname) {
+  // the domain in the scraping-doc-item must be contained in the real domain
+  if ( (parsedUri.hostname.indexOf(item.domain) === -1 && item.domain !== '*') ||
+    // when regex is set, it must match
+    (item.regexp && _.isEmpty(parsedUri.href.match(new RegExp(item.regexp))) ) ||
+    //when path is set, it must match
+    (item.path && item.path !== parsedUri.pathname) ) {
     return false;
   }
 

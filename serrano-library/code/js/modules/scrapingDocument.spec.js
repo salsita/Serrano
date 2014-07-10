@@ -67,22 +67,22 @@ describe('scraping document', function() {
     // the items are not correct scraping units, this is just a simplified structure
     var doc = [
       { domain: 'google.com',unit: 1 },
-      { strictDomain: 'blog.google.com', blah: 3, unit: 2 },
+      { domain: 'blog.google.com', blah: 3, unit: 2 },
       { domain: 'javascripting.com', unit: 3 }
     ];
 
     var ht = scrapingDoc.createHashTable(doc);
     assert(ht['google.com'].length === 2);
     assert.deepEqual(ht['google.com'], [
-      { domain: 'google.com', priority: 0, unit: 1 },
-      { strictDomain: 'blog.google.com', priority: 10, blah: 3,unit: 2 }
+      { domain: 'google.com', priority: -10, unit: 1 },
+      { domain: 'blog.google.com', priority: -20, blah: 3,unit: 2 }
     ]);
 
 
     assert(ht['javascripting.com'].length === 1);
-    assert.deepEqual(ht['javascripting.com'], [{domain: 'javascripting.com', priority: 0, unit:3}]);
+    assert.deepEqual(ht['javascripting.com'], [{domain: 'javascripting.com', priority: -10, unit:3}]);
 
-    assert.ifError(ht.nonsense);
+    assert.ifError(ht['nonsense.com']);
   });
 
   it('should check the `appendDocument` function', function() {
@@ -91,16 +91,16 @@ describe('scraping document', function() {
     ];
 
     var doc2 = [{
-      strictDomain: 'blog.google.com', blah: 3, unit: 2
+      domain: 'blog.google.com', blah: 3, unit: 2
     }];
 
     var combinedDoc = {
      'google.com':
-       [{ strictDomain: 'blog.google.com', blah: 3, priority: 10, unit: 2 },
-         { domain: 'google.com', unit: 1, priority: 0}
+       [{ domain: 'blog.google.com', blah: 3, priority: -20, unit: 2 },
+         { domain: 'google.com', unit: 1, priority: -10}
         ],
 
-      'javascripting.com': [{ domain: 'javascripting.com', priority: 0, unit: 3 }]
+      'javascripting.com': [{ domain: 'javascripting.com', priority: -10, unit: 3 }]
     };
 
     scrapingDoc.unloadDocument();
@@ -111,13 +111,13 @@ describe('scraping document', function() {
 
   it('should test if the correct document item matches given URI', function() {
     var uri = 'http://maps.google.com/mymap?du=bist';
-    var doc = [
-      { strictDomain: 'google.com', unit: 1 }, // false
-      { strictDomain: 'maps.google.com', unit: 2 }, // true
-      { strictDomain: 'maps.google.com', path: '/mymap', unit: 3}, // true
-      { strictDomain: 'maps.google.com', path: 'mymap', unit: 4}, // false, expected /mymap
-      { strictDomain: 'maps.google.com', regexp: '.*?du=bist', unit: 5}, // true
-      { strictDomain: 'maps.google.com', regexp: '.*?du=isst', unit: 6}, // false
+    var items = [
+      { domain: 'google.com', unit: 1 }, // false
+      { domain: 'maps.google.com', unit: 2 }, // true
+      { domain: 'maps.google.com', path: '/mymap', unit: 3}, // true
+      { domain: 'maps.google.com', path: 'mymap', unit: 4}, // false, never matched, expecting '/'
+      { domain: 'maps.google.com', regexp: '.*?du=bist', unit: 5}, // true
+      { domain: 'maps.google.com', regexp: '.*?du=isst', unit: 6}, // false
       { domain: 'google.com', unit: 7}, // true
       { domain: 'google.com', path: '/mymap', unit: 8}, // true
       { domain: 'google.com', path: 'mymap', unit: 9}, // false
@@ -127,21 +127,21 @@ describe('scraping document', function() {
       { domain: 'foo.com', unit: 13} // false
     ];
 
-    var resItems = _.filter(doc, function(item){
+    var resItems = _.filter(items, function(item){
       return scrapingDoc.isMatchingDocumentItem(item, uri);
     });
 
-    assert.deepEqual(_.pluck(resItems, 'unit'), [2, 3, 5, 7, 8, 10]);
+    assert.deepEqual(_.pluck(resItems, 'unit'), [1, 2, 3, 5, 7, 8, 10]);
   });
 
   it('should check if the correct scraping unit is fetched to a given URI', function() {
     var doc = [
-      { strictDomain: 'google.com', unit: 1 },
-      { strictDomain: 'maps.google.com', unit: 2 },
-      { strictDomain: 'maps.google.com', path: '/mymap', unit: 3},
-      { strictDomain: 'maps.google.com', path: 'mymap', unit: 4},
-      { strictDomain: 'maps.google.com', regexp: '.*?du=bist', unit: 5},
-      { strictDomain: 'maps.google.com', regexp: '.*?du=isst', unit: 6},
+      { domain: 'google.com', unit: 1 },
+      { domain: 'maps.google.com', unit: 2 },
+      { domain: 'maps.google.com', path: '/mymap', unit: 3},
+      { domain: 'maps.google.com', path: 'mymap', unit: 4},
+      { domain: 'maps.google.com', regexp: '.*?du=bist', unit: 5},
+      { domain: 'maps.google.com', regexp: '.*?du=isst', unit: 6},
       { domain: 'google.com', unit: 7},
       { domain: 'google.com', path: '/mymap', unit: 8},
       { domain: 'google.com', path: 'mymap', unit: 9},
@@ -159,6 +159,7 @@ describe('scraping document', function() {
     }
 
     _eq('http://google.com/', 1);
+    _eq('http://foo.google.com/', 1); //unknown, matched to google.com
     _eq('http://maps.google.com/', 2);
     _eq('http://maps.google.com/mymap', 3);
     // _eq(nothing, 4)
