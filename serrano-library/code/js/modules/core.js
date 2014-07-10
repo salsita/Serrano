@@ -78,32 +78,31 @@ function processTemp(temp, context) {
 
 /**
  * Processes the result part in the scraping unit.
- * Returns the resulting object of the processed scraping unit.
- * If individual instruction fails, catch the exception and log.
- * But never stop.
- * @param result
+ * If any individual instruction fails, catches the exception and logs it.
+ * @param {Object|Array} scrapDirsObj As defined in the spec, either a scraping directive,
+ *   or an object with scraping directives as values.
  * @param context
- * @returns processedResult
+ * @returns processedResult Returns the resulting object of the processed scraping unit.
  */
-function processResult(result, context) {
-  if (_.isPlainObject(result)) {
-    return _.mapValues(result, function(item) {
-      var r;
-      try {
-        r = interpretScrapingDirective(item, context);
-      } catch (e) {
-        logging.log(e);
-      }
-      return r;
-    });
-  } else {
-    var r;
+function processResult(scrapDirsObj, context) {
+  // ending condition = it's a (hopefully valid) scraping directive, interpret it, finish
+  if (_.isArray(scrapDirsObj)) {
+    var res;
     try {
-      r = interpretScrapingDirective(result, context);
+      res = interpretScrapingDirective(scrapDirsObj, context);
     } catch (e) {
       logging.log(e);
     }
-    return r;
+    return res;
+  } else { // _.isPlainObject -> recursively interpret all it's values...
+    return _.mapValues(scrapDirsObj, function(item) {
+      try {
+        res = processResult(item, context);
+      } catch (e) {
+        logging.log(e);
+      }
+      return res;
+    });
   }
 }
 
@@ -125,20 +124,24 @@ function processWait(waitObject, promise, context) {
 
     var def = Q.defer();
 
-    // test every 50 ms whether the element appeared
-    var timer = setInterval(function() {
-      if (context.$(waitObject.name).length) {
+    // test every 10 ms whether the element appeared
+    var timer;
+    if (!context.$(waitObject.name).length) {
+        timer = setInterval(function() {
+        if (context.$(waitObject.name).length) {
+          clearInterval(timer);
+          def.resolve();
+        }
+      }, 10);
+
+      // after `millis` ms give up
+      setTimeout(function() {
         clearInterval(timer);
-        def.resolve();
-      }
-    }, 50);
-
-    // after `millis` ms give up
-    setTimeout(function() {
-      clearInterval(timer);
-      def.reject(new exceptions.RuntimeError('Element with selector '+ waitObject.name +' never appeared.'));
-    }, millis);
-
+        def.reject(new exceptions.RuntimeError('Element with selector '+ waitObject.name +' never appeared.'));
+      }, millis);
+    } else {
+      def.resolve();
+    }
     return def.promise;
   });
 }
