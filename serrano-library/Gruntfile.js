@@ -10,8 +10,6 @@ module.exports = function(grunt) {
         // http://gruntjs.com/configuring-tasks#globbing-patterns
         src: ['package.json', 'lint-options.json', 'Gruntfile.js',
               'code/js/modules/*.js', 'code/js/libs/jquery-mock.js']
-
-
       }
     },
 
