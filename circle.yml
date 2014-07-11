@@ -6,9 +6,9 @@ dependencies:
     - cd ./simple-extension && npm install
     - pwd
   cache_directories:
-    - node_modules
-    - ./serrano-library/node_modules
-    - ./simple-extension/node-modules
+    - "node_modules"
+    - "serrano-library/node_modules"
+    - "simple-extension/node-modules"
 
 test:
   override:
