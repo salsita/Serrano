@@ -1,8 +1,8 @@
 dependencies:
   override:
     - npm install
-    - cd ./serrano-library && pwd && npm install
-    - cd ./simple-extension && pwd && npm install
+    - cd ./serrano-library && npm install
+    - cd ./simple-extension && npm install
   cache_directories:
     - "node_modules"
     - "serrano-library/node_modules"
