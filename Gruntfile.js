@@ -10,7 +10,8 @@ module.exports = function(grunt) {
   	  },
   	  simple_target: {
   	    options: {
-  	      log: true
+  	      log: true,
+          concurrent: 1
   	    },
         src: ['serrano-library/Gruntfile.js', 'simple-extension/Gruntfile.js']
       }
