@@ -1,8 +1,10 @@
 dependencies:
   override:
     - npm install
+    - cd ./serrano-library && npm install
   cache_directories:
     - node_modules
+    - ./serrano-library/node_modules
 
 test:
   override:
