@@ -114,5 +114,5 @@ module.exports = {
   getOptions: function() {return options;},
   standardizeError: standardizeError,
   logglyLog: logglyLog,
-  log: log,
+  log: log
 };

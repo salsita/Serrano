@@ -204,5 +204,5 @@ module.exports = {
   createHashTable: createHashTable,
   appendDocument: appendDocument,
   isMatchingDocumentItem: isMatchingDocumentItem,
-  getDocument: function() {return scrapingDocumentHashTable;}
+  getHashTable: function() {return scrapingDocumentHashTable;}
 };

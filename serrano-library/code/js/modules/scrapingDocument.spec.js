@@ -13,6 +13,12 @@ describe('scraping document', function() {
     scrapingDoc.unloadDocument();
   });
 
+  it('should check if loading empty document returns empty object', function() {
+    scrapingDoc.loadDocument(undefined);
+    assert.deepEqual(scrapingDoc.getHashTable(), {});
+    scrapingDoc.unloadDocument();
+  });
+
   it('should check if the url is parsed correctly into parts', function() {
     assert.deepEqual(scrapingDoc.parseUri('http://www.blog.google.com/foo/bar?var1=val1#hash'),
       {
@@ -94,7 +100,7 @@ describe('scraping document', function() {
       domain: 'blog.google.com', blah: 3, unit: 2
     }];
 
-    var combinedDoc = {
+    var combinedHT = {
      'google.com':
        [{ domain: 'blog.google.com', blah: 3, priority: -20, unit: 2 },
          { domain: 'google.com', unit: 1, priority: -10}
@@ -106,7 +112,7 @@ describe('scraping document', function() {
     scrapingDoc.unloadDocument();
     scrapingDoc.appendDocument(doc1);
     scrapingDoc.appendDocument(doc2);
-    assert.deepEqual(scrapingDoc.getDocument(), combinedDoc);
+    assert.deepEqual(scrapingDoc.getHashTable(), combinedHT);
   });
 
   it('should test if the correct document item matches given URI', function() {
