@@ -50,7 +50,7 @@ var defaultContext = {
  * Creates new context based on the `defaultContext` prototype .
  */
 function createContext() {
-  return _.clone(defaultContext, true); // deep clone
+  return _.cloneDeep(defaultContext); // deep clone
 }
 
 

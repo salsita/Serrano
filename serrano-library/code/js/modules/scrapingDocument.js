@@ -100,11 +100,12 @@ function createHashTable(doc) {
     // priority matched a given uri, the last one would be selected.
     var priority = (item.domain.split('.').length - 1) * 10;
 
-    if (item.regexp) { // regexp si favoured to path
-      priority += 2;
+    if (item.regexp) {
+      item.regexp = new RegExp(item.regexp);
+      priority += 2; // regexp si favoured to path
     }
     if(item.path) {
-      priority += 1;
+      priority += 1; // path is favoured to nothing at all
     }
 
     item.priority = -priority;
@@ -150,16 +151,14 @@ function loadDocument(document) {
 /**
  * Checks whether the item can be applied to the URI.
  * @param item Scraping doc item.
- * @param {string} uri URI
+ * @param {Object} parsedUri URI parsed by `parseUri` function
  * @returns {boolean}
  */
-function isMatchingDocumentItem(item, uri) {
-  var parsedUri = parseUri(uri);
-
+function isMatchingDocumentItem(item, parsedUri) {
   // the domain in the scraping-doc-item must be contained in the real domain
   if ( (parsedUri.hostname.indexOf(item.domain) === -1 && item.domain !== '*') ||
     // when regex is set, it must match
-    (item.regexp && _.isEmpty(parsedUri.href.match(new RegExp(item.regexp))) ) ||
+    (item.regexp && _.isEmpty(parsedUri.href.match(item.regexp)) ) ||
     //when path is set, it must match
     (item.path && item.path !== parsedUri.pathname) ) {
     return false;
@@ -180,15 +179,15 @@ function getScrapingUnit(uri) {
     throw new TypeError('You must include protocol in the URI!');
   }
 
-
-  var bucket = scrapingDocumentHashTable[parseUri(uri).secondLevelDomain];
+  var parsedUri = parseUri(uri);
+  var bucket = scrapingDocumentHashTable[parsedUri.secondLevelDomain];
   if (_.isEmpty(bucket)) { // nothing found, checks out the default bucket
     bucket = scrapingDocumentHashTable['*'];
   }
 
   if (!_.isEmpty(bucket)) {
     var item = _.find(bucket, function(item) {
-      return isMatchingDocumentItem(item, uri);
+      return isMatchingDocumentItem(item, parsedUri);
     });
     return item.unit;
   }

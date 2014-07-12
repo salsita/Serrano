@@ -3,10 +3,13 @@ dependencies:
     - npm install
     - cd ./serrano-library && npm install
     - cd ./simple-extension && npm install
+    - cd ./demo-extension-client && npm install
+
   cache_directories:
     - "node_modules"
     - "serrano-library/node_modules"
-    - "simple-extension/node-modules"
+    - "simple-extension/node_modules"
+    - "demo-extension-client/node_modules"
 
 test:
   override:

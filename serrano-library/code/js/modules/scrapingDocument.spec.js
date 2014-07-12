@@ -110,7 +110,9 @@ describe('scraping document', function() {
   });
 
   it('should test if the correct document item matches given URI', function() {
-    var uri = 'http://maps.google.com/mymap?du=bist';
+    var uri = 'http://maps.google.com/mymap?du=bist',
+      parsedUri = scrapingDoc.parseUri(uri);
+
     var items = [
       { domain: 'google.com', unit: 1 }, // false
       { domain: 'maps.google.com', unit: 2 }, // true
@@ -128,7 +130,7 @@ describe('scraping document', function() {
     ];
 
     var resItems = _.filter(items, function(item){
-      return scrapingDoc.isMatchingDocumentItem(item, uri);
+      return scrapingDoc.isMatchingDocumentItem(item, parsedUri);
     });
 
     assert.deepEqual(_.pluck(resItems, 'unit'), [1, 2, 3, 5, 7, 8, 10]);
