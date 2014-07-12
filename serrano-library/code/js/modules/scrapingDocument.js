@@ -155,7 +155,6 @@ function loadDocument(document) {
  * @returns {boolean}
  */
 function isMatchingDocumentItem(item, parsedUri) {
-
   // the domain in the scraping-doc-item must be contained in the real domain
   if ( (parsedUri.hostname.indexOf(item.domain) === -1 && item.domain !== '*') ||
     // when regex is set, it must match
