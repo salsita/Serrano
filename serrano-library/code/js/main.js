@@ -20,5 +20,8 @@ module.exports = {
   },
   testing: {
     scrapeDirective: core.interpretScrapingDirective
+  },
+  utils: {
+    getSecondLevelDomain: document.getSecondLevelDomain
   }
 };
