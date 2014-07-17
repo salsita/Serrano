@@ -10,6 +10,7 @@ module.exports = {
     log: logging.log
   },
   document: {
+    getHashTable: document.getHashTable,
     load: document.loadDocument,
     unload: document.unloadDocument,
     getUnit: document.getScrapingUnit
@@ -19,5 +20,8 @@ module.exports = {
   },
   testing: {
     scrapeDirective: core.interpretScrapingDirective
+  },
+  utils: {
+    getSecondLevelDomain: document.getSecondLevelDomain
   }
 };

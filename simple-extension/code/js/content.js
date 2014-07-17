@@ -5,7 +5,7 @@
   require('./modules/msg').init('contentScript', {
     runScrapingUnit: function(scrapingUnit, done) {
       if(!serrano) {
-        serrano = require('../../../serrano-library/build/serrano.js');
+        serrano = require('../../../serrano-library/build/serrano');
         serrano.logging.setOptions({'environment': 'testing', 'console': true});
       }
       console.log('content processing');
