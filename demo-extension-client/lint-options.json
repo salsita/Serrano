@@ -17,6 +17,7 @@
     "describe": true,
     "afterEach": true,
     "it": true,
-    "alert": true
+    "alert": true,
+    "document": true
   }
 }

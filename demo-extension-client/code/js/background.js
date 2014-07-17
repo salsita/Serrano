@@ -1,35 +1,46 @@
 ;(function() {
   var $ = require('./libs/jquery');
-  var dataUrl = "http://localhost:3000/doc/y9245ebj/data";
-  var versionUrl = "http://localhost:3000/doc/y9245ebj/version";
+
+  // uri of the JSON page from which scraping document is loaded
+  var dataUri = "http://localhost:3000/doc/y9245ebj/data";
+
+  // uri used for polling whether new version of scraping doc is available
+  var versionUri = "http://localhost:3000/doc/y9245ebj/version";
+
+  // current version of a scraping doc
   var currentVersion = "0.0.0";
-  var ttl = 5;
 
-  var scrapingDocumentHashTable;
-  var pica = 456;
+  // if server does not respond (correctly, or at all), this is the time (in seconds)
+  // that specifies when to ping the server next.
+  var defaultTtl = 5;
 
-  var msg = require('./modules/msg').init('bg', {
-    'isPotentialDomain': function(domain, done) {
-      done(scrapingDocumentHashTable[domain] !== undefined);
+  var serrano = require('../../../serrano-library/build/serrano');
+
+  // background provides the content script with a service called "getScrapingUnit"
+  // when the content script sends its uri, the background script looks for
+  // a matching scraping unit and sends it. If no scraping unit is found,
+  // background sends 'undefined'.
+  require('./modules/msg').init('bg', {
+    'getScrapingUnit': function(uri, done) {
+      var unit = serrano.document.getUnit(uri);
+      done(unit);
     }
   });
 
+  /**
+   * Updates the scraping document.
+   */
   function updateScrapingDoc() {
     $.ajax({
-      url: dataUrl,
+      url: dataUri,
       method: 'get',
       dataType: 'json',
       crossDomain: true
     }).done(function(res) {
-        // todo bcast to the first tab active...
-        //alert('result'+JSON.stringify(res.scrapingDocument));
-        msg.bcast(['ct'], 'updateScrapingDocument', res.scrapingDocument, function(ret) {
-          //alert('rettt' + ret);
-          //scrapingDocumentHashTable = ret;
-          alert('scrDoc' + JSON.stringify(ret) );
-        });
+        currentVersion = res.version;
+        serrano.document.load(res.scrapingDocument);
     }).fail(function(reason) {
-      alert('failed'+reason);
+      console.log('Failed to load scraping document. '+JSON.stringify(reason, null, 4));
     });
   }
 
@@ -37,37 +48,30 @@
    * Main loop. Checks if there is a new version of scraping doc available.
    * If so, updates the scraping doc.
    */
+  var ttl;
   function mainLoop() {
     $.ajax({
-      url: versionUrl,
+      url: versionUri,
       method: 'get',
       dataType: 'json',
       crossDomain: true//,
-      //timeout: ttl * 1000
     }).done(function(res) {
       ttl = res.ttl;
-      msg.bcast('echo', ttl);
 
-      if (res.version > currentVersion) {
+      if (require('./modules/versionComparer').isNewer(currentVersion, res.version)) {
         currentVersion = res.version;
         updateScrapingDoc();
       }
     }).fail(function(res) {
-      ttl = 5;
-      msg.bcast("echo", "fail" + JSON.stringify(res));
+      ttl = defaultTtl;
+      console.log('Unable to poll for the version of scraping doc. ' + JSON.stringify(res));
     }).complete(function() {
-      if (!scrapingDocumentHashTable) {
-        updateScrapingDoc();
-      }
-      setTimeout(mainLoop, ttl * 1000/2); // todo
+      setTimeout(mainLoop, ttl * 1000);
     });
   }
 
-  // timeout set because after refreshing the extension
-  // it immediately posts scraping doc to any active page but no page has active new content scritp
-  // so they have to be reloaded first
-  setTimeout(function(){
-    mainLoop();
-  }, 5000)
+  // run mainloop
+  mainLoop();
+
 
 })();
