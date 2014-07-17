@@ -10,7 +10,6 @@ module.exports = {
     log: logging.log
   },
   document: {
-    getHashTable: document.getHashTable,
     load: document.loadDocument,
     unload: document.unloadDocument,
     getUnit: document.getScrapingUnit
