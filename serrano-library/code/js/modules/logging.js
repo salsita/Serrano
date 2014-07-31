@@ -20,7 +20,11 @@ var options = {
   logglyToken: false
 };
 
-function setOptions(different) {
+function config(different) {
+  if (!different) {
+    return options;
+  }
+
   _.forEach(different, function(value, key) {
     options[key] = value;
   });
@@ -110,8 +114,7 @@ function log(error) {
 
 module.exports = {
   __setJQuery: function(different) {$ = different;},
-  setOptions: setOptions,
-  getOptions: function() {return options;},
+  config: config,
   standardizeError: standardizeError,
   logglyLog: logglyLog,
   log: log
