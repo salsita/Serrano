@@ -13,8 +13,10 @@
   "boss": true,
   "eqnull": true,
   "globals": {
+    "before": true,
     "beforeEach": true,
     "describe": true,
+    "after": true,
     "afterEach": true,
     "it": true
   }

@@ -9,7 +9,7 @@
   msg.bg('getScrapingUnit', document.location.href, function(scrapUnit) {
     if (scrapUnit) {
       var serrano = require('../../../serrano-library/build/serrano');
-      serrano.logging.setOptions({'environment': 'testing', 'console': true});
+      serrano.logging.config({'environment': 'testing', 'console': true});
 
       serrano.engine.scrapeUnit(scrapUnit).then(function(res) {
         console.log('Found scraping unit. The result is below: ');

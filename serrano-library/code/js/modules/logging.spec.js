@@ -13,15 +13,13 @@ function startsWith(str, substr) {
 describe('logging module ', function() {
   var tmpOptions;
 
-  /*global before*/
   before(function() {
     logging.__setJQuery(require('../libs/jquery-mock'));
-    tmpOptions = logging.getOptions();
+    tmpOptions = logging.config();
   });
 
-  /*global after*/
   after(function(){
-    logging.setOptions(tmpOptions);
+    logging.config(tmpOptions);
   });
 
   it('should check option set-up', function(){
@@ -30,9 +28,9 @@ describe('logging module ', function() {
       logglyToken: 'hello-world-123'
     };
 
-    logging.setOptions(options);
+    logging.config(options);
 
-    var gotten = logging.getOptions();
+    var gotten = logging.config();
     assert.strictEqual(gotten.console, true);
     assert.strictEqual(gotten.logglyToken, 'hello-world-123');
     assert.strictEqual(gotten.environment, 'production');

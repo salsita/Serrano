@@ -468,6 +468,6 @@ describe('module for testing commands module', function() {
     assert( res[2] === '.1');
 
     assert(_i([['!constant', str], ['>!match', ['!regexp', '(somethingUnmatched)', 'i']] ]) === null);
-
   });
+
 });

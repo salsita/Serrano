@@ -15,6 +15,7 @@
   var defaultTtl = 5;
 
   var serrano = require('../../../serrano-library/build/serrano');
+  serrano.config({console:true});
 
   // background provides the content script with a service called "getScrapingUnit"
   // when the content script sends its uri, the background script looks for

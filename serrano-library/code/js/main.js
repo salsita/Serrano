@@ -6,7 +6,7 @@ var logging = require('./modules/logging');
 
 module.exports = {
   logging: {
-    setOptions: logging.setOptions,
+    config: logging.config,
     log: logging.log
   },
   document: {
