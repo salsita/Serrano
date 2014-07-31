@@ -423,4 +423,51 @@ describe('module for testing commands module', function() {
     assert.strictEqual(_i([['!replace', 'hello', 'e','3'], ['>!replace', 'l', 1],
       ['>!replace', 'o', 0]]), 'h3110');
   });
+
+  it('should verify `interpretArray`, `regexp` and `match` commands', function() {
+    // interpretArray command needed for regexp...
+    assert.deepEqual(_i(['!interpretArray',[['!constant', 'a'],['!constant', 'b']] ]), ['a', 'b']);
+    assert.deepEqual(_i(['!interpretArray', 12345]), []); // only array counts
+    assert.throws(function() { _i(['!interpretArray', 'stringIsAnArrayToo']); }, Error);
+
+    // http://stackoverflow.com/questions/10776600/testing-for-equality-of-regular-expressions
+    // Of course, does not directly compare the languages produced by the expressions,
+    // only checks for syntactic equivalence.
+    function regexpEqual(x, y) {
+      return (x instanceof RegExp) && (y instanceof RegExp) &&
+        (x.source === y.source) && (x.global === y.global) &&
+        (x.ignoreCase === y.ignoreCase) && (x.multiline === y.multiline);
+    }
+
+    assert(regexpEqual(_i(['!regexp', 'haha']), _i(['!regexp', 'haha'])) );
+    assert.ifError(regexpEqual(_i(['!regexp', 'haha', 'g']), _i(['!regexp', 'haha'])) );
+
+    assert(regexpEqual(_i(['!regexp', 'haha', 'g']), /haha/g));
+    assert(regexpEqual(_i(['!regexp', 'haha', 'ig']), /haha/gi));
+    assert(regexpEqual(_i(['!regexp', 'haha']), /haha/));
+    assert.ifError(regexpEqual(_i(['!regexp', 'haha']), /haha/gi));
+
+
+    assert.strictEqual(
+      _i([['!constant', 'aba'], ['>!apply', 'replace',
+        ['!interpretArray', [['!regexp', 'a'], ['!constant', 'b']]]  ]]),
+      'bba'
+    );
+
+    assert.strictEqual(
+      _i([['!constant', 'aba'], ['>!apply', 'replace',
+        ['!interpretArray', [['!regexp', 'a','g'], ['!constant', 'b']]]  ]]),
+      'bbb'
+    );
+
+    // taken from https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match
+    var str = "For more information, see Chapter 3.4.5.1";
+    var res = _i([['!constant', str], ['>!match', ['!regexp', '(chapter \\d+(\\.\\d)*)', 'i']] ]);
+    assert( res[0] === 'Chapter 3.4.5.1');
+    assert( res[1] === 'Chapter 3.4.5.1');
+    assert( res[2] === '.1');
+
+    assert(_i([['!constant', str], ['>!match', ['!regexp', '(somethingUnmatched)', 'i']] ]) === null)
+
+  });
 });
