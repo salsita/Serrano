@@ -32,7 +32,7 @@ var commandDefaults = {
  *   code: Function (the code of the function itself)
  * }
  *
- * Note: sometimes a function can have conflicting atributes,
+ * Note: sometimes a function can have conflicting attributes,
  *   i.e. implicitForeach==true and 0 is in rawArguments 'array'.
  *   In that case, rawArguments application has higher priority, i.e it functions the same
  * as if implicitForeach would be set to false.
@@ -505,6 +505,32 @@ var builtinCommands = {
     code: function(context, str, old, n) {
       var reg = new RegExp(old, 'g');
       return str.replace(reg, n);
+    }
+  },
+
+  // https://developer.mozilla.org/cs/docs/Web/JavaScript/Reference/Global_Objects/RegExp
+  regexp: {
+    argumentCount: '1, 2',
+    code: function(context, pattern, flags) {
+      return new RegExp(pattern, flags);
+    }
+  },
+
+  // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match
+  match: {
+    argumentCount: '2',
+    code: function(context, str, regexp) {
+      return str.match(regexp);
+    }
+  },
+
+  interpretArray: {
+    argumentCount: '1',
+    rawArguments: '0',
+    code: function(context, array) {
+      return _.map(array, function(scrapDir) {
+        return context.interpretScrapingDirective(scrapDir, context);
+      });
     }
   }
 };
