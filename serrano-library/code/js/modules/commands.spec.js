@@ -467,7 +467,7 @@ describe('module for testing commands module', function() {
     assert( res[1] === 'Chapter 3.4.5.1');
     assert( res[2] === '.1');
 
-    assert(_i([['!constant', str], ['>!match', ['!regexp', '(somethingUnmatched)', 'i']] ]) === null)
+    assert(_i([['!constant', str], ['>!match', ['!regexp', '(somethingUnmatched)', 'i']] ]) === null);
 
   });
 });
