@@ -8,10 +8,10 @@ var $ = require('../libs/jquery');
 /**
  * Options object for logging.
  * Possible values:
- * environment: {string} either 'production' or 'testing'
- * logEmptyElements: {bool} [default =true] whether should log in case selector returned 0 elements
- * console: {bool} whether should output logs to console
- * logglyToken: {string|null}  loggly authentification token
+ * environment: {string} ['production'] either 'production' or 'testing'
+ * logEmptyElements: {bool} [true] whether should log in case selector returned 0 elements
+ * console: {bool}[false] whether should output logs to console
+ * logglyToken: {string}[false]  loggly authentification token
  *
  * environment='production' means there will be much less logging to the console
  */
