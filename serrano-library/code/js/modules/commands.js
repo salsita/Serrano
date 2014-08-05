@@ -1,5 +1,6 @@
 var _ = require('../libs/lodash');
 var exceptions = require('./exceptions');
+var logging = require('./logging');
 
 /**
  * Set of commands in use.
@@ -50,11 +51,19 @@ var builtinCommands = {
   jQuery : {
     argumentCount: '1-2',
     code: function(context, obj1, obj2) {
+      var el;
       if (arguments.length === 2) {
-        return context.$(obj1);
+        el = context.$(obj1);
       } else { // it's chained
-        return context.$(obj2, obj1);
+        el = context.$(obj2, obj1);
       }
+
+      if (el.length === 0 && logging.config().logEmptyElements) {
+        logging.log('Serrano selector selected an empty command. Arguments given to a selector:'+
+          'Obj1 = '+ JSON.stringify(obj1) + ' Obj2 = '+ JSON.stringify(obj2) +
+          ' Context = '+ JSON.stringify(context));
+      }
+      return el;
     }
   },
 
