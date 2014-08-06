@@ -26,7 +26,7 @@ var options = {
 
 function config(different) {
   if (!different) {
-    return options;
+    return _.cloneDeep(options);
   }
 
   _.forEach(different, function(value, key) {

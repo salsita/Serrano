@@ -4,7 +4,20 @@
 var assert = require('assert');
 var template = require('./template');
 
+var logging = require('./logging');
+
 describe('templating module', function() {
+  var logconfig;
+  before(function() {
+    logconfig = logging.config();
+    // I don't want any logging going on during unittests
+    logging.config({logUnresolvedTemplateVariables:false});
+  });
+
+  after(function() {
+    logging.config(logconfig);
+  });
+
   it('should test if templates are rendered properly', function() {
     var cartoonContext = {
       name: 'Futurama',

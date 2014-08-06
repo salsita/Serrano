@@ -546,6 +546,7 @@ var builtinCommands = {
     }
   },
 
+  // action commands
   remove: {
     argumentCount: '1',
     code: function(context, selector) {
@@ -555,8 +556,8 @@ var builtinCommands = {
 
   insert: {
     argumentCount: '2-3',
-    code: function(context, selector, where, template) {
-      var insertedContent = template.render(template, context.template);
+    code: function(context, selector, where, tpl) {
+      var insertedContent = template.render(tpl, context.template);
       if (where === 'before') {
         return selector.before(insertedContent);
       } else {
@@ -567,8 +568,8 @@ var builtinCommands = {
 
   replaceWith: {
     argumentCount: '2',
-    code: function(context, selector, template) {
-      var newContent = template.render(template, context.template);
+    code: function(context, selector, tpl) {
+      var newContent = template.render(tpl, context.template);
       return selector.replaceWith(newContent);
     }
   }
