@@ -1,6 +1,9 @@
 var _ = require('../libs/lodash');
 var exceptions = require('./exceptions');
+
 var logging = require('./logging');
+var template = require('./template'); // for actions
+
 
 /**
  * Set of commands in use.
@@ -540,6 +543,34 @@ var builtinCommands = {
       return _.map(array, function(scrapDir) {
         return context.interpretScrapingDirective(scrapDir, context);
       });
+    }
+  },
+
+  // action commands
+  remove: {
+    argumentCount: '1',
+    code: function(context, selector) {
+      return selector.remove();
+    }
+  },
+
+  insert: {
+    argumentCount: '2-3',
+    code: function(context, selector, where, tpl) {
+      var insertedContent = template.render(tpl, context.template);
+      if (where === 'before') {
+        return selector.before(insertedContent);
+      } else {
+        return selector.after(insertedContent);
+      }
+    }
+  },
+
+  replaceWith: {
+    argumentCount: '2',
+    code: function(context, selector, tpl) {
+      var newContent = template.render(tpl, context.template);
+      return selector.replaceWith(newContent);
     }
   }
 };
