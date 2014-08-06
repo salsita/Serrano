@@ -2,6 +2,7 @@
  * Created by tomasnovella on 8/5/14.
  */
 var _ = require('../libs/lodash');
+var logging = require('./logging');
 
 /**
  * A microtemplating function. For now it only supports replacing {{var}}.
@@ -33,13 +34,13 @@ function render(template, context) {
       return acc[part];
     }, context);
 
-    // 2. perform specific filters todo "default"|striptags|safe...
-
-
-    // 3. replace if possible
+    // 2. replace if possible
     if (res) {
       return res;
     } else {
+      if (logging.config().logUnresolvedTemplateVariables) {
+        logging.log('Variable ' + p1 + ' unresolved in context +' + JSON.stringify(context));
+      }
       return full_match;
     }
 

@@ -10,6 +10,7 @@ var $ = require('../libs/jquery');
  * Possible values:
  * environment: {string} ['production'] either 'production' or 'testing'
  * logEmptyElements: {bool} [true] whether should log in case selector returned 0 elements
+ * logUnresolvedTemplateVariables: {bool} [true]
  * console: {bool}[false] whether should output logs to console
  * logglyToken: {string}[false]  loggly authentification token
  *
@@ -18,7 +19,7 @@ var $ = require('../libs/jquery');
 var options = {
   environment: 'production',
   logEmptyElements: true,
-
+  logUnresolvedTemplateVariables: true,
   console: false,
   logglyToken: false
 };
