@@ -14,7 +14,7 @@ var logging = require('./logging');
  * @returns {string} Returns the the rendered template.
  * @example
  *
- * cartoonContext = {name: 'Futurama', cast: {robot: 'Bender'}}
+ * var cartoonContext = {name: 'Futurama', cast: {robot: 'Bender'}}
  * template.render('{{cast.robot}} is a character in {{name}} {{fullstop}}', cartoonContext);
  * // => 'Bender is a character in Futurama {{fullstop}}'
  */
