@@ -1,7 +1,7 @@
 var _ = require('../libs/lodash');
 var exceptions = require('./exceptions');
 
-var logging = require('./logging'); 
+var logging = require('./logging');
 var template = require('./template'); // for actions
 
 
