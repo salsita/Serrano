@@ -7,7 +7,8 @@ var logging = require('./logging');
 /**
  * A microtemplating function. For now it only supports replacing {{var}}.
  * Also supports dot (.) notation when the context is a complex object.
- * When the variable is not found, is it neither replaced nor changed in the original template.
+ * When the variable is not found, is it neither replaced nor changed in the original template,
+ * but it can be logged based on the logger configuration.
  * @param {string} template A template.
  * @param {Object} context
  * @returns {string} Returns the the rendered template.
