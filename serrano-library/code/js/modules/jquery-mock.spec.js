@@ -5,7 +5,7 @@
 var assert = require('assert');
 var _ = require('../libs/lodash');
 
-var $ = require('../libs/jquery-mock');
+var $ = require('./jquery-mock');
 
 describe('module with mock jQuery library', function() {
   beforeEach(function(){

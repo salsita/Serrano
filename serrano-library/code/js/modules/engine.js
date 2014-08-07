@@ -35,9 +35,9 @@ function exec() { // todo context.storage??? ->transfer further...
 
   var context = interpreter.createContext();
   context.template = templateContext;
-  if (!action) {
-    throw new Error('No valid action selected from the rules object. Arguments '+
-      'array of exec function: '+ JSON.stringify(arguments) +
+  if (!action || !templateContext) {
+    throw new Error('No valid action/templateContext selected from the rules object. Arguments '+
+      'array-like object of exec function: '+ JSON.stringify(arguments) +
       '. Template supplied:'+JSON.stringify(templateContext)+'.');
   }
   return interpreter.interpretScrapingDirective(action, context);
@@ -48,8 +48,13 @@ function scrape() {
 
   if (arguments.length === 0) { // scrape()
     unit = rules.scraping;
-  } else if(arguments.length === 1) {
+  } else if(arguments.length === 1) { // scrape(action_name)
     unit = rules.scraping[arguments[0]]
+  }
+
+  if (!unit) {
+    throw new Error('No unit selected from the rules object.' +
+      'Arguments array-like object of the scrape function:' + JSON.stringify(arguments));
   }
   return scrapingUnit.scrapeUnit(unit);
 }

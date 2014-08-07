@@ -4,7 +4,7 @@
 var assert = require('assert');
 
 var interpreter = require('./interpreter');
-var mockJQuery = require('../libs/jquery-mock');
+var mockJQuery = require('./jquery-mock');
 
 describe('module for the main interpreter', function() {
   function createMockContext() {

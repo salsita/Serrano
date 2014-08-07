@@ -4,7 +4,7 @@
 
 var assert = require('assert');
 var Q = require('../libs/q');
-var mockJQuery = require('../libs/jquery-mock');
+var mockJQuery = require('./jquery-mock');
 var scrapingUnit = require('./scrapingUnit');
 
 describe('module for testing Serrano scrapingUnit', function() {

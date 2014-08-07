@@ -13,7 +13,7 @@ describe('module for testing commands module', function() {
   var context;
   before(function() {
     context = interpreter.createContext();
-    context.$ = require('../libs/jquery-mock');
+    context.$ = require('./jquery-mock');
 
     commands.init(); // I want the basic set of commands
   });

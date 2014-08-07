@@ -66,5 +66,20 @@ describe('module providing engine functionality', function() {
 
   it('should check the engine.scrape functionality', function() {
 
+    engine.setRules({
+      scraping: {result: ['!constant', 'const']},
+      actions: 'whatever'
+    });
+    console.log(JSON.stringify(engine.scrape())); // todo returns {}
+    //assert.deepEqual(engine.scrape(), 'const');
+
+    engine.setRules({
+      scraping: {
+        first: {result: ['!constant', 'constFirst']},
+        second: {result: ['!constant', 'constSecond']}
+      },
+      actions: 'whatever'
+    });
+
   });
 });

@@ -4,7 +4,7 @@
 var assert = require('assert');
 
 var commands = require('./commands');
-var $ = require('../libs/jquery-mock');
+var $ = require('./jquery-mock');
 
 var testCommands = {
   nonForeachable: {
