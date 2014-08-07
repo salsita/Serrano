@@ -7,9 +7,7 @@ var _ = require('../libs/lodash');
 
 var exceptions = require('./exceptions');
 var logging = require('./logging');
-
 var interpreter = require('./interpreter');
-
 
 /**
  * Processes the action part of the scraping unit.
@@ -169,11 +167,8 @@ function interpretScrapingUnit(scrapingUnit, context) {
 
 
 module.exports = {
-  // these three functions are exported only for unit testing
   processTemp: processTemp,
   processResult: processResult,
   processWaitActionsLoop: processWaitActionsLoop,
-
-  //interpretScrapingDirective: interpretScrapingDirective, // used in commands.js todo delete
   interpretScrapingUnit: interpretScrapingUnit
 };

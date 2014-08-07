@@ -1,7 +1,8 @@
 // entry point of the library
 
-var core = require('./modules/core');
+var scrapingUnit = require('./modules/scrapingUnit');
 var document = require('./modules/scrapingDocument');
+var interpreter = require('./modules/interpreter');
 var logging = require('./modules/logging');
 
 module.exports = {
@@ -15,10 +16,10 @@ module.exports = {
     getUnit: document.getScrapingUnit
   },
   engine: {
-    scrapeUnit: core.interpretScrapingUnit
+    scrapeUnit: scrapingUnit.interpretScrapingUnit
   },
   testing: {
-    scrapeDirective: core.interpretScrapingDirective
+    scrapeDirective: interpreter.interpretScrapingDirective
   },
   utils: {
     getSecondLevelDomain: document.getSecondLevelDomain

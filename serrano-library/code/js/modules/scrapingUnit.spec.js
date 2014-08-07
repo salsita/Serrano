@@ -5,7 +5,7 @@
 var assert = require('assert');
 var Q = require('../libs/q');
 var mockJQuery = require('../libs/jquery-mock');
-var core = require('./core');
+var core = require('./scrapingUnit');
 
 describe('module for testing Serrano core', function() {
   function createMockContext() {
