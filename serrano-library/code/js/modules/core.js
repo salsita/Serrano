@@ -2,56 +2,13 @@
  * Created by tomasnovella on 5/12/14.
  */
 
-var _ = require('../libs/lodash');
 var Q = require('../libs/q');
+var _ = require('../libs/lodash');
 
-var depthChecker = require('./depthChecker');
-var simplifier = require('./simplifier');
-var evaluator = require('./evaluator');
 var exceptions = require('./exceptions');
 var logging = require('./logging');
 
-
-/**
- * Gets one raw scraping directive. Checks for the depth, simplifies and runs it.
- * @param directive Directive to run
- * @param context Context in which the instructions are processed.
- * @param [implicitArgument] Optional implicit argument.
- * @note it throws error in well-reasoned cases and it should not be taken lightly
- * @returns The return value of the instruction.
- */
-function interpretScrapingDirective(directive, context, implicitArgument) {
-  try {
-    if (!depthChecker.isValidDepth(directive)) {
-      throw new exceptions.RuntimeError('Depth of nesting of the instruction is too high');
-    }
-
-    var simplified = simplifier.simplifyScrapingDirective(directive);
-    return evaluator.evalScrapingDirective(simplified, context, implicitArgument);
-  } catch (e) {
-    e.scrapingDirective = directive;
-    e.storage = context.storage;
-    e.implicitArgument = implicitArgument;
-    throw e;
-  }
-}
-
-/**
- * Default context 'prototype'.
- * Everytime a a unit is scraped a new deep clone of this is created.
- */
-var defaultContext = {
-  storage: {},
-  interpretScrapingDirective: interpretScrapingDirective,
-  $: require('../libs/jquery')
-};
-
-/**
- * Creates new context based on the `defaultContext` prototype .
- */
-function createContext() {
-  return _.cloneDeep(defaultContext); // deep clone
-}
+var interpreter = require('./interpreter');
 
 
 /**
@@ -61,7 +18,7 @@ function createContext() {
  */
 function processActions(actions, context) {
   _.forEach(actions, function(action){
-      interpretScrapingDirective(action, context);
+    interpreter.interpretScrapingDirective(action, context);
   });
 }
 
@@ -72,7 +29,7 @@ function processActions(actions, context) {
  */
 function processTemp(temp, context) {
   _.forEach(temp, function(item, key){ // setVal...
-    context.storage[key] = interpretScrapingDirective(item, context);
+    context.storage[key] = interpreter.interpretScrapingDirective(item, context);
   });
 }
 
@@ -89,7 +46,7 @@ function processResult(scrapDirsObj, context) {
   if (_.isArray(scrapDirsObj)) {
     var res;
     try {
-      res = interpretScrapingDirective(scrapDirsObj, context);
+      res = interpreter.interpretScrapingDirective(scrapDirsObj, context);
     } catch (e) {
       logging.log(e);
     }
@@ -175,7 +132,7 @@ function processWaitActionsLoop(waitActionsLoop, promise, context) {
  */
 function interpretScrapingUnit(scrapingUnit, context) {
   if (!context) {
-    context = createContext();
+    context = interpreter.createContext();
   }
   // initial promise
   var promise = Q.Promise.resolve('initial promise');
@@ -212,13 +169,11 @@ function interpretScrapingUnit(scrapingUnit, context) {
 
 
 module.exports = {
-  // these four functions are exported only for unit testing
-  __setJQuery: function(different) {defaultContext.$ = different;},
-  createContext: createContext,
+  // these three functions are exported only for unit testing
   processTemp: processTemp,
   processResult: processResult,
   processWaitActionsLoop: processWaitActionsLoop,
 
-  interpretScrapingDirective: interpretScrapingDirective, // used in commands.js
+  //interpretScrapingDirective: interpretScrapingDirective, // used in commands.js todo delete
   interpretScrapingUnit: interpretScrapingUnit
 };
