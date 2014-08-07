@@ -42,7 +42,7 @@ function scrape() {
   } else if(arguments.length === 1) {
     unit = rules.scraping[arguments[0]]
   }
-  return scrapingUnit.interpretScrapingUnit(unit);
+  return scrapingUnit.scrapeUnit(unit);
 }
 
 module.exports = {

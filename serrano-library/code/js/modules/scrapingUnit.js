@@ -128,7 +128,7 @@ function processWaitActionsLoop(waitActionsLoop, promise, context) {
  * @returns {Promise} For further chaining. In case of success a resulting scraped object
  *   is returned. Otherwise a failed promise is returned.
  */
-function interpretScrapingUnit(scrapingUnit, context) {
+function scrapeUnit(scrapingUnit, context) {
   if (!context) {
     context = interpreter.createContext();
   }
@@ -170,5 +170,5 @@ module.exports = {
   processTemp: processTemp,
   processResult: processResult,
   processWaitActionsLoop: processWaitActionsLoop,
-  interpretScrapingUnit: interpretScrapingUnit
+  scrapeUnit: scrapeUnit
 };

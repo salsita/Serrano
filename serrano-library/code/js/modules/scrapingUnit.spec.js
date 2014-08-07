@@ -5,9 +5,9 @@
 var assert = require('assert');
 var Q = require('../libs/q');
 var mockJQuery = require('../libs/jquery-mock');
-var core = require('./scrapingUnit');
+var scrapingUnit = require('./scrapingUnit');
 
-describe('module for testing Serrano core', function() {
+describe('module for testing Serrano scrapingUnit', function() {
   function createMockContext() {
     var context = require('./interpreter').createContext();
     context.$ = mockJQuery;
@@ -21,7 +21,7 @@ describe('module for testing Serrano core', function() {
     };
 
     var context = createMockContext();
-    core.processTemp(temp, context);
+    scrapingUnit.processTemp(temp, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
 
@@ -32,7 +32,7 @@ describe('module for testing Serrano core', function() {
       tmpVar2: ['!getVal', 'tmpVar3'], // this is undefined because of the order of execution...
       tmpVar3: ['!constant', 'tmpVal3']
     };
-    core.processTemp(tempError, context);
+    scrapingUnit.processTemp(tempError, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar1, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar2, undefined);
@@ -46,7 +46,7 @@ describe('module for testing Serrano core', function() {
     };
 
     context = createMockContext();
-    core.processTemp(temp2, context);
+    scrapingUnit.processTemp(temp2, context);
     assert.strictEqual(context.storage.tmpVar0, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar1, 'tmpVal0');
     assert.strictEqual(context.storage.tmpVar2, 'tmpVal3');
@@ -63,9 +63,9 @@ describe('module for testing Serrano core', function() {
         name: ['!constant', 'Tomas'],
         surname: ['!constantttttt', 'Novella']
       };
-    assert.deepEqual(core.processResult(result1, createMockContext()), 1);
-    assert.deepEqual(core.processResult(result2, createMockContext()), {name:'Tomas', surname:'Novella'});
-    assert.deepEqual(core.processResult(result3, createMockContext()), {name:'Tomas', surname: undefined});
+    assert.deepEqual(scrapingUnit.processResult(result1, createMockContext()), 1);
+    assert.deepEqual(scrapingUnit.processResult(result2, createMockContext()), {name:'Tomas', surname:'Novella'});
+    assert.deepEqual(scrapingUnit.processResult(result3, createMockContext()), {name:'Tomas', surname: undefined});
 
     var nested1 = {
       age: ['!constant', 29],
@@ -79,7 +79,7 @@ describe('module for testing Serrano core', function() {
       }
     };
 
-    assert.deepEqual(core.processResult(nested1, createMockContext()), {
+    assert.deepEqual(scrapingUnit.processResult(nested1, createMockContext()), {
       age: 29,
       name: {
         first: 'Bastian',
@@ -107,7 +107,7 @@ describe('module for testing Serrano core', function() {
           millis: 40
         }
       ];
-      core.processWaitActionsLoop(waitActionsLoop, promise, createMockContext()).catch(
+      scrapingUnit.processWaitActionsLoop(waitActionsLoop, promise, createMockContext()).catch(
         function(e) {
           // stack: 'RuntimeError: Element with selector $nonExistingID never appeared.\n ...
           assert.strictEqual(e.name, 'RuntimeError');
@@ -134,7 +134,7 @@ describe('module for testing Serrano core', function() {
           millis: 60
         }
       ];
-      core.processWaitActionsLoop(waitActionsLoop, promise, createMockContext()).then(
+      scrapingUnit.processWaitActionsLoop(waitActionsLoop, promise, createMockContext()).then(
         function() {
           done();
         }
@@ -142,7 +142,7 @@ describe('module for testing Serrano core', function() {
     });
   });
 
-  describe('`interpretScrapingUnit` ', function() {
+  describe('`scrapeUnit` ', function() {
     beforeEach(function() {
       mockJQuery.init();
     });
@@ -155,7 +155,7 @@ describe('module for testing Serrano core', function() {
         result: [['$secondCall'], ['>!first'], ['>!prop', 'innerHTML']]
       };
 
-      core.interpretScrapingUnit(scrapingUnit1, createMockContext())
+      scrapingUnit.scrapeUnit(scrapingUnit1, createMockContext())
         .then(function(data) {
           assert.strictEqual(data, 'This is the first h2 heading');
           done();
@@ -171,7 +171,7 @@ describe('module for testing Serrano core', function() {
         },
         result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
-      core.interpretScrapingUnit(scrapingUnit2, createMockContext())
+      scrapingUnit.scrapeUnit(scrapingUnit2, createMockContext())
         .catch(function(err) {
           assert.strictEqual(err.name, 'RuntimeError');
           done();
@@ -187,7 +187,7 @@ describe('module for testing Serrano core', function() {
         result: [['$h2'], ['>!first'], ['>!prop', 'innerHTML']]
       };
 
-      core.interpretScrapingUnit(scrapingUnit3, createMockContext())
+      scrapingUnit.scrapeUnit(scrapingUnit3, createMockContext())
         .catch(function(err) {
           // TypeError: (simplifier) selector/command/instruction expected
           assert.strictEqual(err.name, 'TypeError');
