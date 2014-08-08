@@ -6,7 +6,7 @@
     }
   });
 
-  msg.bg('getScrapingUnit', document.location.href, function(scrapUnit) {
+  msg.bg('getRules', document.location.href, function(scrapUnit) {
     if (scrapUnit) {
       var serrano = require('../../../serrano-library/build/serrano');
       serrano.logging.config({'environment': 'testing', 'console': true});

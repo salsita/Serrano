@@ -17,7 +17,7 @@
   var serrano = require('../../../serrano-library/build/serrano');
   serrano.config({console:true});
 
-  // background provides the content script with a service called "getScrapingUnit"
+  // background provides the content script with a service called "getRules"
   // when the content script sends its uri, the background script looks for
   // a matching scraping unit and sends it. If no scraping unit is found,
   // background sends 'undefined'.

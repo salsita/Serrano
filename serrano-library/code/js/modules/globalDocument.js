@@ -8,7 +8,7 @@ var exceptions = require('./exceptions');
 /**
  * Get the second-level domain.
  * @param {string} hostname
- * @returns {string} domane The domain name up to the second level.
+ * @returns {string} domain The domain name up to the second level.
  * @example
  * getSecondLevelDomain('www.blog.google.com')
  * // => 'google.com'
@@ -64,21 +64,21 @@ function parseUri(href) {
 
 
 /**
- * Container for all scraping docs.
+ * Container for all rules.
  * Contains key-value pairs where
- * 'key' {string} domain up to the second level. Represents a "hash" of a scraping doc item.
- * 'value' {Array} Array of scraping doc items.
+ * 'key' {string} domain up to the second level. Represents a "hash" of a global doc item.
+ * 'value' {Array} Array of rules items.
  *
  * @example
  * Valid keys are 'example.com', 'javascripting.com' and 'wikipedia.org'.
  * Invalid keys are 'www.wikipedia.org', 'en.wikipedia.org' and '.org'
  */
-var scrapingDocumentHashTable = {};
+var globalDocumentHashTable = {};
 
 
 /**
- * Creates a hash table from the given scraping document.
- * @param doc Scraping document.
+ * Creates a hash table from the given global document.
+ * @param doc Global document.
  * @returns {Object} Returns the final hashtable.
  */
 function createHashTable(doc) {
@@ -86,17 +86,17 @@ function createHashTable(doc) {
   _.forEach(doc, function(item) {
     var domain = item.domain;
     if (!domain) {
-      throw new exceptions.RuntimeError('Scraping document does not have domain item!');
+      throw new exceptions.RuntimeError('Global document does not have domain item!');
     }
     var key = getSecondLevelDomain(domain);
     if (!ht[key]) {
       ht[key] = [];
     }
 
-    // Priority. Internal parameter used for sorting scraping doc items inside a bucket.
+    // Priority. Internal parameter used for sorting document items inside a bucket.
     // It's reverted to negative so that lower numbers imply higher priority, otherwise
     // I would have to reverse() the buckets in the end
-    // and that would make _.sortBy 'unstable' i.e. if multiple scrap-doc-items of same
+    // and that would make _.sortBy 'unstable' i.e. if multiple doc-items of same
     // priority matched a given uri, the last one would be selected.
     var priority = (item.domain.split('.').length - 1) * 10;
 
@@ -120,22 +120,22 @@ function createHashTable(doc) {
  * Unloads the document by clearing the hashtable.
  */
 function unloadDocument() {
-  scrapingDocumentHashTable = {};
+  globalDocumentHashTable = {};
 }
 
 /**
- * Merges the `scrapingDocumentHashTable` with hashtable created out of `doc`.
+ * Merges the `globalDocumentHashTable` with hashtable created out of `doc`.
  * @param doc document
  */
 function appendDocument(doc) {
   var ht = createHashTable(doc);
   // merge
   _.forEach(ht, function(val, key) {
-    if (!scrapingDocumentHashTable[key]) {
-      scrapingDocumentHashTable[key] = [];
+    if (!globalDocumentHashTable[key]) {
+      globalDocumentHashTable[key] = [];
     }
-    var conc = scrapingDocumentHashTable[key].concat(ht[key]);
-    scrapingDocumentHashTable[key] = _.sortBy(conc, 'priority');
+    var conc = globalDocumentHashTable[key].concat(ht[key]);
+    globalDocumentHashTable[key] = _.sortBy(conc, 'priority');
   });
 }
 
@@ -150,12 +150,12 @@ function loadDocument(document) {
 
 /**
  * Checks whether the item can be applied to the URI.
- * @param item Scraping doc item.
+ * @param item doc item.
  * @param {Object} parsedUri URI parsed by `parseUri` function
  * @returns {boolean}
  */
 function isMatchingDocumentItem(item, parsedUri) {
-  // the domain in the scraping-doc-item must be contained in the real domain
+  // the domain in the doc-item must be contained in the real domain
   if ( (parsedUri.hostname.indexOf(item.domain) === -1 && item.domain !== '*') ||
     // when regex is set, it must match
     (item.regexp && _.isEmpty(parsedUri.href.match(item.regexp)) ) ||
@@ -168,35 +168,35 @@ function isMatchingDocumentItem(item, parsedUri) {
 }
 
 /**
- * Returns the first scraping unit from scraping doc that matches the url.
- * '*' is considered bucket for the default scraping units that is selected when no
- * other scraping bucket was selected.
+ * Returns the first rules object from global doc that matches the url.
+ * '*' is considered bucket for the default rules objects that is selected when no
+ * other rules bucket was selected.
  * @param {string} uri
- * @returns {Object| undefined} Returns scraping unit, if found.
+ * @returns {Object| undefined} Returns rules-object, if found.
  */
-function getScrapingUnit(uri) {
+function getRules(uri) {
   if (uri.split('://').length === 1) { // because without that '.hostname' does not work
     throw new TypeError('You must include protocol in the URI!');
   }
 
   var parsedUri = parseUri(uri);
-  var bucket = scrapingDocumentHashTable[parsedUri.secondLevelDomain];
+  var bucket = globalDocumentHashTable[parsedUri.secondLevelDomain];
   if (_.isEmpty(bucket)) { // nothing found, checks out the default bucket
-    bucket = scrapingDocumentHashTable['*'];
+    bucket = globalDocumentHashTable['*'];
   }
 
   if (!_.isEmpty(bucket)) {
     var item = _.find(bucket, function(item) {
       return isMatchingDocumentItem(item, parsedUri);
     });
-    return item.unit;
+    return item.rules;
   }
 }
 
 module.exports = {
   loadDocument: loadDocument,
   unloadDocument: unloadDocument,
-  getScrapingUnit: getScrapingUnit,
+  getRules: getRules,
 
   // private methods, for unittesting only
   parseUri: parseUri,
@@ -204,5 +204,5 @@ module.exports = {
   createHashTable: createHashTable,
   appendDocument: appendDocument,
   isMatchingDocumentItem: isMatchingDocumentItem,
-  getHashTable: function() {return scrapingDocumentHashTable;}
+  getHashTable: function() {return globalDocumentHashTable;}
 };
