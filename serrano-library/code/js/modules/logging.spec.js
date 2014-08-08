@@ -14,7 +14,7 @@ describe('logging module ', function() {
   var tmpOptions;
 
   before(function() {
-    logging.__setJQuery(require('../libs/jquery-mock'));
+    logging.__setJQuery(require('./jquery-mock'));
     tmpOptions = logging.config();
   });
 

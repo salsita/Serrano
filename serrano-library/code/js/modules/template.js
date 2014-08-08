@@ -9,6 +9,7 @@ var logging = require('./logging');
  * Also supports dot (.) notation when the context is a complex object.
  * When the variable is not found, is it neither replaced nor changed in the original template,
  * but it can be logged based on the logger configuration.
+ * One thing to note: '{{' must not be separated by anything. Same for '}}'.
  * @param {string} template A template.
  * @param {Object} context
  * @returns {string} Returns the the rendered template.
@@ -19,9 +20,6 @@ var logging = require('./logging');
  * // => 'Bender is a character in Futurama {{fullstop}}'
  */
 function render(template, context) {
-  // two things to notice:
-  // 1. { and { must not be separated be anything. Same for }}
-  // 2. inside there must be a word -> no whitespace separation allowed todo?
   var rVariable = new RegExp("{{\\s*([\\w.]*)\\s*}}", "g");
 
 

@@ -5,7 +5,7 @@
 var assert = require('assert');
 var _ = require('../libs/lodash');
 
-var $ = require('../libs/jquery-mock');
+var $ = require('./jquery-mock');
 
 describe('module with mock jQuery library', function() {
   beforeEach(function(){
@@ -24,7 +24,6 @@ describe('module with mock jQuery library', function() {
     assert.equal(doubleSelector.length, 1);
     assert.equal(defaultSelector.length, 0);
   });
-
 
   it('should check whether each selector with not preset argument(s) is evaled as default selector',
     function(){

@@ -5,18 +5,22 @@
 var assert = require('assert');
 var _ = require('../libs/lodash');
 var exceptions = require('./exceptions');
+var interpreter = require('./interpreter');
+
 var commands = require('./commands');
-var core = require('./core');
 
 describe('module for testing commands module', function() {
-  commands.init(); // I want the basic set of commands
-  var context = {
-    storage: {},
-    interpretScrapingDirective: core.interpretScrapingDirective,
-    $: require('../libs/jquery-mock')
-  };
+  var context;
+  before(function() {
+    context = interpreter.createContext();
+    context.$ = require('./jquery-mock');
+
+    commands.init(); // I want the basic set of commands
+  });
+
+
   function _i(directive, implicitArgument) { // shortcut
-    return core.interpretScrapingDirective(directive, context, implicitArgument);
+    return interpreter.interpretScrapingDirective(directive, context, implicitArgument);
   }
 
   it('should verify if the default signature is set correctly', function() {
