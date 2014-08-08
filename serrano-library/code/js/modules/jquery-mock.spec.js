@@ -25,7 +25,6 @@ describe('module with mock jQuery library', function() {
     assert.equal(defaultSelector.length, 0);
   });
 
-
   it('should check whether each selector with not preset argument(s) is evaled as default selector',
     function(){
     assert.deepEqual(defaultSelector, defaultSelector2);

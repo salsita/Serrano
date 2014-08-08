@@ -2,21 +2,28 @@
  * Created by tomasnovella on 8/7/14.
  */
 
-var _ = require('../libs/lodash');
 var interpreter = require('./interpreter');
 var scrapingUnit = require('./scrapingUnit');
 
-
 /**
- * This object contains all the scrapingUnits and actions bound to a given URI.
+ * This object contains all the scraping units and actions bound to a given URI.
+ * See the official spec or the unit tests for more information.
  */
 var rules;
 
-//todo add comments
-function exec() { // todo context.storage??? ->transfer further...
+/**
+ * Selects the action from the rules object. Then executes it.
+ * @param {string}[actName] Name of the action within the rules object.
+ * @param {Object} [templateContext]
+ * @throws Error when the action is not found.
+ */
+function exec() {
   var action;
   var templateContext;
 
+  if (!rules.actions) {
+    throw new Error('no action found in the rules object');
+  }
   if (arguments.length === 0) { // exec()
     action = rules.actions;
     templateContext = {};
@@ -35,32 +42,42 @@ function exec() { // todo context.storage??? ->transfer further...
 
   var context = interpreter.createContext();
   context.template = templateContext;
-  if (!action || !templateContext) {
-    throw new Error('No valid action/templateContext selected from the rules object. Arguments '+
-      'array-like object of exec function: '+ JSON.stringify(arguments) +
-      '. Template supplied:'+JSON.stringify(templateContext)+'.');
+  if (!action || typeof(templateContext)!== 'object') {
+    throw new Error('No valid action/templateContext selected from the rules object. ' +
+      'Arguments array-like object of exec function: '+ JSON.stringify(arguments) +
+      '. Template supplied:'+JSON.stringify(templateContext)+'. Rules object: ' +
+      JSON.stringify(rules));
   }
   return interpreter.interpretScrapingDirective(action, context);
 }
 
-function scrape() {
+/**
+ * Selects the scraping unit from the rules object and scrapes it.
+ * @param {string} [scrapName] Name of the scraping unit.
+ * @returns {Promise} Returns a promise containing scraped data.
+ * @throws Error when the scraping unit is not found.
+ */
+function scrape(scrapName) {
   var unit;
-
-  if (arguments.length === 0) { // scrape()
+  if (!rules || !rules.scraping) {
+    throw new Error('No scraping units found in the rules object');
+  }
+  if (!scrapName) { // scrape()
     unit = rules.scraping;
-  } else if(arguments.length === 1) { // scrape(action_name)
-    unit = rules.scraping[arguments[0]]
+  } else { // scrape(unit_name)
+    unit = rules.scraping[arguments[0]];
   }
 
-  if (!unit) {
-    throw new Error('No unit selected from the rules object.' +
-      'Arguments array-like object of the scrape function:' + JSON.stringify(arguments));
+  if (!unit || !unit.result) {
+    throw new Error('No unit selected from the rules object. ' +
+      'Arguments array-like object of the scrape function:' + JSON.stringify(arguments) +
+      '. Rules object: '+ JSON.stringify(rules));
   }
   return scrapingUnit.scrapeUnit(unit);
 }
 
 module.exports = {
-  setRules: function(different) {rules = different;},
+  setRules: function(different) {rules = different;}, // context setter
   exec: exec,
   scrape: scrape
 };
