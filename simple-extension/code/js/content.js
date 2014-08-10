@@ -9,7 +9,7 @@
         serrano.logging.config({'environment': 'testing', 'console': true});
       }
       console.log('content processing');
-      serrano.engine.scrapeUnit(scrapingUnit).then(function(res) {
+      serrano.utils.scrapeUnit(scrapingUnit).then(function(res) {
         done(res);
         return;
       });

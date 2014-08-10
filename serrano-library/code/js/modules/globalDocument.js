@@ -64,7 +64,7 @@ function parseUri(href) {
 
 
 /**
- * Container for all rules.
+ * All the document items from the global document are preprocessed into hashtable.
  * Contains key-value pairs where
  * 'key' {string} domain up to the second level. Represents a "hash" of a global doc item.
  * 'value' {Array} Array of rules items.
