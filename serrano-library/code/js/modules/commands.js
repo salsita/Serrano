@@ -283,6 +283,24 @@ var builtinCommands = {
     }
   },
 
+  indices: {
+    argumentCount: '2',
+    implicitForeach: false,
+    rawArguments: '1',
+    code: function(context, data, condition) {
+      if (!_.isArray(data)) { // if not called with an array, return undefined
+        return;
+      }
+      var res = [];
+      _.forEach(data, function(item, index) {
+        if (context.interpretScrapingDirective(condition, context, item)) {
+          res.push(index);
+        }
+      });
+      return res;
+    }
+  },
+
 
   // array reduction commands
   len: {
