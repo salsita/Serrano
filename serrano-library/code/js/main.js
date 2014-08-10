@@ -17,7 +17,8 @@ module.exports = {
     getRules: document.getRules
   },
   engine: engine,
-  testing: {
-    scrapeDirective: interpreter.interpretScrapingDirective
+  utils: {
+    scrapeUnit: scrapingUnit.scrapeUnit,
+    interpret: interpreter.interpretScrapingDirective
   }
 };

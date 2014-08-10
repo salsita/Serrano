@@ -239,6 +239,28 @@ describe('module for testing commands module', function() {
 
   });
 
+  it('should check indices command', function() {
+    var ages = [2, 4, 6, 8, 10, 1, 3, 5, 7, 9];
+
+    // [x | x < 5]
+    var instr = _i(  [['!constant', ages], ['>!indices',['>!lt', 5]]]  );
+    assert.deepEqual(instr, [0, 1, 5, 6]);
+
+    // [x | 7 <= x < 9]
+    instr = _i([['!constant', ages], ['>!indices', ['>!and',['>!ge', 7], ['>!lt', 9] ]]] );
+    assert.deepEqual(instr, [3, 8]);
+
+    // supplied with invalid arguments (with a single value instead of an array of values)
+    assert.strictEqual(_i( ['!indices', undefined, ['>!lt', 5]]  ), undefined);
+
+    // null < 5 == true (sic!)
+    assert.strictEqual(_i( ['!indices', null, ['>!lt', 5]]  ), undefined);
+
+    assert.strictEqual(_i( ['!indices', 6, ['>!lt', 5]]  ), undefined);
+    assert.strictEqual(_i( ['!indices', 4, ['>!lt', 5]]  ), undefined);
+
+
+  });
   it('should check array reduction (len/at/first/last)', function() {
     var arr = [10, 20, 30, 40, 50];
 
