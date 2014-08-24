@@ -1,0 +1,8 @@
+{
+  "wait": {"name": "[itemprop='name']"},
+  "result":
+  {
+    "what": ["=[itemprop='name']"],
+    "where": [["=[itemprop='address']"], [">!replace", "➔", ""], [">!trim"]]
+  }
+}
