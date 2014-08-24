@@ -9,7 +9,7 @@ var logging = require('./logging');
  * Also supports dot (.) notation when the context is a complex object.
  * When the variable is not found, is it neither replaced nor changed in the original template,
  * but it can be logged based on the logger configuration.
- * One thing to note: '{{' must not be separated by anything. Same for '}}'.
+ * One thing to note: '{{' must not be separated with anything. Same for '}}'.
  * @param {string} template A template.
  * @param {Object} context
  * @returns {string} Returns the the rendered template.

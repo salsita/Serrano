@@ -1,4 +1,22 @@
 {
   "version": "0.1.0",
-  "key": "value"
+  "globalDocument": [
+    { "domain": "*", 
+      "rules": {
+      	"scraping": {
+          "unit1": {"result": ["!constant", "Res uni1"]},
+          "unit2": {"result": ["!constant", "Res unit2"]}
+        },
+        "actions": {
+          "act1": [["$body"], [">!remove"]]
+        }
+      } 
+    },
+    { "domain": "localhost",
+      "rules": {
+      	"scraping": {"result": ["!constant", "Welcome to localhost"]},
+        "actions": [["$body"], [">!remove"]]
+      } 
+    }
+  ]
 }
