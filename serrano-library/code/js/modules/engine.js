@@ -22,7 +22,7 @@ function exec() {
   var templateContext;
 
   if (!rules.actions) {
-    throw new Error('no action found in the rules object');
+    throw new Error('No action found in the rules object');
   }
   if (arguments.length === 0) { // exec()
     action = rules.actions;

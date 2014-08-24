@@ -6,17 +6,16 @@
     }
   });
 
-  msg.bg('getRules', document.location.href, function(scrapUnit) {
-    if (scrapUnit) {
+  var uri = document.location.href;
+  msg.bg('getRules', uri, function(rules) {
+    if (rules) {
       var serrano = require('../../../serrano-library/build/serrano');
       serrano.logging.config({'environment': 'testing', 'console': true});
 
-      serrano.engine.scrapeUnit(scrapUnit).then(function(res) {
-        console.log('Found scraping unit. The result is below: ');
-        console.log(JSON.stringify(res, null, 4));
-      });
+      var desc = require('./modules/RulesDescription').describe(rules);
+      console.log(desc);
     } else {
-      console.log('No scraping unit found for this URI.');
+      console.log('No rules found for URI ' + uri);
     }
   });
 
