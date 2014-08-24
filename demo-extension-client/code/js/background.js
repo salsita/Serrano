@@ -24,7 +24,7 @@
   require('./modules/msg').init('bg', {
     'getRules': function(uri, done) {
       var rules = serrano.document.getRules(uri);
-      console.log('Rules for URI' + uri +': ');
+      console.log('Rules for URI ' + uri +': ');
       if (rules) {
         var desc = require('./modules/RulesDescription').describe(rules);
         console.log(desc);
