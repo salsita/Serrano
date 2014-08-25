@@ -1,0 +1,24 @@
+// * one little difference against the magneto script:
+//   magneto transformed the date into a nice form
+//   e.g: Fri, August 29, 2014
+//   this, on the other hand returns something like:
+//   {day: 29, month:8, year:2014}
+// * also "Source:" missing in "notes" instruction, since it links to the current url and I cannot obtain that
+
+{
+  "temp": {
+    "date": [["$.infobar [itemprop='datePublished']"], [">!apply", "attr", ["content"]], [">!split", "-"]],
+    "stars": [["~[itemprop='actors'] span[itemprop='name']"], [">!prop", "innerHTML"], [">!join", ", "]],
+    "desc": ["=p[itemprop='description']"]
+  },
+  "result": {
+    "what": [ ["!concat", ["!constant", "In theatres: "], ["=h1.header span[itemprop='name']"]], [">!join", ""]],
+    "where": [["=address"],  [">!replace", "\n", "" ]],
+    "when": {
+      "year": [["!getVal", "date"], [">!at", 2]],
+      "month": [["!getVal", "date"], [">!at", 1]],
+      "day": [["!getVal", "date"], [">!at", 0]]
+    },
+    "notes": [["!concat", ["!constant", "Stars:"],["!getVal", "stars"], ["!getVal", "desc"]], [">!join", "\n"]]
+  }
+}
