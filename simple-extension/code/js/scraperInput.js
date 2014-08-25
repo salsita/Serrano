@@ -8,9 +8,25 @@
   var inputSelector = '#scr_unit_input';
   var outputSelector = '#scr_unit_output';
 
+  // fixme does not work even now...fix later...TypeError: Converting circular structure to JSON
+  function filterJquery(key, value) {
+    // initial call (called on the object as a whole
+    if (key === '') {
+      return value;
+    }
+
+    if (typeof value === 'object') { // this was supposed to be the hot fix core
+      return '[Object]';
+    } else {
+      return value;
+    }
+  }
+
   function printOutput(output) {
-    $(outputSelector).val(JSON.stringify(output));
-    console.log('result: ' + JSON.stringify(output));
+    var result = JSON.stringify(output, filterJquery);
+
+    $(outputSelector).val(result);
+    console.log('result: '+ result);
   }
 
   $(function() {
