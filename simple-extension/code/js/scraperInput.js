@@ -3,6 +3,8 @@
  */
 ;(function() {
   var $ = require('./libs/jquery');
+  var _ = require('./libs/lodash');
+
   var msg = require('./modules/msg').init('scraperUnit', {});
 
   var inputSelector = '#scr_unit_input';
@@ -15,7 +17,7 @@
       return value;
     }
 
-    if (typeof value === 'object') { // this was supposed to be the hot fix core
+    if (typeof value === 'object' && !_.isPlainObject(value)) { // this was supposed to be the hot fix core
       return '[Object]';
     } else {
       return value;
@@ -23,7 +25,7 @@
   }
 
   function printOutput(output) {
-    var result = JSON.stringify(output, filterJquery);
+    var result = JSON.stringify(output, filterJquery, '\t');
 
     $(outputSelector).val(result);
     console.log('result: '+ result);
