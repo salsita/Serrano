@@ -1,0 +1,7 @@
+{
+  "wait": {"name": "h1"},
+  "result":
+  {
+    "what": ["=h1:first"]
+  }
+}
