@@ -11,7 +11,8 @@
       console.log('content processing');
       serrano.utils.scrapeUnit(scrapingUnit).then(function(res) {
         done(res);
-        return;
+      }).catch(function(reason) {
+        done(reason);
       });
     }
   });
