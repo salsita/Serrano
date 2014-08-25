@@ -1,0 +1,7 @@
+{"result":
+  {
+    "source": [["$link"], [">!at", 1], [">!prop", "href"]],
+    "what": ["=h1:first"],
+    "where": [["=address"],  [">!replace", "\n", "" ]  ]
+  }
+}
