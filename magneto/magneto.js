@@ -1,6 +1,3 @@
-//magneto
-
-
 // for unit testing
 var exports = {};
 
@@ -13,6 +10,7 @@ define([], function() {
 
 // http://stackoverflow.com/a/46181/502149
 var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+var EMAIL_GLOBAL_RE = /(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/g;
 
 (function($, _) {
   "use strict";
@@ -23,15 +21,20 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
 
     jq.fn.textLB = function() {
       return jq.access(this, function() {
-        var clonedObj = jq(this).clone();
-        var html = clonedObj.html() || '';
+        var clonedObj = jq('<span></span>');
 
-        lineBreakers.forEach(function(tag) {
-          html = html.replace(new RegExp('<' + tag  + '>', 'gi'), '\n<' + tag + '>');
-          html = html.replace(new RegExp('</' + tag + '>', 'gi'), '</' + tag + '>\n');
+        this.each(function() {
+          var obj = jq(this).clone();
+          var html = obj.html() || '';
+
+          lineBreakers.forEach(function(tag) {
+            html = html.replace(new RegExp('<' + tag  + '>', 'gi'), '\n<' + tag + '>');
+            html = html.replace(new RegExp('</' + tag + '>', 'gi'), '</' + tag + '>\n');
+          });
+
+          obj.html(html);
+          clonedObj.push(obj);
         });
-
-        clonedObj.html(html);
 
         var returnValue = jq.fn.text.apply(clonedObj, arguments);
         // replace multiple line-breakers (3+) with only two line-breakers
@@ -42,6 +45,19 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
   })($);
 
   var jQuery = $;
+
+  function getEmailNotes(elements) {
+    var selection = getSelText();
+
+    if(selection.toString() === '') {
+      return  '';
+    }
+
+    if(selectionIsInMailBody(elements)) {
+      return cleanupSel(selection.toString());
+    }
+    return '';
+  }
 
   function scrapePageData() {
     // begin with generic info, then patch in site-specific data
@@ -87,17 +103,14 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
       data = getGooglePlace(data);
     } else if (domain.indexOf('mail.google.com') > -1) {
       data = getGmail(data);
-      data.isMailService = true;
     } else if (domain.indexOf('tripadvisor.') > -1) {
       data = getTripAdvisor(data);
     } else if (domain.indexOf('.mail.yahoo.') > -1) {
       data = getYahooMail(data);
-      data.isMailService = true;
     } else if (domain.indexOf('.salesforce.') > -1) {
       data = getSalesForce(data);
     } else if (url.indexOf('mail.live.com') > -1) {
       data = getLiveCom(data);
-      data.isMailService = true;
     } else if (domain.indexOf('fandango.com') > -1) {
       data = getFandango(data);
     } else if (domain.indexOf('paperlesspost.com') > -1) {
@@ -151,11 +164,11 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
         where += ' ' + jQuery(meta[i]).attr('content');
       }
       /*if (jQuery(meta[i]).attr('property') == 'og:latitude') {
-        obj.lat = ' ' + jQuery(meta[i]).attr('content');
-      }
-      if (jQuery(meta[i]).attr('property') == 'og:longitude') {
-        obj.lon += ' ' + jQuery(meta[i]).attr('content');
-      }*/
+       obj.lat = ' ' + jQuery(meta[i]).attr('content');
+       }
+       if (jQuery(meta[i]).attr('property') == 'og:longitude') {
+       obj.lon += ' ' + jQuery(meta[i]).attr('content');
+       }*/
     }
 
     if (where.length > 0) {
@@ -199,26 +212,26 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
 
     switch (type) {
       case "Event":
-      break;
+        break;
 
       case "LocalBusiness":
       case "PostalAddress":
       case "Place":
-      var where = '';
-      jQuery(node).find('div, span, p').each(function() {
-        if (jQuery(this).attr('itemprop') == 'streetAddress') {
-          where += cleanupSel(jQuery(this).html());
-        } else if (jQuery(this).attr('itemprop') == 'addressLocality') {
-          where += ' ' + jQuery(this).textLB();
-        } else if (jQuery(this).attr('itemprop') == 'addressRegion') {
-          where += ', ' + jQuery(this).textLB();
-        } else if (jQuery(this).attr('itemprop') == 'postalCode') {
-          where += ' ' + jQuery(this).textLB();
-        }
+        var where = '';
+        jQuery(node).find('div, span, p').each(function() {
+          if (jQuery(this).attr('itemprop') == 'streetAddress') {
+            where += cleanupSel(jQuery(this).html());
+          } else if (jQuery(this).attr('itemprop') == 'addressLocality') {
+            where += ' ' + jQuery(this).textLB();
+          } else if (jQuery(this).attr('itemprop') == 'addressRegion') {
+            where += ', ' + jQuery(this).textLB();
+          } else if (jQuery(this).attr('itemprop') == 'postalCode') {
+            where += ' ' + jQuery(this).textLB();
+          }
 
-      });
-      arr.push('where', where);
-      break;
+        });
+        arr.push('where', where);
+        break;
 
     }
     return arr;
@@ -244,12 +257,12 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
 
   /******************************/
   /* TRAVEL MAGNETS (WHEN)
-  /******************************/
+   /******************************/
 
 
   /******************************/
   /* PEOPLE MAGNETS (WHO)
-  /******************************/
+   /******************************/
   function getLinkedIn(obj) {
     console.log('getLinkedIn');
 
@@ -290,8 +303,8 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
     }
 
     obj.notes = $('.full-name').text() + '\n' +
-                $('p.title').text() + '\n\n' +
-                $('.summary p.description, #profile-summary .description').textLB();
+      $('p.title').text() + '\n\n' +
+      $('.summary p.description, #profile-summary .description').textLB();
 
     return obj;
   }
@@ -362,14 +375,14 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
 
     /*
      *<address itemprop="address" itemscope="" itemtype="http://schema.org/PostalAddress">
-        <span itemprop="streetAddress">2066 Chestnut St</span>
-        <br>    (between Steiner St &amp; Mallorca Way)
-        <br>
-        <span itemprop="addressLocality">San Francisco</span>,
-        <span itemprop="addressRegion">CA</span>
-        <span itemprop="postalCode">94123</span>
-        <br> Neighborhood: Marina/Cow Hollow<br>
-      </address>
+     <span itemprop="streetAddress">2066 Chestnut St</span>
+     <br>    (between Steiner St &amp; Mallorca Way)
+     <br>
+     <span itemprop="addressLocality">San Francisco</span>,
+     <span itemprop="addressRegion">CA</span>
+     <span itemprop="postalCode">94123</span>
+     <br> Neighborhood: Marina/Cow Hollow<br>
+     </address>
      */
     if(!isEvent) {
       obj.what = $('[itemprop="name"]').text();
@@ -460,7 +473,7 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
 
   /******************************/
   /* EVENT MAGNETS (WHAT)
-  /******************************/
+   /******************************/
   function getEventbrite(obj) {
     console.log('getEventbrite');
 
@@ -509,11 +522,11 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
     if(obj.where === undefined && obj.when === undefined) {
       var p = $('#manage_order p:first').text() || '';
       var matches = p
-                    .trim()
-                    .split('\n')
-                    .map(function(str) {
-                      return str.trim();
-                    });
+        .trim()
+        .split('\n')
+        .map(function(str) {
+          return str.trim();
+        });
       if(matches.length === 2) {
         obj.start = matches[0];
         obj.where = matches[1];
@@ -544,8 +557,8 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
     console.log('getStubHub');
 
     function parseTimezone(str) {
-        return (
-          str.replace(/\s(\s+)/g, ' ').match(/(a|p)\.m\. ([^\s]+)/) || []
+      return (
+        str.replace(/\s(\s+)/g, ' ').match(/(a|p)\.m\. ([^\s]+)/) || []
         )[2] || '';
     }
 
@@ -620,7 +633,7 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
         obj.end = endDay + ', ' + curYear + ' ' + endTime;
 
         var start = new Date(obj.start),
-            end = new Date(obj.end);
+          end = new Date(obj.end);
         if(start.getDOY() > end.getDOY()) {
           if(curYear + 1 - curDay.getFullYear() > 1) {
             curYear--;
@@ -825,10 +838,11 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
       }
     } else {
       when.end = parseFacebookUntilBlock(when.start, [
-                   startTime,
-                   end
-                 ], true); //keep as Date
-     var endMinutes = when.end.getMinutes();
+        startTime,
+        end
+      ], true); //keep as Date
+
+      var endMinutes = when.end.getMinutes();
       when.end = when.end.toDateString() + ' ' + when.end.getHours() + ':' + (endMinutes < 10 ? '0': '') + endMinutes;
     }
 
@@ -893,9 +907,7 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
     if (jQuery('div#event-when-display').length > 0) {
       var when = '';
       if (jQuery('time#event-start-time').length > 0) {
-        when += jQuery('time#event-start-time p.headline').textLB();
-        when += ' ' + jQuery('time#event-start-time p.subtext').textLB();
-        //when += jQuery('time#event-end-time').textLB();
+        when = $('time#event-start-time').textLB() + ' to ' + $('time#event-end-time').textLB();
       } else if (jQuery('time').length > 0) {
         when += jQuery('time p.headline').textLB();
         when += ' ' + jQuery('time p.subtext').textLB();
@@ -1031,7 +1043,7 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
 
   /******************************/
   /* HELPER FUNCTIONS
-  /******************************/
+   /******************************/
   function cleanupSel(s) {
     console.log('cleanupSel');
 
@@ -1074,8 +1086,8 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
       }
 
       var isAfternoon = matches[6] !== undefined &&
-                        (matches[6].toLowerCase().trim() === 'pm' ||
-                        matches[6].toLowerCase().trim() === 'p');
+        (matches[6].toLowerCase().trim() === 'pm' ||
+          matches[6].toLowerCase().trim() === 'p');
       if(isAfternoon) {
         if(hour < 12) {
           hour += 12;
@@ -1109,16 +1121,16 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
       toTime = spans[1];
     } else {
       fromTime = $(spans[0]).text(),
-      toTime = $(spans[1]).text();
+        toTime = $(spans[1]).text();
     }
 
     var parsedFrom = parseTime(fromTime),
-        parsedTo = parseTime(toTime);
+      parsedTo = parseTime(toTime);
 
     var fromHour = parsedFrom.hour,
-        fromMin = parsedFrom.minute,
-        toHour = parsedTo.hour,
-        toMin = parsedTo.minute;
+      fromMin = parsedFrom.minute,
+      toHour = parsedTo.hour,
+      toMin = parsedTo.minute;
 
     var end;
     if(fromHour !== undefined && toHour !== undefined) {
@@ -1143,21 +1155,67 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
   }
 
   function getFacebook(data) {
+
     var notimes = false;
 
     // "2013-10-31T00:00:00-07:00"
-    var start = $('[itemProp="startDate"]').attr('content');
+    var startDate = $('[itemProp="startDate"]');
+    var start = startDate.attr('content');
     if(start === '') {
       start = $('img[title="Time"]').parents(':eq(1)').textLB();
     }
 
+
     var end = $('[itemProp="endDate"]').attr('content');
+    if (!end) {
+      if (startDate.length > 1) {
+        // The end date is hidden in the second startDate element.
+        var ajaxifyURL = startDate.eq(1).find('a').attr('ajaxify');
+        if (ajaxifyURL) {
+          var endDateTimestamp = ajaxifyURL.match(/day=(\d*)/)[1];
+          // And now we try to get the time.
+          var timeDiv = startDate.parents('div.clearfix:first').next().find('span').last();
+          var timeText = timeDiv.text();
+
+          // last occurence of time in a string like "from 10:30pm till 2:00am in UTC+2"
+          var timeMatch = timeText.match(/\d?\d:\d\d([ap]m)?/g);
+          var timeString = timeMatch ? timeMatch.pop() : '';
+
+          // 12-hour format --> 24-hour format
+          if(timeString.match(/[ap]m$/)) {
+            var hourMinute = parseTime(timeString);
+            timeString = hourMinute.hour + ':' + hourMinute.minute;
+          }
+
+          var timeZoneMatch = timeText.match(/in (.*?)$/);
+          var timeZone = timeZoneMatch ? timeZoneMatch.pop() : '';
+          // UTC+02 --> GMT+0200
+          if(timeZone.indexOf('UTC') === 0) {
+            timeZone = 'GMT+' + timeZone.match(/\d+/)[0] + '00';
+          }
+
+          var tempDate = new Date(0);
+          tempDate.setUTCSeconds(endDateTimestamp);
+          // Thu Aug 21 2014 23:0 GMT+0900
+          var dateString = tempDate.toDateString() + ' ' + timeString + ' ' + timeZone;
+
+          end = new Date(dateString).toString();
+        }
+      }
+    }
+
     var spans = $('#contentCol span.fcb');
     var onlyStartTimestamp = $('li.fbEventTimeWeatherInfoSection span').length === 1 && //<timestamp> in <timeozone>
-                             $('#contentCol span.fcb').length === 0 && // there is no string from ... until...
-                             $('li.fbEventTimeWeatherInfoSection div.fsl').length === 0; // <timestamp> w/o <timezone>
+      $('#contentCol span.fcb').length === 0 && // there is no string from ... until...
+      $('li.fbEventTimeWeatherInfoSection div.fsl').length === 0; // <timestamp> w/o <timezone>
+    if (!onlyStartTimestamp && !end) {
+      var timeString = startDate.parents('div.clearfix:first').find('div').eq(1).find('span').text();
+      if (!timeString.match(/\d?\d:\d\d/)) {
+        onlyStartTimestamp = true;
+      }
+    }
 
-     /*
+    /*
      * In this case Facebooks might show something "8:00pm until 4:00am in UTC+02". If you hover the mouse on
      * one of those timestamps, you can see something like "11:00am in your time". So here I try to parse titles and
      * extract hours for start and end. Since I'm not going to complicate the code base for calculating time zones, I want to
@@ -1166,9 +1224,10 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
      * The problem with 12h time format is that its writing in diffirent locales are different.
      */
 
-    var untilBlockThere = spans.length === 2;
+    var timeLengthBlock = $('div#event_summary table:first span:contains(-)');
+    var untilBlockThere = timeLengthBlock.length === 1;
     if(end === undefined && untilBlockThere) {
-      end = parseFacebookUntilBlock(start, spans);
+      end = parseFacebookUntilBlock(start, timeLengthBlock.text().split('-'));
     }
 
     if(onlyStartTimestamp === true) {
@@ -1177,20 +1236,20 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
       }
 
       var startDate = new Date(start);
-      start = $('[itemprop="startDate"]').text();
+      start = $('[itemprop="startDate"]').attr('content');
       end = start;
       notimes = true;
     }
 
     return _.extend(data, {
-      what: $('.fbEventHeadline').html() || $('a[href*="/events/"]:first').textLB(),
+      what: $('div#event_header_info a[href*="events/"]').text() || $('.fbEventHeadline').html() || $('a[href*="/events/"]:first').textLB(),
       when: {
         start: start,
         end: end,
         notimes: notimes
       },
-      where: $('span.visible:first').textLB() || $('span[itemprop="location"]').textLB(),
-      notes: $('span[itemprop="description"]').textLB() || $('[id="pagelet_event_details"]').textLB(),
+      where: $('span.visible:first').textLB() || $('span[itemprop="location"]').textLB() || $('div#event_summary table:eq(1) div:last').text() || $('div#event_summary table:eq(1) span:first').text(),
+      notes: $('span[itemprop="description"]').textLB() || $('[id="pagelet_event_details"]').textLB() || $('div#event_description div[class*="text"]').textLB(),
       who: ''
     });
   }
@@ -1203,27 +1262,27 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
     published.set({hour: 0, minute: 0, second: 0});
 
     if(published > curDay) {
-     return {
-       start: published.toString('yyyy-MM-dd'),
-       end: published.toString('yyyy-MM-dd'),
-       notimes: true
-     }
+      return {
+        start: published.toString('yyyy-MM-dd'),
+        end: published.toString('yyyy-MM-dd'),
+        notimes: true
+      }
     } else {
-     return {}
+      return {}
     };
   }
 
   function getIMDB(data) {
     var notes =
-          'Stars:\n' +
-          $('[itemprop="actors"] span[itemprop="name"]').
+      'Stars:\n' +
+        $('[itemprop="actors"] span[itemprop="name"]').
           map(function(index, el) {
             return $(el).textLB()
           }).
           toArray().
           join(', ') +
-          '\n\n' +
-          $('p[itemprop="description"]').textLB().trim();
+        '\n\n' +
+        $('p[itemprop="description"]').textLB().trim();
     var when = parseIMDBDate($('.infobar [itemprop="datePublished"]').attr('content'));
 
     return _.extend(data, {
@@ -1238,7 +1297,7 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
   function getGooglePlace(data) {
     var where = $('span:contains("Address") + span').textLB();
 
-    var metadataTextnodes = $('#rhs_block .kno-f').find(":not(iframe)").contents().filter(function() {
+    var metadataTextnodes = $('#rhs_block .kno-card').find(":not(iframe)").contents().filter(function() {
       return this.nodeType === 3 && this.nodeText !== '';
     });
     var metadata = metadataTextnodes.toArray().map(function(piece) {
@@ -1257,10 +1316,10 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
 
   function getGmail(data) {
     var who = $('form[method="POST"]:last [email]').
-          map(function(index, el) {
-            return $(el).attr('email');
-          }).
-          toArray();
+      map(function(index, el) {
+        return $(el).attr('email');
+      }).
+      toArray();
 
     $('form[method="POST"]:last div').each(function(index, el) {
       if(EMAIL_RE.test($(el).textLB()) && $(el).children().length === 0) {
@@ -1268,29 +1327,58 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
       }
     });
 
-    $('span[email]:visible').each(function(index, el) {
-      who.push($(el).attr('email'));
-    });
+    var emailCompositionOpen = (who.length > 0);
+
+    if(!emailCompositionOpen) {
+      $('span[email]:visible').each(function(index, el) {
+        who.push($(el).attr('email'));
+      });
+    }
+
+    if(emailCompositionOpen) {
+      who.push($('img[email]').attr('email'));
+    }
+
     who = who.sort().filter(function(el, index, arr){
       return index === arr.indexOf(el);
     });
 
-    // h2:last was added on 17/2/2014
-    var what = $('input[name="subjectbox"]:last').val() || $('h1[role!="banner"]:first,h2:last span:first').textLB();
+    var what = $('input[name="subjectbox"]:last').val();
+    if(typeof what !== 'string' || what === '') {
+      what = $('h2:last span:first,h2[tabindex=-1]').filter(function() {
+        return $(this).width() > 1;
+      });
+
+      what = $(what).textLB();
+    }
     what = what.replace(/fwd\:\s?/ig, '').
-            replace(/re\:\s?/ig, '').
-            replace(/Invitation\:\s?/, '');
+      replace(/re\:\s?/ig, '').
+      replace(/Invitation\:\s?/, '');
 
     if(what === '') {
-      who = '';
+      who = [];
     }
+
+    var notesBlock = [];
+    var composeArea = $('[contenteditable][role="textbox"]:last')[0];
+    var emailThread = $('div[id*=":"][style*="overflow"][style*="hidden"]:visible');
+
+    if(composeArea) {
+      notesBlock.push(composeArea);
+    } else if (emailThread) {
+      notesBlock = emailThread;
+    }
+
+    // notesBlock should contain either composeArea or emailThread to prevent
+    // duplicating text.
+    notesBlock = $(notesBlock);
 
     return _.extend(data, {
       who: who.join(", "),
       what: what,
       where: '',
       when: '',
-      notes: $('[contenteditable]:last').textLB() || $('div[id*=":"][style*="overflow"][style*="hidden"]:visible:last').textLB()
+      notes: getEmailNotes(notesBlock) || notesBlock.textLB()
     });
   }
 
@@ -1317,6 +1405,7 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
     var what = '', who = [], notes = '';
     var isNewMode = $('#msg-list').length > 0;
     var isConversations = $('.threadpane').length > 0;
+    var mailBodyElements;
 
     /*
      * Selector which returns the visible pane in Yahoo UI. There is only reliable technique to figure out whether
@@ -1329,15 +1418,16 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
       return $(obj).width() >= 100;
     };
 
-    var notesBlock;
+    var notesBlock, mailBodyElements;
     if(isNewMode) {
       var classSelector = isConversations ? '.threadpane' : '.messagepane';
       if(isConversations) {
         what = $('.threadpane:currentPane .thread-subject').text();
-        notesBlock = $('.threadpane:currentPane .thread-body:last');
+        mailBodyElements = $('.threadpane:currentPane .thread-body');
+        notesBlock = $('.threadpane:currentPane .thread-body:last')
       } else {
         what = $('.messagepane:currentPane .subject').text();
-        notesBlock = $('.messagepane:currentPane .msg-body');
+        mailBodyElements = notesBlock = $('.messagepane:currentPane .msg-body');
       }
 
       /*
@@ -1346,19 +1436,19 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
        */
       $(classSelector + ' [data-action="more"]').click();
       who = $(classSelector + ':currentPane [data-address]')
-              .toArray()
-              .map(function(email) {
-                return $(email).attr('data-address');
-              });
+        .toArray()
+        .map(function(email) {
+          return $(email).attr('data-address');
+        });
 
     } else {
       what = $('.subjectbar h1').text();
-      notesBlock = $('.mailContent');
+      mailBodyElements = notesBlock = $('.mailContent');
       who = $('dd.emailids span')
-              .toArray()
-              .map(function(span) {
-                return $(span).text();
-              });
+        .toArray()
+        .map(function(span) {
+          return $(span).text();
+        });
     }
 
     notesBlock = notesBlock.clone();
@@ -1378,14 +1468,14 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
 
     notes = notes.replace(/\n(\n)+/g, '\n');
     what = what.replace(/fwd\:\s?/ig, '').
-            replace(/re\:\s?/ig, '').
-            replace(/Invitation\:\s?/, '');
+      replace(/re\:\s?/ig, '').
+      replace(/Invitation\:\s?/, '');
 
 
     return _.extend(data, {
       what: what,
       who: who,
-      notes: notes
+      notes: getEmailNotes(mailBodyElements) || notes
     });
   }
 
@@ -1398,8 +1488,8 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
     var who = $('a[href*="@"][href*="mailto:"]').textLB();
 
     var mailingAddress = '',
-        billingAdress = '',
-        shippingAddress = '';
+      billingAdress = '',
+      shippingAddress = '';
     mailingAddress = $('.pbSubsection:nth(1) div').textLB().replace(/\n/g, ' ').trim();
     if(mailingAddress === '') {
       var accountUrl = $('td.labelCol:contains("Account"):first + td a').attr('href');
@@ -1461,10 +1551,12 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
       return data;
     }
 
-    var what = $('#readingPaneSplitPane').find('.ReadMsgSubject').text();
+    var container = $('.ContentRight');
+
+    var what = container.find('.rmSubject').text();
     what = what.replace(/fwd?\:\s?/ig, '').
-        replace(/re\:\s?/ig, '').
-        replace(/Invitation\:\s?/, '');
+      replace(/re\:\s?/ig, '').
+      replace(/Invitation\:\s?/, '');
 
     /*
      * Extract recipients
@@ -1472,68 +1564,32 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
 
     // from service attributes
     var who = [];
-    $('#readingPaneSplitPane').find('.HasLayout').each(function() {
-      $.each(this.attributes, function() {
-        var attr = this;
-        if(!attr.specified || attr.value.indexOf('@') === -1) {
-          return;
-        }
-
-        var mails = attr.value.split(';');
-        mails.forEach(function(mail) {
-          if(mail.indexOf('@') >= 0) {
-            mail = extractEmail(mail);
-            who.push(mail.trim());
-          }
-        });
-      });
-    });
-
-    /*
-     * There are two places where "To:" recipients are listed.
-     *
-     * the first one is in the short info block
-     */
-    $('#readingPaneSplitPane').find('.recip_to').each(function() {
-      $(this).text()
-        .replace(/,/g, '')
-        .split(/[ \t\r\n\v\f]/)
-        .filter(function(mail) {
-          return mail.indexOf('@') >= 0;
-        })
-        .forEach(function(mail) {
-          who.push(mail.trim());
-        })
-    });
-
-
-    // the second one is in the
-    $('#readingPaneSplitPane').find('td.ReadMsgHeaderCol1:contains("To") + td').each(function() {
-      var matches = $(this)
-                    .text()
-                    .match(/\((.*?)\)/g) || [];
-        matches.forEach(function(mail) {
-          mail = mail.replace(')', '').replace('(', '');
-          who.push(mail.trim());
-        });
+    var emailHeaders = container.find('tr.Header');
+    emailHeaders.each(function() {
+      var text = $(this).text();
+      var emails = text.match(EMAIL_GLOBAL_RE) || [];
+      emails.forEach(function(email) {
+        who.push(email);
+      })
     });
 
     // normalize(sort, remove dupes, join with comma)
     who = who
-          .sort()
-          .filter(function(el, index, arr){
-            // remove dupes
-            return index === arr.indexOf(el);
-          })
-          .join(',');
+      .sort()
+      .filter(function(el, index, arr){
+        // remove dupes
+        return index === arr.indexOf(el);
+      })
+      .join(',');
 
-    var notes = $('#readingPaneSplitPane').find('.SandboxScopeClass').clone();
+    var notesBlock = container.find('.readMsgBody');
+    var notes = notesBlock.clone();
     notes.find('style').remove();
 
     return _.extend(data, {
       what: what,
       who: who,
-      notes: notes.textLB()
+      notes: getEmailNotes(notesBlock) || notes.textLB()
     });
   }
 
@@ -1588,12 +1644,12 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
 
   function unescapeSpecialChars(str) {
     return str
-            .replace(/&amp;/g, '&')
-            .replace(/&gt;/g, '>')
-            .replace(/&lt;/g, '<')
-            .replace(/&nbsp;/g, ' ')
-            .replace(/\u00a0/g, ' ') //whitespace
-            .replace(/<!--.*?-->/g, '');
+      .replace(/&amp;/g, '&')
+      .replace(/&gt;/g, '>')
+      .replace(/&lt;/g, '<')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\u00a0/g, ' ') //whitespace
+      .replace(/<!--.*?-->/g, '');
   }
 
   function scrape() {
@@ -1609,13 +1665,7 @@ var EMAIL_RE = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@
     var selection = getSelText();
     var address = parent !== window ? document.referrer : document.location.href;
 
-    // selected text has a higher priority in mail services
-    if(data.isMailService) {
-      data.notes = cleanupSel(selection.toString()) || data.notes;
-    } else {
-      data.notes = data.notes || cleanupSel(selection.toString());
-    }
-
+    data.notes = data.notes || cleanupSel(selection.toString());
     data.notes += '\nSource:\n' + address;
 
     data.where = unescapeSpecialChars(data.where || '');

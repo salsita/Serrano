@@ -591,12 +591,30 @@ var builtinCommands = {
       return selector.replaceWith(newContent);
     }
   },
+  window: {
+    argumentCount: '0',
+    code: function(/* context */) {
+      /*global window */
+      if (window) {
+        return window;
+      }
+    }
+  },
   document: {
     argumentCount: '0',
     code: function(/* context */) {
       /*global window */
       if (window && window.document) {
         return window.document;
+      }
+    }
+  },
+  href: {
+    argumentCount: '0',
+    code: function(/* context */) {
+      /*global window */
+      if (window && window.document) {
+        return window.document.location.href;
       }
     }
   }

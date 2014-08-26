@@ -1,0 +1,8 @@
+{"result":
+  {
+    "what": ["=.full-name"],
+    "who": [["~#email-view ul a"], [">!prop", "innerHTML"],[">!join", ", "] ],
+    "notes": [["!interpretArray", [["=.full-name"], ["=p.title"], ["!constant", "\n"],
+      ["=.summary p.description, #profile-summary .description"]] ], [">!join", "\n"], [">!trim"]]
+  }
+}
