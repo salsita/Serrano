@@ -1,0 +1,27 @@
+{
+  "actions": [
+    [["$#event_description a.see_more_link:eq(0)"], [">!at", 0],[">!call", "click"]]
+  ],
+  "temp": {
+    "wordsDay": ["=#event_summary div.clearfix._5xhk div:eq(0)"],
+    "wordsTime": ["=#event_summary div.clearfix._5xhk div:eq(1)"],
+    "desc": ["=#event_description div.text_exposed_root"],
+// 8 -> deleting the "See more"
+    "descSubstrEnd": ["!-", [["!getVal", "desc"], [">!len"]], 9]
+  },
+  "result":
+  {
+    "what":["=#event_header_info div._5v1l a"],
+    "where": {
+      "firstLine": ["=#event_summary div ul li._3xd0 tbody tr div a"],
+      "secondLine": ["=#event_summary div ul li._3xd0 tbody tr div div._5xhp.fsm.fwn.fcg"]
+    },
+    "when": {
+      "metaStart": [["$#event_summary span[itemprop='startDate']:first"], [">!apply", "attr", ["content"]] ],
+      "firstLine": [  ["!interpretArray", [["!getVal", "wordsDay"], ["!getVal", "wordsTime"]]  ],   [">!join", " "], [">!trim"]  ],
+      "secondLine": ["=#event_summary div._5xhp.fsm.fwn.fcg"]
+    },
+    "notes": [ ["=#event_description div.text_exposed_root"], [">!substr", 0,   ["!getVal", "descSubstrEnd"] ]],
+    "source": [["!document"], [">!prop", "location"], [">!prop", "href"]]
+  }
+}
