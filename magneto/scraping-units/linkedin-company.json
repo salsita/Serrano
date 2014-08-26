@@ -1,0 +1,7 @@
+{"result":
+  {
+  "what": [["=h1.name"], [">!trim"]],
+  "where": [["=[itemprop=address]"], [">!trim"]],
+  "notes": [["!interpretArray", [["!constant", "Source:"], ["!href"]] ], [">!join", "\n"], [">!trim"]]
+  }
+}
