@@ -590,6 +590,15 @@ var builtinCommands = {
       var newContent = template.render(tpl, context.template);
       return selector.replaceWith(newContent);
     }
+  },
+  document: {
+    argumentCount: '0',
+    code: function(/* context */) {
+      /*global window */
+      if (window && window.document) {
+        return window.document;
+      }
+    }
   }
 };
 
