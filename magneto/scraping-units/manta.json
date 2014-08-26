@@ -1,0 +1,7 @@
+{
+  "result": {
+    "what": ["=[itemprop=name]:eq(0)"],
+    "where": [["=[itemprop=address]"], [">!replace", "  ", ""], [">!trim"]],
+    "notes": [["!interpretArray", [["!constant", "Source:"], ["!href"]] ], [">!join", "\n"], [">!trim"]]
+  }
+}
