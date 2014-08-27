@@ -1,0 +1,12 @@
+{
+  "temp": {
+    "composeArea": [["=[contenteditable][role=textbox]:last"]],
+    "eventDesc": [["=div[id*=':'][style*='overflow'][style*='hidden']:visible"], [">!split", "»"], [">!at",[0,1]], [">!join", ""]]
+  },
+  "result":
+  {
+    "what": ["=h2:last span:first,h2[tabindex=-1]:eq(1)"],
+    "who": [["~span[email]:visible"], [">!apply", "getAttribute",["email"], "inner" ], [">!join", ", "]],
+    "notes": [["!interpretArray", [ ["!getVal", "composeArea"],["!getVal", "eventDesc"]] ], [">!join", " "]]
+  }
+}
