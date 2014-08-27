@@ -7,6 +7,8 @@
       if(!serrano) {
         serrano = require('../../../serrano-library/build/serrano');
         serrano.logging.config({'environment': 'testing', 'console': true});
+        /*global window*/
+        window.serranoConsoleExtension.serrano = serrano;
       }
       console.log('content processing');
       serrano.utils.scrapeUnit(scrapingUnit).then(function(res) {

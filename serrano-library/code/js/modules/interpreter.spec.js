@@ -22,7 +22,7 @@ describe('module for the main interpreter', function() {
       setV = ['!setVal', 'Tomas', 'myname'],
       cmd = ['!replace', 'Hello Roman!', 'Roman', ['!getVal', 'myname']],
       sel = ['$h2'],
-      instr = [['$h2'],['>$p'], ['>!prop', 'outerHTML'],['>!replace', 'p>', 're>'], ['>!first']];
+      instr = [['$h2'],['>$p'], ['>!prop', 'outerHTML'],['>!replaceAll', 'p>', 're>'], ['>!first']];
 
     // now run them one after another
     assert.strictEqual(interpret(setV), 'Tomas');
