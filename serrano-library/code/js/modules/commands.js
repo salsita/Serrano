@@ -545,14 +545,6 @@ var builtinCommands = {
     }
   },
 
-  // https://developer.mozilla.org/cs/docs/Web/JavaScript/Reference/Global_Objects/RegExp
-  regexp: {
-    argumentCount: '1, 2',
-    code: function(context, pattern, flags) {
-      return new RegExp(pattern, flags);
-    }
-  },
-
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/match
   match: {
     argumentCount: '2',
@@ -598,6 +590,8 @@ var builtinCommands = {
       return selector.replaceWith(newContent);
     }
   },
+
+  // global object access
   window: {
     argumentCount: '0',
     code: function(/* context */) {
@@ -623,6 +617,26 @@ var builtinCommands = {
       if (window && window.document) {
         return window.document.location.href;
       }
+    }
+  },
+
+  // data types
+  date: {
+    argumentCount: '0-1',
+    code: function(context, arg) {
+      if (arg) {
+        return new Date(arg);
+      } else {
+        return new Date();
+      }
+    }
+  },
+
+  // https://developer.mozilla.org/cs/docs/Web/JavaScript/Reference/Global_Objects/RegExp
+  regexp: {
+    argumentCount: '1, 2',
+    code: function(context, pattern, flags) {
+      return new RegExp(pattern, flags);
     }
   }
 };

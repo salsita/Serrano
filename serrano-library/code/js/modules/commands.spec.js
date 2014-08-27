@@ -503,4 +503,11 @@ describe('module for testing commands module', function() {
     assert(_i([['!constant', str], ['>!match', ['!regexp', '(somethingUnmatched)', 'i']] ]) === null);
   });
 
+  it('should verify !date command', function() {
+    assert(typeof (_i(['!date'])), 'object');
+    // new Date().getTime is a function that returns a number
+    assert(typeof (_i([['!date'], ['>!prop', 'getTime']])), 'function');
+    assert(typeof (_i([['!date'], ['>!call', 'getTime']])), 'number');
+  });
+
 });
