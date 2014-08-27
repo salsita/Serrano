@@ -1,0 +1,8 @@
+// dunno what to do with parseGCalLink, but fortunately it works as well...
+{
+  "result": {
+    "what": [["=[itemprop='name']"], [">!trim"]],
+    "where": [["~address span"],[">!prop", "innerHTML"], [">!join", " "], [">!trim"]],
+    "notes": ["=.event_description[itemprop='description']"]
+  }
+}
