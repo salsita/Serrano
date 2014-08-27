@@ -433,21 +433,28 @@ describe('module for testing commands module', function() {
     assert.throws(function() { _i(['!substr', null, 1, 3]); }, TypeError);
 
 
-    assert.strictEqual(_i(['!replace', 'Hello Hello world', 'Hello', 'Goodbye']),
+    assert.strictEqual(_i(['!replaceAll', 'Hello Hello world', 'Hello', 'Goodbye']),
       'Goodbye Goodbye world');
+
+    assert.strictEqual(_i(['!replaceAll', 'Hello Hello world', 'Hello', 5]),
+      '5 5 world');
+
+    // 1337 5p34k
+    assert.strictEqual(_i([['!replaceAll', 'hello', 'e','3'], ['>!replaceAll', 'l', 1],
+      ['>!replace', 'o', 0]]), 'h3110');
+
+    assert.strictEqual(_i(['!replace', 'Hello Hello world', 'Hello', 'Goodbye']),
+      'Goodbye Hello world');
 
     assert.strictEqual(_i(['!replace', 'Hello Hello world', 'pHello', 'Goodbye']),
       'Hello Hello world');
 
-    assert.strictEqual(_i(['!replace', 'Hello Hello world', 'Hello', 5]),
-      '5 5 world');
 
     assert.strictEqual(_i(['!replace', 'Hello Hello world', 'Hello', 5]),
-      '5 5 world');
+      '5 Hello world');
 
-    // 1337 5p34k
-    assert.strictEqual(_i([['!replace', 'hello', 'e','3'], ['>!replace', 'l', 1],
-      ['>!replace', 'o', 0]]), 'h3110');
+
+
   });
 
   it('should verify `interpretArray`, `regexp` and `match` commands', function() {

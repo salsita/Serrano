@@ -533,6 +533,13 @@ var builtinCommands = {
   replace: {
     argumentCount: '3',
     code: function(context, str, old, n) {
+      return str.replace(old, n);
+    }
+  },
+
+  replaceAll: {
+    argumentCount: '3',
+    code: function(context, str, old, n) {
       var reg = new RegExp(old, 'g');
       return str.replace(reg, n);
     }
