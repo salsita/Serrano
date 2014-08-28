@@ -315,6 +315,9 @@ var builtinCommands = {
     argumentCount: '2',
     implicitForeach: false,
     code: function(context, array, index) {
+      if (!array || !array.length) { // non array, return undefined.
+        return;
+      }
       if (_.isArray(index)) {
         return _.map(index, function(i) {
           // array.length + negativeNumber (this is why it is not -i but +i).
@@ -637,6 +640,12 @@ var builtinCommands = {
     argumentCount: '1, 2',
     code: function(context, pattern, flags) {
       return new RegExp(pattern, flags);
+    }
+  },
+  attr: {
+    argumentCount: '2',
+    code: function(context, obj, attrib) {
+      return obj.attr(attrib);
     }
   }
 };
