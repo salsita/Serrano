@@ -1,5 +1,5 @@
 {
-  "docs": "We can explore two views in stubhub. Either event page(1), or a confirmation page(2). Hence the what1/what2, and other names",
+  "doc": "We can explore two views in stubhub. Either event page(1), or a confirmation page(2). Hence the what1/what2, and other names",
   "temp": {
 
     "what1": [["$meta[property='og:title']"], [">!attr", "content"] ],
