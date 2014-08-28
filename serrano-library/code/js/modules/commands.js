@@ -160,19 +160,21 @@ var builtinCommands = {
     argumentCount: '1-',
     code: function(/* context */) {
       var args = Array.prototype.slice.call(arguments, 1);
-      return _.all(args);
+      return _.foldl(args, function(acc, val) {
+        return acc && val;
+      }, true);
     }
   },
+
   '>all': {
     argumentCount: '2-',
     rawArguments: '1-',
-    code: function(context) {
-      var implicit = arguments[1],
-        rest = Array.prototype.slice.call(arguments, 2); // slice off context + implicit arg
+    code: function(context, implicit) {
+      var rest = Array.prototype.slice.call(arguments, 2); // slice off context + implicit arg
 
-      return _.all(rest, function(condition) {
-        return context.interpretScrapingDirective(condition, context, implicit);
-      });
+      return _.foldl(rest, function(acc, condition) {
+        return acc && context.interpretScrapingDirective(condition, context, implicit);
+      }, true);
     }
   },
 
@@ -180,19 +182,21 @@ var builtinCommands = {
     argumentCount:'1-',
     code: function(/* context */) {
       var args = Array.prototype.slice.call(arguments, 1);
-      return _.any(args);
+      return _.foldl(args, function(acc, val) {
+        return acc || val;
+      }, false);
     }
   },
+
   '>any': {
     argumentCount: '2-',
     rawArguments:'1-',
-    code: function(context) {
-      var implicit = arguments[1],
-        rest = Array.prototype.slice.call(arguments, 2); // slices off context and implicit arg...
+    code: function(context, implicit) {
+      var rest = Array.prototype.slice.call(arguments, 2); // slices off context and implicit arg...
+      return _.foldl(rest, function(acc, condition) {
+        return acc || context.interpretScrapingDirective(condition, context, implicit);
+      }, false);
 
-      return _.any(rest, function(condition) {
-        return context.interpretScrapingDirective(condition, context, implicit);
-      });
     }
   },
 

@@ -1,0 +1,8 @@
+{"result":
+  {
+    "what": ["!or", ["=.movieTitle"], ["=#GlobalBody_HeaderTitleControl"], [["=h1"], [">!trim"]  ]],
+    "where": ["=.address a"],
+    "when": ["!interpretArray", ["=.showDate"], [["=.showTime"], [">!replace", "Showtime: ", ""], [">!replace", ["!regexp","\\s\\s+", "g"], " "]  ]    ],
+    "notes": ["=#moviepage-details"]
+  }
+}
