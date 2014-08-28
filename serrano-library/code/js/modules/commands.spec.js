@@ -280,6 +280,10 @@ describe('module for testing commands module', function() {
       [10, 40, undefined, undefined]);
     assert.deepEqual(_i([['!constant', arr], ['>!at', ['hh', null, undefined]]]),
       [undefined, undefined, undefined]);
+    assert.strictEqual(_i([['!constant', 5], ['>!at', 0]]), undefined);
+    assert.strictEqual(_i([['!constant', undefined], ['>!at', 0]]), undefined);
+    assert.strictEqual(_i([['!constant', null], ['>!at', 0]]), undefined);
+    assert.strictEqual(_i([['!constant', {}], ['>!at', 0]]), undefined);
 
 
     assert.strictEqual(_i(['!first', arr]), 10);

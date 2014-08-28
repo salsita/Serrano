@@ -1,0 +1,25 @@
+{
+  "docs": "We can explore two views in stubhub. Either event page(1), or a confirmation page(2). Hence the what1/what2, and other names",
+  "temp": {
+
+    "what1": [["$meta[property='og:title']"], [">!attr", "content"] ],
+    "what2":[["=.eventDescription"], [">!trim"]],
+    "timezone": [["=.eventInfoDateTime"], [">!replace", ["!regexp", "\\s(\\s+)", "g"], " "  ],
+      [">!match", ["!regexp", "(a|p)\\.m\\. ([^\\s]+)" ] ], [">!at",2]    ],
+    "when1Part1": [["$meta[property='stubhub:date']"], [">!attr", "content"],[">!replace", ["!regexp", "at (\\d)"] ," $1"  ]],
+    "when1": [["!interpretArray", [["!getVal", "when1Part1"], ["!getVal", "timezone" ]   ] ], [">!join", ""]],
+    "when2Part1": [["!interpretArray",  [["=.cal"], ["=.tixDetails .boldOrangeText"]] ], [">!join", " "], [">!trim"] ],
+    "when2Timezone":[["=.tixDetails"], [">!replace", ["!regexp", "\\s(\\s+)", "g"], " "  ],
+      [">!match", ["!regexp", "(a|p)\\.m\\. ([^\\s]+)" ] ], [">!at",2] ],
+    "when2": [["!interpretArray", [["!getVal", "when2Part1"], ["!getVal", "when2Timezone" ]   ] ], [">!join", ""]],
+    "where1": [["$meta[property='stubhub:venue']"], [">!attr", "content"]],
+    "where2Part1": [["=.tixDetails:first"], [">!replace", ["!regexp", "\\n", "g"]," "],[">!trim"], [">!match", ["!regexp", "at(.*?)$"]]  ],
+    "where2Part2": ["!if", ["!exists", ["!getVal", "where2Part1"]], [["!getVal", "where2Part1"], [">!at", 1]], ["!constant", ""]]
+  },
+  "result": {
+    "when":["!if", ["!getVal", "when1"], ["!getVal", "when1"], ["!getVal", "when2"]],
+    "what": ["!if", ["!getVal", "what1"], ["!getVal", "what1"], ["!getVal", "what2"]],
+    "where":  ["!if", ["!getVal", "where1"], ["!getVal", "where1"], ["!getVal", "where2"]]
+  }
+}
+
