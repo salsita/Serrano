@@ -214,10 +214,6 @@ var builtinCommands = {
     argumentCount: '2-3',
     implicitForeach: false, // get prop of the whole object
     code: function(context, obj, prop, inner) {
-      if(!obj) {
-        return;
-      }
-
       if (inner || ! _.has(obj, prop)) {
         return _.map(obj, function(item) {
           return item[prop];
