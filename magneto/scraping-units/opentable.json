@@ -1,0 +1,28 @@
+{
+  "temp": {
+    "date": ["!or",
+      [["$input#txtHid_ResDate"], [">!call", "val"]],
+      [["span#ResoDetails_lblDate"], [">!call", "html"]]],
+    "time": ["!or",
+      [["$input#txtHid_ResTime"], [">!call", "val"]],
+      [["$span#ResoDetails_lblTime"], [">!call", "html"]]
+    ]
+  },
+
+  "result": {
+    "what": ["!or",
+      [["$input#txtHid_RestaurantName"], [">!call", "val"]],
+      [["$span#ResoDetails_lblNameAddress"],[">!call", "html"], [">!match", ["!regexp", "<b>(.*)<\\/b>"] ], [">!at", 1]],
+      ["=#ProfileOverview_RestaurantName"],
+      ["!constant", ""]
+    ],
+
+    "where": ["!or",
+     [["$input#txtHid_Address"], [">!call", "val"]],
+     [["$span#ResoDetails_lblNameAddress"], [">!call", "html"], [">!match", ["!regexp", "<b>(.*)<\\/b>"] ], [">!at", 1]],
+     ["!constant", ""]
+    ],
+
+    "when": [["!interpretArray", [["!getVal", "date"], ["!getVal", "time"]]], [">!join", " "], [">!trim"]]
+  }
+}
