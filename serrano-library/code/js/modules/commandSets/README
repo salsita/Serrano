@@ -1,0 +1,25 @@
+var jq = $;
+var textLB = function(jqSelector) {
+      return jq.access(this, function() {
+        var clonedObj = jq('<span></span>');
+        //console.log("global this");console.log(this)
+        jqSelector.each(function() {
+
+          var obj = jq(this).clone();
+          var html = obj.html() || '';
+          // console.log(obj);
+          lineBreakers.forEach(function(tag) {
+            html = html.replace(new RegExp('<' + tag  + '>', 'gi'), '\n<' + tag + '>');
+            html = html.replace(new RegExp('</' + tag + '>', 'gi'), '</' + tag + '>\n');
+          });
+
+          obj.html(html);
+          clonedObj.push(obj);
+        });
+
+        var returnValue = jq.fn.text.apply(clonedObj, arguments);
+        // replace multiple line-breakers (3+) with only two line-breakers
+        returnValue = returnValue.replace(/\n(\n+)/g, '\n\n');
+        return returnValue;
+      });
+    };
