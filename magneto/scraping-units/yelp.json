@@ -3,6 +3,6 @@
   "result": {
     "what": [["=[itemprop='name']"], [">!trim"]],
     "where": [["~address span"],[">!prop", "innerHTML"], [">!join", " "], [">!trim"]],
-    "notes": ["=.event_description[itemprop='description']"]
+    "notes": [["$.event_description[itemprop='description']"], [">!textLB"]]
   }
 }

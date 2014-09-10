@@ -1,10 +1,5 @@
-// * one little difference against the magneto script:
-//   magneto transformed the date into a nice form
-//   e.g: Fri, August 29, 2014
-//   this, on the other hand returns something like:
-//   {day: 29, month:8, year:2014}
-
 {
+  "wait": {"name": ".infobar [itemprop='datePublished']"},
   "temp": {
     "date": [["$.infobar [itemprop='datePublished']"], [">!apply", "attr", ["content"]], [">!split", "-"]],
     "stars": [["~[itemprop='actors'] span[itemprop='name']"], [">!prop", "innerHTML"], [">!join", ", "]],
@@ -14,11 +9,7 @@
   "result": {
     "what": [ ["!concat", ["!constant", "In theatres: "], ["=h1.header span[itemprop='name']"]], [">!join", ""]],
     "where": [["=address"],  [">!replace", "\n", "" ]],
-    "when": {
-      "year": [["!getVal", "date"], [">!at", 2]],
-      "month": [["!getVal", "date"], [">!at", 1]],
-      "day": [["!getVal", "date"], [">!at", 0]]
-    },
+    "when": [["$.infobar [itemprop='datePublished']"], [">!attr", "content"], [">!parseIMDBDate"]],
     "notes": [["!concat", ["!constant", "Stars:"],["!getVal", "stars"], ["!getVal", "desc"], ["!getVal", "uri"]], [">!join", "\n"]]
   }
 }

@@ -1,7 +1,7 @@
 {"result":
   {
-    "source": [["!document"], [">!prop", "location"], [">!prop", "href"]],
-    "what": ["=h1:first"],
-    "where": [["=address"],  [">!replace", "\n", "" ]  ]
+    "source": ["!href"],
+    "what": [["$h1:first"], [">!textLB"]],
+    "where": [["$address"], [">!textLB"], [">!replace", "\n", "" ]  ]
   }
 }

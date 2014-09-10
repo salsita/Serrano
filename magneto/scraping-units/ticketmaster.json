@@ -1,5 +1,5 @@
-// not tested because I could not find a page where this is used...
 {
+  "doc": "not tested because I could not find a page where this is used...",
   "temp": {
     "wht": ["div.artistDetails a#artist_link"],
     "wht2": [["=h1.header"], [">!match", ["!regexp", "going to(.*)"]], [">!at", 1], [">!trim"] ]
