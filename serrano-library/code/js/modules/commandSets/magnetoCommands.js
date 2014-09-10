@@ -241,11 +241,77 @@ var magnetoCommands = {
           start: published.toString('yyyy-MM-dd'),
           end: published.toString('yyyy-MM-dd'),
           notimes: true
+        };
+      } else {
+        return {};
+      }
+    }
+  },
+  "parsePinggTime": {
+    argumentCount: '1',
+    code:  function(context, str) {
+      var when = {};
+
+      /*
+       * Cases:
+       *
+       * 1) short event with only timestamp @ http://www.celebrations.com/rsvp/x62578c6zatqzdyae
+       *    December 30th, 2013, 9:15am
+       *
+       * 2) short event within one day @ http://www.celebrations.com/rsvp/iy7qmxge3jb8k85h8
+       *    December 30th, 2013, 8:15pm - 11:15pm
+       *
+       * 3) event which covers two days @ http://www.celebrations.com/rsvp/8b525km5j3f8668pk
+       *    December 30th, 2013, 9:30pm - 4:30am
+       *
+       * 4) multi-day event @ http://www.celebrations.com/rsvp/db4kc5b4qdbkm52qb
+       *    December 30th, 2013 @ 9:30pm to December 31st, 2013 @ 12:30pm
+       */
+
+      /*
+       * short event
+       */
+      var startTime;
+      var matches = str.match(/^(.*?), (\d{1,2}(:\d{2})?(am|pm))( - (.*?))?$/);
+      if(matches !== null) {
+        startTime = this.parseTime.code(context, matches[2]);
+
+        when.start = matches[1].replace(/(\d+)(th|nd|st)/g, '$1');
+        when.start += ' ' + startTime.hour + ':' + (startTime.minute < 10 ? '0' : '') + startTime.minute;
+
+        // end time is not undefined
+        if(matches[6] !== undefined) {
+          when.end = this.parseFacebookUntilBlock.code(context, when.start, [
+            matches[2],
+            matches[6]
+          ], true); // keep as Date
+
+          // Date --> DoW Mon dd YYYY HH:mm
+          var min = when.end.getMinutes();
+          when.end = when.end.toDateString() + ' ' + when.end.getHours() + ':' + (min < 10 ? '0' : '') + min;
         }
       } else {
-        return {}
-      };
+
+        /*
+         * multi-day event
+         * December 30th, 2013 @ 9:30pm to December 31st, 2013 @ 12:30pm
+         */
+        matches = str.match(/^(.*?) @ (\d{1,2}(:\d{1,2})?(am|pm)) to (.*?) @ (\d{1,2}(:\d{2})?(am|pm))$/);
+        if(matches !== null) {
+          startTime = this.parseTime.code(context, matches[2]);
+          var endTime = this.parseTime.code(context, matches[6]);
+
+          when.start = matches[1].replace(/(\d+)(th|nd|st)/g, '$1');
+          when.end = matches[5].replace(/(\d+)(th|nd|st)/g, '$1');
+
+          when.start += ' ' + startTime.hour + ':' + (startTime.minute < 10 ? '0' : '') + startTime.minute;
+          when.end += ' ' + endTime.hour + ':' + (endTime.minute < 10 ? '0' : '') + endTime.minute;
+        }
+      }
+
+      return when;
     }
+
   }
 
 };
