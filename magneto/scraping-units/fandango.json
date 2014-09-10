@@ -1,8 +1,8 @@
 {"result":
   {
-    "what": ["!or", ["=.movieTitle"], ["=#GlobalBody_HeaderTitleControl"], [["=h1"], [">!trim"]  ]],
-    "where": ["=.address a"],
+    "what": ["!if", ["!nempty",["$.movieTitle"]], ["=.movieTitle"], ["=#GlobalBody_HeaderTitleControl"]  ],
+    "where": [["$.address a"], ["!textLB"]],
     "when": ["!interpretArray", ["=.showDate"], [["=.showTime"], [">!replace", "Showtime: ", ""], [">!replace", ["!regexp","\\s\\s+", "g"], " "]  ]    ],
-    "notes": ["=#moviepage-details"]
+    "notes": [["$#moviepage-details"], [">!textLB"]]
   }
 }

@@ -1,5 +1,4 @@
 {
-  "desc": " 'when' is not the same as the magneto's field, since we do not have the !parseFacebooUntilBlock function",
   "temp": {
     "where1": ["=div#event-where-display p.headline"],
     "where2": ["=p.event-where-address"],
@@ -10,7 +9,7 @@
   },
   "result": {
     "what": ["=h1[itemprop]"],
-    "where":["!getVal", "whereJoined"],
+    "where":[["!getVal", "whereJoined"], [">!cleanupSel"], [">!textLB"]],
     "when":[["!interpretArray", [["!getVal", "time1"], ["!getVal", "timeToJoin"]] ], [">!join", " "], [">!trim"]],
     "notes": [["=[itemprop='description']"], [">!trim"]]
   }

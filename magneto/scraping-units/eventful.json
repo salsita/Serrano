@@ -1,9 +1,9 @@
-// date is not parsed, only raw element content is fetched
 {
+  "doc": "Scrapers for Eventful.com",
   "result": {
-    "what": [["=h1[itemprop='name']"], [">!trim"]],
-    "when": [["=div.event-meta-details .event-date"], [">!replace", "\n", " "], [">!replace", ["!regexp", "\\s+", "g"], " "],[">!trim"]],
+    "what": [["=h1[itemprop='name']"], [">!textLB"],[">!trim"]],
+    "when": [["=div.event-meta-details .event-date"], [">!replace", "\n", " "], [">!replace", ["!regexp", "\\s+", "g"], " "],[">!trim"], [">!parseEventfulDate"]],
     "where": [["=[itemprop=address]"], [">!replace", ["!regexp", "\\s+", "g"], " "]],
-    "notes": [["!interpretArray", [[["=p.description"]],["!constant", "Source:"], ["!href"]] ], [">!join", "\n"], [">!trim"]]
+    "notes": [["$p.description"],[">!textLB"], [">!trim"]]
   }
 }

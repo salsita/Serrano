@@ -7,6 +7,12 @@
  * copy-pasted from the magneto sources and are not unittested.
  * Time is tight, but in the future I suggest rewriting them and hopefully
  * distilling some new useful commands.
+ *
+ * How to create serrano commands out of magneto commands:
+ * 1. add *context* as the first argument in the functions
+ * 2. replace $ with context.$
+ * 3. when you call different functions that are already serrano commands,
+ *   call the via this.*commandName*.code(context, *other parameters*)
  */
 var magnetoCommands = {
   cleanupSel: {
@@ -154,6 +160,91 @@ var magnetoCommands = {
         returnValue = returnValue.replace(/\n(\n+)/g, '\n\n');
         return returnValue;
       });
+    }
+  },
+  parseEventfulDate: {
+    argumentCount: '1',
+    code: function(context, str) {
+      /*
+       * "December 3, 2013 Tuesday 7:30 PM"
+       * "November 26, 2013 Tuesday 8:00 PM - 10:30 PM (daily for 1000 times)"
+       * "November 26, 2013 Tuesday 9:00 PM (on various days)"
+       *
+       * "December 6, 2013 - December 15, 2013"
+       *
+       * "June 17, 2013 - March 24, 2014 Monday 7:30 PM - Monday 10:30 PM"
+       * "December 20, 2013 - December 21, 2013 Friday 8:00 PM - Saturday 6:00 AM"
+       */
+
+      var when = {}, startTime = false;
+
+      /*
+       * Short events
+       */
+      var matches = str.match(/(.*?, \d{4}) [a-zA-Z]+ (\d{1,2}:\d{2} (AM|PM))( - (\d{1,2}:\d{2} (AM|PM)))?/);
+      if(matches !== null) {
+        startTime = this.parseTime.code(context, matches[2]);
+
+        when.start = matches[1] + ' ' + startTime.hour + ':' + (startTime.minute < 10 ? '0' : '') + startTime.minute;
+        if(matches[6] !== undefined) {
+          when.end = this.parseFacebookUntilBlock.code(context, when.start, [
+            matches[2], // start
+            matches[5]  // end
+          ], true); // keep as Date
+
+          // Date --> DoW Mon dd YYYY HH:mm
+          var min = when.end.getMinutes();
+          when.end = when.end.toDateString() + ' ' + when.end.getHours() + ':' + (min < 10 ? '0' : '') + min;
+        }
+      }
+
+      /*
+       * Multi-day events w/o times
+       */
+      matches = str.match(/^((.*?) \d+, \d{4}) - ((.*?) \d+, \d{4})$/);
+      if(matches !== null) {
+        when = {
+          start: matches[1],
+          end: matches[3],
+          notimes: true
+        };
+      }
+
+      /*
+       * Multi-day events with times
+       * "December 20, 2013 - December 21, 2013 Friday 8:00 PM - Saturday 6:00 AM"
+       */
+      matches = str.match(/^((.*?) \d+, \d{4}) - ((.*?) \d+, \d{4}) [A-Za-z]+ (\d{1,2}:\d{2} (AM|PM)) - [A-Za-z]+ (\d{1,2}:\d{2} (AM|PM))$/);
+      if(matches !== null) {
+        startTime = this.parseTime.code(context, matches[5]);
+        var endTime = this.parseTime.code(context, matches[7]);
+
+        when.start = matches[1] + ' ' + startTime.hour + ':' + (startTime.minute < 10 ? '0': '') + startTime.minute;
+        when.end = matches[3] + ' ' + endTime.hour + ':' + (endTime.minute < 10 ? '0': '') + endTime.minute;
+      }
+
+      return when;
+
+    }
+  },
+  parseIMDBDate: {
+    argumentCount: '1',
+    code: function(context, publishedDate) {
+      var published = Date.parse(publishedDate || '');
+      var curDay = new Date();
+
+      curDay.set({hour: 0, minute: 0, second: 0});
+      published.set({hour: 0, minute: 0, second: 0});
+
+      if(published > curDay) {
+        return {
+          start: published.toString('yyyy-MM-dd'),
+          end: published.toString('yyyy-MM-dd'),
+          notimes: true
+        }
+      } else {
+        return {}
+      };
     }
   }
 

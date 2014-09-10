@@ -1,6 +1,6 @@
 {"result":
   {
-  "what": [["=h1.name"], [">!trim"]],
+  "what": [["$h1.name"], [">!textLB"], [">!cleanupSel"]],
   "where": [["=[itemprop=address]"], [">!trim"]],
   "notes": [["!interpretArray", [["!constant", "Source:"], ["!href"]] ], [">!join", "\n"], [">!trim"]]
   }
