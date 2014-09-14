@@ -1,0 +1,27 @@
+{
+  "temp": {
+    "start": [["$span.dtstart span.value-title"], [">!attr", "title"]],
+    "end": [["$span.dtend span.value-title"], [">!attr", "title"]],
+
+    "preMatch": [["$header time"], [">!textLB"], [">!trim"]],
+    "matches": [["!getVal", "preMatch"], [">!match", ["!regexp", "\\w+, (\\w+ \\d+, \\d+) from ([0-9]+:[0-9]+ (PM|AM)) to ([0-9]+:[0-9]+ (AM|PM)) \\((\\w+)\\)"]]],
+    "mStart": ["!if", ["!empty", ["!getVal", "matches"]],  [["!getVal", "matches"], [">!at", [1,2,6] ], [">!join", " "], [">!trim"]] ],
+    "mEnd": ["!if", ["!empty", ["!getVal", "matches"]],  [["!getVal", "matches"], [">!at", [1,4,6] ], [">!join", " "], [">!trim"]] ],
+    "what1":[["$div#event_header span.summary"], [">!textLB"]],
+    "what2": [["!document"], [">!prop", "title"], [">!match", ["!regexp", "(.*)\\s-\\sEventbrite"]], [">!at", 1]],
+    "what3": [["$h1.text-heading-epic"], [">!textLB"]],
+    "what4": ["=h2 a"],
+    "p": ["!or", ["=#manage_order p:first"], ["!constant", ""]],
+    "processedP": [["!getVal", "p"], [">!split", "\n"], [">!trim"]],
+    "startProcessedP": [["!getVal", "processedP"], [">!at", 0]],
+    "whereProcessedP": [["!getVal", "processedP"], [">!at", 1]]
+  },
+  "result": {
+    "notes": [["=span.description"], [">!trim"]],
+    "start": ["!or", ["!getVal", "start"], ["!getVal", "mStart"],["!getVal", "startProcessedP"]],
+    "end": ["!or", ["!getVal", "end"], ["!getVal", "mEnd"]],
+    "where": ["!getVal", "whereProcessedP"],
+    "what": ["!or", ["!getVal", "what1"], ["!getVal", "what2"],["!getVal", "what3"],["!getVal", "what4"]],
+    "matched": ["!getVal", "matches"]
+  }
+}

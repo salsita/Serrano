@@ -621,6 +621,12 @@ var builtinCommands = {
     code: function(context, obj, attrib) {
       return obj.attr(attrib);
     }
+  },
+  isArray: {
+    argumentCount: '1',
+    code: function(context, obj) {
+      return _.isArray(obj);
+    }
   }
 };
 
