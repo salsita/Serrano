@@ -12,40 +12,59 @@ var scrapingUnit = require('./scrapingUnit');
 var rules;
 
 /**
+ * Fetches a correct object from the container.
+ * Container is specified in the doc.
+ * For now we have only 2 containers: 'actions' and 'scraping' containers
+ * within the rules object.
+ * @param container
+ * @param args
+ * @returns {{object: *, templateContext: *}}
+ * @example
+ * // very brief container examples
+ * container1 = {"name1": ["!constant", 123], "name2": ["!constant", 456]};
+ * container2 = ["!constant", 123]
+ */
+function lookUpObjectInContainer(container, args) {
+  var object;
+  var templateContext;
+
+  if (!container) {
+    throw new Error('No object found in the rules object');
+  }
+  if (args.length === 0) { // exec()
+    object = container;
+    templateContext = {};
+  } else if (args.length === 1) { // exec(<templateContext>) and exec(act_name)
+    if (typeof (args[0]) === 'string') { // exec(act_name)
+      object = container[args[0]];
+      templateContext = {};
+    } else { // exec(<templateContext>)
+      object = container;
+      templateContext = args[0];
+    }
+  } else if (args.length === 2) { // exec(act_name, <templateContext>);
+    object = container[args[0]];
+    templateContext = args[1];
+  }
+  return {object: object, templateContext: templateContext};
+}
+/**
  * Selects the action from the rules object. Then executes it.
  * @param {string}[actName] Name of the action within the rules object.
  * @param {Object} [templateContext]
  * @throws Error when the action is not found.
  */
 function exec() {
-  var action;
-  var templateContext;
-
-  if (!rules.actions) {
-    throw new Error('No action found in the rules object');
-  }
-  if (arguments.length === 0) { // exec()
-    action = rules.actions;
-    templateContext = {};
-  } else if (arguments.length === 1) { // exec(<templateContext>) and exec(act_name)
-    if (typeof (arguments[0]) === 'string') { // exec(act_name)
-      action = rules.actions[arguments[0]];
-      templateContext = {};
-    } else { // exec(<templateContext>)
-      action = rules.actions;
-      templateContext = arguments[0];
-    }
-  } else if(arguments.length === 2) {   // exec(act_name, <templateContext>);
-    action = rules.actions[arguments[0]];
-    templateContext = arguments[1];
-  }
+  var __ret = lookUpObjectInContainer(rules.actions, arguments);
+  var action = __ret.object;
+  var templateContext = __ret.templateContext;
 
   var context = interpreter.createContext();
   context.template = templateContext;
-  if (!action || typeof(templateContext)!== 'object') {
+  if (!action || typeof(templateContext) !== 'object') {
     throw new Error('No valid action/templateContext selected from the rules object. ' +
-      'Arguments array-like object of exec function: '+ JSON.stringify(arguments) +
-      '. Template supplied:'+JSON.stringify(templateContext)+'. Rules object: ' +
+      'Arguments array-like object of exec function: ' + JSON.stringify(arguments) +
+      '. Template supplied:' + JSON.stringify(templateContext) + '. Rules object: ' +
       JSON.stringify(rules));
   }
   return interpreter.interpretScrapingDirective(action, context);
@@ -53,27 +72,24 @@ function exec() {
 
 /**
  * Selects the scraping unit from the rules object and scrapes it.
- * @param {string} [scrapName] Name of the scraping unit.
+ * @param {string}[actName] Name of the action within the rules object.
+ * @param {Object} [templateContext]
  * @returns {Promise} Returns a promise containing scraped data.
  * @throws Error when the scraping unit is not found.
  */
-function scrape(scrapName) {
-  var unit;
-  if (!rules || !rules.scraping) {
-    throw new Error('No scraping units found in the rules object');
-  }
-  if (!scrapName) { // scrape()
-    unit = rules.scraping;
-  } else { // scrape(unit_name)
-    unit = rules.scraping[arguments[0]];
-  }
-
+function scrape() {
+  var __ret = lookUpObjectInContainer(rules.scraping, arguments);
+  var unit = __ret.object;
+  var templateContext = __ret.templateContext;
+console.log('context'+JSON.stringify(templateContext));
   if (!unit || !unit.result) {
     throw new Error('No unit selected from the rules object. ' +
       'Arguments array-like object of the scrape function:' + JSON.stringify(arguments) +
       '. Rules object: '+ JSON.stringify(rules));
   }
-  return scrapingUnit.scrapeUnit(unit);
+  var context = interpreter.createContext();
+  context.template = templateContext;
+  return scrapingUnit.scrapeUnit(unit, context);
 }
 
 module.exports = {
