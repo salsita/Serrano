@@ -15,6 +15,12 @@ describe('module providing engine functionality', function() {
         code: function(context, arg1) {
           return [arg1, context.template];
         }
+      },
+      processedConstant: {
+        argumentCount: '1',
+        code: function(context, c) {
+          return c;
+        }
       }
     });
   });
@@ -94,11 +100,12 @@ describe('module providing engine functionality', function() {
   });
 
   describe('engine.scrape, when engine.scrape is an object', function() {
-    before(function() {
+    beforeEach(function() {
       engine.setRules({
         scraping: {
           first: {result: ['!constant', 'constFirst']},
-          second: {result: ['!constant', 'constSecond']}
+          second: {result: ['!constant', 'constSecond']},
+          townName: {result: ['!processedConstant', 'Is {{town}}']}
         },
         actions: 'whatever'
       });
@@ -119,10 +126,16 @@ describe('module providing engine functionality', function() {
       assert.throws(function() {engine.scrape().done();}, Error);
     });
 
-    it('should check whther errors are thrown properly if there is no rules.scraping', function() {
+    it('should check whether errors are thrown properly if there is no rules.scraping', function() {
       engine.setRules({});
       assert.throws(function() {engine.scrape();}, Error);
       assert.throws(function() {engine.scrape('notFound');}, Error);
+    });
+    it('should check if templates are correctly rendered', function(done) {
+      engine.scrape('townName', {town: 'Goettingen'}).then(function(res) {
+        assert.strictEqual(res, 'Is Goettingen');
+        done();
+      }).done();
     });
   });
 });

@@ -15,31 +15,48 @@ var commands = require('./commands');
  * @returns {*} Returns the result of command execution.
  */
 function evalCommand(cmd, context, implicitArgument) {
-  var args = [context],
+  function processArgument(argument) {
+    /**
+     * When the command is NOT piped (eg ["!constant", "foo"]) it means that
+     * the "foo" is actually on the first position=0 (we count arguments from 0) on the argument list!
+     */
+    var argumentPositionWithRespectToPiping = i + (piped ? 0 : -1);
+
+    if (argumentCountChecker.isInRange(argumentPositionWithRespectToPiping, command.rawArguments)) {
+      return argument;
+    } else if (commands.isInstruction(argument)) {
+      /*global evalInstruction */
+      return evalInstruction(argument, context);
+    } else if (commands.isCommand(argument)) {
+      return evalCommand(argument, context);
+    } else if (typeof (argument) === "string") {
+      var rendered = require('./template').render(argument, context.template);
+      return rendered;
+    } else {
+      return argument;
+    }
+  }
+
+  var commandArguments = [context],
     piped = commands.isPipedName(cmd[0]),
     commName = commands.getCommandName(cmd[0]),
     command = commands.getCommand(commName);
 
   if (piped) {
-    args.push(implicitArgument);
+    commandArguments.push(implicitArgument);
   }
 
-  for (var i = 1; i < cmd.length; ++i) {
-    var arg = cmd[i];
-
-    if (argumentCountChecker.checkArgumentCount(i + (piped? 0: -1) , command.rawArguments)) {
-      args.push(arg);
-    } else if (commands.isInstruction(arg)) {
-      /*global evalInstruction */
-      args.push(evalInstruction(arg, context));
-    } else if (commands.isCommand(arg)) {
-      args.push(evalCommand(arg, context));
-    } else {
-      args.push(arg);
-    }
+  /**
+   * On the zeroth position is the command name, so the first argument starts
+   * at position 1.
+   */
+  var FIRST_ARGUMENT_POSITION = 1;
+  for (var i = FIRST_ARGUMENT_POSITION; i < cmd.length; ++i) {
+    var argument = cmd[i];
+    commandArguments.push(processArgument(argument));
   }
 
-  return command.code.apply(commands.getCommands(), args);
+  return command.code.apply(commands.getCommands(), commandArguments);
 }
 
 /**
@@ -61,7 +78,7 @@ function evalInstruction(instruction, context, implicitArgument) {
       command = commands.getCommand(commName);
 
     // implicit foreach
-    if (!argumentCountChecker.checkArgumentCount(0, command.rawArguments) &&
+    if (!argumentCountChecker.isInRange(0, command.rawArguments) &&
       command.implicitForeach  && _.isArray(implicitArgument)) {
       implicitArgument = _.map(implicitArgument, _mapper);
     } else {
