@@ -15,31 +15,45 @@ var commands = require('./commands');
  * @returns {*} Returns the result of command execution.
  */
 function evalCommand(cmd, context, implicitArgument) {
-  var args = [context],
+  var commandArguments = [context],
     piped = commands.isPipedName(cmd[0]),
     commName = commands.getCommandName(cmd[0]),
     command = commands.getCommand(commName);
 
   if (piped) {
-    args.push(implicitArgument);
+    commandArguments.push(implicitArgument);
   }
 
-  for (var i = 1; i < cmd.length; ++i) {
+  /**
+   * On the zeroth position is the command name, so the first argument starts
+   * at position 1.
+   */
+  var FIRST_ARGUMENT_POSITION = 1;
+  for (var i = FIRST_ARGUMENT_POSITION; i < cmd.length; ++i) {
     var arg = cmd[i];
 
-    if (argumentCountChecker.checkArgumentCount(i + (piped? 0: -1) , command.rawArguments)) {
-      args.push(arg);
+    /**
+     * When the command is NOT piped (eg ["!constant", "foo"]) it means that
+     * the "foo" is actually on the first position=0 (we count arguments from 0) on the argument list!
+     */
+    var argumentPositionWithRespectToPiping = i + (piped? 0: -1);
+
+    if (argumentCountChecker.isInRange(argumentPositionWithRespectToPiping, command.rawArguments)) {
+      commandArguments.push(arg);
     } else if (commands.isInstruction(arg)) {
       /*global evalInstruction */
-      args.push(evalInstruction(arg, context));
+      commandArguments.push(evalInstruction(arg, context));
     } else if (commands.isCommand(arg)) {
-      args.push(evalCommand(arg, context));
+      commandArguments.push(evalCommand(arg, context));
+    } else if (typeof (arg) === "string") {
+      var rendered = require('./template').render(arg, context.template);
+      commandArguments.push(rendered);
     } else {
-      args.push(arg);
+      commandArguments.push(arg);
     }
   }
 
-  return command.code.apply(commands.getCommands(), args);
+  return command.code.apply(commands.getCommands(), commandArguments);
 }
 
 /**
@@ -61,7 +75,7 @@ function evalInstruction(instruction, context, implicitArgument) {
       command = commands.getCommand(commName);
 
     // implicit foreach
-    if (!argumentCountChecker.checkArgumentCount(0, command.rawArguments) &&
+    if (!argumentCountChecker.isInRange(0, command.rawArguments) &&
       command.implicitForeach  && _.isArray(implicitArgument)) {
       implicitArgument = _.map(implicitArgument, _mapper);
     } else {

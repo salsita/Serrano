@@ -71,7 +71,7 @@ function simplifyCommand(command) {
 
   // -1 for the head==commName, +1 if it receives an explicit argument ('>')
   var argcSupplied = command.length - 1 + (piped ? 1 : 0);
-  if (!argumentCountChecker.checkArgumentCount(argcSupplied, signature)) {
+  if (!argumentCountChecker.isInRange(argcSupplied, signature)) {
     var msg = 'Command ' + commFullName + ' was supplied with ' + argcSupplied +' arguments '+
       'while it was expected to be supplied with "'+signature +'" arguments. '+
       'The whole command is '+ JSON.stringify(command);
@@ -82,7 +82,7 @@ function simplifyCommand(command) {
   var rawArguments = commands.getCommand(commName).rawArguments;
   for (var i=0; i < args.length; ++i) {
     var arg1 = args[i];
-    if (argumentCountChecker.checkArgumentCount(i + (piped ? 1 : 0), rawArguments)) { // is raw
+    if (argumentCountChecker.isInRange(i + (piped ? 1 : 0), rawArguments)) { // is raw
       result.push(arg1);
     } else if (commands.isSelector(arg1)) {
       result.push(simplifySelector(arg1));

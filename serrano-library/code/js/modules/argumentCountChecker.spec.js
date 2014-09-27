@@ -6,7 +6,7 @@ var argcChecker = require('./argumentCountChecker');
 describe('module for parsing the right number of arguments', function() {
   it('should verify whether argc parsing is correct', function() {
 
-    var vargc = argcChecker.checkArgumentCount; // valid argc
+    var vargc = argcChecker.isInRange; // valid argc
     assert.equal('function', typeof(vargc));
 
     var signature = ' 2-   4 , 6, 10  - ';

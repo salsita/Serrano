@@ -35,13 +35,13 @@ function isValidSignature(signature) {
 }
 
 /**
- * Finds out whether the count of arguments the function received
- * corresponds to it's signature.
- * @param {int} argc - Number of arguments the function received.
- * @param {string} signature - Function signature.
+ * Finds out whether the count falls into one of intervals described in the signature.
+ * @param {int} count - Number to be checked against intervals.
+ * @param {string} signature - something like "2-6, 9-" which denotes integer intervals
+ *   [2,6] and [9, infinity]
  * @returns {boolean}
  */
-module.exports.checkArgumentCount = function(argc, signature)
+module.exports.isInRange = function(count, signature)
 {
   /**
    * Find out whether the number $num is in the closed interval [$low, $up].
@@ -72,7 +72,7 @@ module.exports.checkArgumentCount = function(argc, signature)
     // will be NaN if error
     var up = parseInt(limits[1], 10);
 
-    return inInterval(argc, low, (len === 1) ? low : up);
+    return inInterval(count, low, (len === 1) ? low : up);
   });
 };
 
