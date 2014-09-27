@@ -15,6 +15,28 @@ var commands = require('./commands');
  * @returns {*} Returns the result of command execution.
  */
 function evalCommand(cmd, context, implicitArgument) {
+  function processArgument(argument) {
+    /**
+     * When the command is NOT piped (eg ["!constant", "foo"]) it means that
+     * the "foo" is actually on the first position=0 (we count arguments from 0) on the argument list!
+     */
+    var argumentPositionWithRespectToPiping = i + (piped ? 0 : -1);
+
+    if (argumentCountChecker.isInRange(argumentPositionWithRespectToPiping, command.rawArguments)) {
+      return argument;
+    } else if (commands.isInstruction(argument)) {
+      /*global evalInstruction */
+      return evalInstruction(argument, context);
+    } else if (commands.isCommand(argument)) {
+      return evalCommand(argument, context);
+    } else if (typeof (argument) === "string") {
+      var rendered = require('./template').render(argument, context.template);
+      return rendered;
+    } else {
+      return argument;
+    }
+  }
+
   var commandArguments = [context],
     piped = commands.isPipedName(cmd[0]),
     commName = commands.getCommandName(cmd[0]),
@@ -30,27 +52,8 @@ function evalCommand(cmd, context, implicitArgument) {
    */
   var FIRST_ARGUMENT_POSITION = 1;
   for (var i = FIRST_ARGUMENT_POSITION; i < cmd.length; ++i) {
-    var arg = cmd[i];
-
-    /**
-     * When the command is NOT piped (eg ["!constant", "foo"]) it means that
-     * the "foo" is actually on the first position=0 (we count arguments from 0) on the argument list!
-     */
-    var argumentPositionWithRespectToPiping = i + (piped? 0: -1);
-
-    if (argumentCountChecker.isInRange(argumentPositionWithRespectToPiping, command.rawArguments)) {
-      commandArguments.push(arg);
-    } else if (commands.isInstruction(arg)) {
-      /*global evalInstruction */
-      commandArguments.push(evalInstruction(arg, context));
-    } else if (commands.isCommand(arg)) {
-      commandArguments.push(evalCommand(arg, context));
-    } else if (typeof (arg) === "string") {
-      var rendered = require('./template').render(arg, context.template);
-      commandArguments.push(rendered);
-    } else {
-      commandArguments.push(arg);
-    }
+    var argument = cmd[i];
+    commandArguments.push(processArgument(argument));
   }
 
   return command.code.apply(commands.getCommands(), commandArguments);
