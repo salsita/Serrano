@@ -81,7 +81,6 @@ function scrape() {
   var __ret = lookUpObjectInContainer(rules.scraping, arguments);
   var unit = __ret.object;
   var templateContext = __ret.templateContext;
-console.log('context'+JSON.stringify(templateContext));
   if (!unit || !unit.result) {
     throw new Error('No unit selected from the rules object. ' +
       'Arguments array-like object of the scrape function:' + JSON.stringify(arguments) +
