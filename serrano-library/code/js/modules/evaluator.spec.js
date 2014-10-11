@@ -95,7 +95,7 @@ var testCommands = {
 
 var evaluator = require('./evaluator');
 
-describe('interpreter evaluator', function() {
+describe('evaluator', function() {
     before(function(){
       commands.setCommands(testCommands);
     });
@@ -159,17 +159,5 @@ describe('interpreter evaluator', function() {
     it('should verify mock jQuery in action', function(){
       var mock = [['!jQuery', 'h2'], ['>!arr'], ['>!len']];
       assert.strictEqual(ei(mock), 2);
-    });
-
-    it('should check whether the template variables are automatically rendered', function() {
-      var tplEi = function(directive, implicitArgument) {
-        var context = {storage:{}, template: {name: 'Tomy'}};
-        return evaluator.evalScrapingDirective(directive, context, implicitArgument);
-      };
-
-      // constant uses a raw argument
-      assert.strictEqual(tplEi(["!constant", "I am {{name}}"]), "I am {{name}}");
-      assert.strictEqual(tplEi(["!processedConstant", "I am {{name}}"]), "I am Tomy");
-      assert.strictEqual(tplEi(["!processedConstant", "I am {{surname}}"]), "I am {{surname}}");
     });
 });
