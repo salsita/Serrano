@@ -29,9 +29,6 @@ function evalCommand(cmd, context, implicitArgument) {
       return evalInstruction(argument, context);
     } else if (commands.isCommand(argument)) {
       return evalCommand(argument, context);
-    } else if (typeof (argument) === "string") {
-      var rendered = require('./template').render(argument, context.template);
-      return rendered;
     } else {
       return argument;
     }

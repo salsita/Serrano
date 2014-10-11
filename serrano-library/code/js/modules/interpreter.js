@@ -8,6 +8,7 @@ var depthChecker = require('./depthChecker');
 var simplifier = require('./simplifier');
 var evaluator = require('./evaluator');
 var exceptions = require('./exceptions');
+var renderer = require('./instructionTemplateRenderer');
 
 /**
  * Gets one raw scraping directive. Checks for the depth, simplifies and runs it.
@@ -22,8 +23,8 @@ function interpretScrapingDirective(directive, context, implicitArgument) {
     if (!depthChecker.isValidDepth(directive)) {
       throw new exceptions.RuntimeError('Depth of nesting of the instruction is too high');
     }
-
-    var simplified = simplifier.simplifyScrapingDirective(directive);
+    var rendered = renderer.render(directive, context.template);
+    var simplified = simplifier.simplifyScrapingDirective(rendered);
     return evaluator.evalScrapingDirective(simplified, context, implicitArgument);
   } catch (e) {
     e.scrapingDirective = directive;

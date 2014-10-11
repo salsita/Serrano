@@ -47,4 +47,7 @@ describe('templating module', function() {
     assert.strictEqual(template.render('{ {name}} {{name} } {{name}}', cartoonContext),
       '{ {name}} {{name} } Futurama');
   });
+  it ('should check undefined template context', function() {
+    assert.strictEqual(template.render('{{name}}', undefined), '{{name}}');
+  });
 });
