@@ -47,7 +47,23 @@ describe('templating module', function() {
     assert.strictEqual(template.render('{ {name}} {{name} } {{name}}', cartoonContext),
       '{ {name}} {{name} } Futurama');
   });
+
   it ('should check undefined template context', function() {
     assert.strictEqual(template.render('{{name}}', undefined), '{{name}}');
+  });
+
+  it('should check if the template renderer works only with a copy of a string', function() {
+    var ctx = {name: 'John'};
+    var a1 = 'I am {{name}}',
+        a2 = 'I am {{name}}',
+        b = 'I am John';
+
+    assert.strictEqual(a1, a2);
+
+    assert.strictEqual(template.render(a1, ctx), b);
+
+    assert.strictEqual(a1, a2);
+    assert.notStrictEqual(a1, b);
+
   });
 });
