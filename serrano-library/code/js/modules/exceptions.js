@@ -38,3 +38,14 @@ function RuntimeError() {
 RuntimeError.prototype = Error.prototype;
 
 module.exports.RuntimeError = RuntimeError;
+
+function WrongArgumentError() {
+  var tmp = Error.apply(this, arguments);
+  tmp.name = this.name = 'WrongArgumentError';
+
+  this.stack = tmp.stack;
+  this.message = tmp.message;
+}
+WrongArgumentError.prototype = Error.prototype;
+
+module.exports.WrongArgumentError = WrongArgumentError;
