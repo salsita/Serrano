@@ -1,3 +1,7 @@
+### Note: in order to run simple-extension, you first need to have serrano-library compiled
+
+
+
 ## Skeleton for Google Chrome extensions
 
 * includes awesome messaging module

@@ -22,10 +22,12 @@ module.exports = function(grunt) {
     browserify: {
       build: {
         files: { 'build/<%= pkg.name %>-<%= pkg.version %>.js': 'code/js/main.js' },
-        options: { bundleOptions: {
-          debug: true,  // for source maps
-          standalone: '<%= pkg["export-symbol"]%>'
-        } }
+        options: { 
+          browserifyOptions: {
+            debug: true,  // for source maps
+            standalone: '<%= pkg["export-symbol"]%>'
+          }
+        }
       }
     },
 

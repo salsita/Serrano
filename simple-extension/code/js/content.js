@@ -5,7 +5,9 @@
   require('./modules/msg').init('contentScript', {
     runScrapingUnit: function(scrapingUnit, done) {
       if(!serrano) {
-        serrano = require('../../../serrano-library/build/serrano');
+        // quick fix: grunt-browserify can't resolve requires from serrano.js, but 
+        // it can from serrano.min.js
+        serrano = require('../../../serrano-library/build/serrano.min');
         serrano.logging.config({'environment': 'testing', 'console': true});
         /*global window*/
         window.serranoConsoleExtension.serrano = serrano;
